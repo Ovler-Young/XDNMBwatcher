@@ -1,17 +1,6 @@
 <p align="center">
-    <h1 align="center">INK RSS</h1>
+    <h1 align="center">XDNMB watcher</h1>
 </p>
-  <p align="center">
-    管理订阅，接收通知
-    <br />
-    <br />
-    <a href="https://channel.1nk.workers.dev/channel">示例网页</a>
-    ·
-    <a href="https://t.me/inkrss_chat">
-    示例群组</a>
-    ·
-    <a href="https://github.com/pureink/inkrss/issues">报告Bug</a>
-  </p>
     <p align="center">
 <img src="https://img.shields.io/github/license/pureink/inkrss?style=for-the-badge"/>
 </p>
@@ -31,12 +20,14 @@
 
 ## 介绍
 
-INK RSS 提供及时且多样的 rss 通知服务，借助现有的接口你可以在任意位置订阅，并使用任意方式接收通知，并且所有服务均开源且免费。
+本项目由 @Ovler-Young 在 [inkrss](https://github.com/pureink/inkrss) 项目上修改而成，在这里感谢原作者的开源与分享，给了我很大的启发与思考。
+
+XDNMB watcher 是一个监视 XDNMB 论坛的工具，可以在论坛帖子有更新时，自动将更新内容推送到 Telegram 群组或频道，并集成了一些其他功能如非常不准确的灌铅骰子。
 
 已包含的订阅方式：
 网页，telegram bot
 
-已实现的通知方式：telegram（支持 instant view），bark，微信
+已实现的通知方式：telegram（支持 instant view）~~，bark，微信~~(现在高度依赖Telegram 机器人，所以暂时不支持微信)
 
 ⚠️ 注意：由于测试有限，无法发现所有问题，当前无法保证项目的高可用性。如果部署的早期代码出现异常，请在网页删除 worker 和 KV 并部署最新版本。
 
@@ -48,25 +39,25 @@ INK RSS 提供及时且多样的 rss 通知服务，借助现有的接口你可�
 
 ♻️ **省心** - serverless，无需管理服务器和数据库。
 
-🎨 **定制** - 多种订阅和通知方式，包括不限于 telegram，bark，微信
+🎨 **定制** - 多种订阅和通知方式，包括不限于 telegram~~，bark，微信~~(现在高度依赖Telegram 机器人，所以暂时不支持微信等其他通知方式)。
 
 ## 项目背景
 
-部分 rss 提供者并没有提供全文输出，在阅读器订阅此类信息体验并不完整。随着 rsshub 的出现，更多种的信息可以被订阅。这些源或许更适合被动接收更新。
-
-大部分阅读器并不提供通知功能，因为这需要后端定时去获取，inoreader 等功能强大的软件提供此服务，但即使每月支出\$6.99,也只有 60 分钟的刷新周期保证。IFTTT 是个好选择，但它无法保证延迟并且在去年（2020）只对免费用户提供三个 Applet。
-
-telegram 有不少开源的机器人，使用公益公开的机器人，隐私安全是一小方面，telegram 对机器人发送信息频率有限制，一个服务器往往也不能保证所有人的订阅即时更新，也无法保证稳定性。自行部署可以解决以上问题但服务器和数据库的支出和维护也不是小问题，通知方式和订阅方式也局限于 telegram。
+跑团的时候刷新多了独自寂寞，刷新少了kp跑路，非常的可怕。就搞个爬虫抓一下，然后推送到telegram群组，方便你我他；再除外，也可以当作一个会丢内容的备份。
 
 ## TODO
 
 - [ ] 关键词过滤
 
-- [ ] 翻译功能
-
 - [ ] 多语言支持
 
+- [ ] 监视多po
+
+- [ ] [Bog岛支持](https://bog.ac)
+
 ## 注意事项
+
+### Work in progress, 本章节文档尚未更新
 
 1. 对于所有项目都可以使用网页进行订阅
 
@@ -149,17 +140,16 @@ telegram 有不少开源的机器人，使用公益公开的机器人，隐私�
 
     ![api screenshot](https://user-images.githubusercontent.com/44235276/126452407-8f7fb995-1ba1-4daf-91c5-d931e893ccc6.png)
 
-    选择你的通知方式，出于覆盖性考虑目前支持以下方式，将支持 Slack，Discord，钉钉等其他通知方式。
+    选择你的通知方式，出于覆盖性考虑目前支持以下方式。
 
     - telegram（包括即时预览和机器人订阅，功能丰富，受限于网络）
-    - bark（部署最便捷，受限于平台）
-    - wechat（部署较麻烦，仅支持纯文本，适用性广）
 
     定义 wrangler.toml 中环境变量 `[vars]`，其中必须定义的有：
 
     - `NOTIFIER` 为想要的通知方式
     - `SECRET_PATH` 为 UI 页面路径
     - `PARSE_URL` 为 Feed Parser
+    - `COOKIES` 为 cookie，即X岛登录后 "userhash" 的值，可在浏览器开发者工具中找到
 
     然后根据所选通知方式，根据 config 文件夹的指定文件夹中 readme 配置其他相应变量，如`BARK_URL`。
 
@@ -213,6 +203,8 @@ telegram 有不少开源的机器人，使用公益公开的机器人，隐私�
 
 ## 额外附赠
 
+### Work in progress, 本章节文档尚未更新
+
 - [IOS 桌面小插件](https://github.com/pureink/scripts/tree/master/scriptable/inkrss)
 
 
@@ -233,19 +225,21 @@ telegram 有不少开源的机器人，使用公益公开的机器人，隐私�
 - 频繁的通知提醒会打扰到正常的生活，建议适量订阅。
 - 建议和阅读器结合使用。
 
-## 调查
-
-此开源方案在功能上解决了问题，但多人订阅相同源，必然会造成带宽的浪费并对源站造成压力。如 websub（原 pubsubhubbub）这样的方案我认为太过理想，大部分已使用的协议很难发生变化，我认为存在更合适的过渡方案，请协助填写此[问卷](https://airtable.com/shr5wzoOLMvUM7Aor)帮助我了解 RSS 用户。
-
 ## 贡献
 
 本项目仍在起步阶段，无论是机器人，前端后端的交互，还是 worker 的逻辑和功能都可能有所缺陷，任何贡献都将起到帮助。
 
-## 作者
+## 原inkrss作者
 
 21 岁，是学生。
 
 [@pureink](https://github.com/pureink)
+
+## 现XDNMB watcher 作者
+
+19 岁，是学生。
+
+[@Ovler-Young](https://github.com/Ovler-Young)
 
 ## 协议
 
