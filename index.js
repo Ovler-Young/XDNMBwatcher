@@ -442,9 +442,15 @@ router.get(`/${secret_path}/jumpread`, async req => {
   await KV.put("sub", JSON.stringify(sub));
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
-    return Response.redirect(`https://www.nmbxd1.com/m/t/${id}?page=${Math.floor(( lastreadto - 1) / 9)+1}`, 307);
+    let page = Math.floor((lastreadto - 1)/9) + 1;
+    console.log(page);
+    console.log("mobile");
+    return Response.redirect(`https://www.nmbxd1.com/m/t/${id}?page=${page}`, 307);
   }
-  return Response.redirect(`https://www.nmbxd1.com/t/${id}?page=${Math.floor(( lastreadto - 1) / 19)+1}`, 307);
+  let page = Math.floor((lastreadto - 1)/19) + 1;
+  console.log(page);
+  console.log("pc");
+  return Response.redirect(`https://www.nmbxd1.com/t/${id}?page=${page}`, 307);
 });
 router.get(`/${secret_path}/jumplast`, async req => {
   const id = req.url.split("?id=")[1];
@@ -482,7 +488,6 @@ router.get(`/${secret_path}/jumplast`, async req => {
     );
   }
   sub[index].unread = 0;
-  lastreadto = sub[index].LastRead;
   const res = await fetch(
     `https://api.nmb.best/Api/thread?id=${id}`,
     {
@@ -495,11 +500,18 @@ router.get(`/${secret_path}/jumplast`, async req => {
   );
   sub[index].LastRead = (await res.json()).ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
+  let lastreadto = sub[index].LastRead;
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
-    return Response.redirect(`https://www.nmbxd1.com/m/t/${id}?page=${Math.floor(sub[index].ReplyCountAll-1/9)+1}`, 302);
+    let page = Math.floor((lastreadto - 1)/9) + 1;
+    console.log(page);
+    console.log("mobile");
+    return Response.redirect(`https://www.nmbxd1.com/m/t/${id}?page=${page}`, 307);
   }
-  return Response.redirect(`https://www.nmbxd1.com/t/${id}?page=${Math.floor(sub[index].ReplyCountAll-1/19)+1}`, 302);
+  let page = Math.floor((lastreadto - 1)/19) + 1;
+  console.log(page);
+  console.log("pc");
+  return Response.redirect(`https://www.nmbxd1.com/t/${id}?page=${page}`, 307);
 });
 router.get("/test", async (req, e) => {
   // 测试
