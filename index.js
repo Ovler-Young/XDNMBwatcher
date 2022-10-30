@@ -442,9 +442,9 @@ router.get(`/${secret_path}/jumpread`, async req => {
   await KV.put("sub", JSON.stringify(sub));
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
-    return Response.redirect(`https://www.nmbxd1.com/m/t/${id}?page=${Math.floor((lastreadto-1/9))+1}`, 307);
+    return Response.redirect(`https://www.nmbxd1.com/m/t/${id}?page=${Math.floor(( lastreadto - 1) / 9)+1}`, 307);
   }
-  return Response.redirect(`https://www.nmbxd1.com/t/${id}?page=${Math.floor((lastreadto-1/19))+1}`, 307);
+  return Response.redirect(`https://www.nmbxd1.com/t/${id}?page=${Math.floor(( lastreadto - 1) / 19)+1}`, 307);
 });
 router.get(`/${secret_path}/jumplast`, async req => {
   const id = req.url.split("?id=")[1];
