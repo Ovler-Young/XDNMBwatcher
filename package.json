@@ -1,6 +1,6 @@
 {
-  "name": "inkrss",
-  "version": "1.0.0",
+  "name": "xdnmb-watcher",
+  "version": "2.0.0",
   "description": "Hardworking workers helps you with Syndication",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "tail": "wrangler tail",
     "whoami": "wrangler whoami"
   },
-  "author": "pureink <pureink@tutanota.com>",
+  "author": "Ovler-Young <pureink@ovlertheyoung@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "@cloudflare/wrangler": "^1.19.12",

@@ -1,5 +1,5 @@
 account_id = ""
-name = "inkrss-dev"
+name = "xdnmb-watcher-dev"
 type = "webpack"
 workers_dev = true
 
@@ -24,8 +24,8 @@ entry-point = "./"
 # Global variables can be used by the Worker scripts.
 # NOT inherited. Need to define in each environment.
 [vars]
-NOTIFIER = "" # bark, telegram or wechat
-PARSE_URL = "" 
+NOTIFIER = "telegram" # Now only support telegram
+PARSE_URL = "" # can be set to "https://inkrssparse.vercel.app" with fair use
 SECRET_PATH = "" 
 
 # Bark notification
@@ -41,11 +41,14 @@ TG_USERID = 123456789
 # WeChat notification
 WECHAT_URL = ""
 
+# XDNMB Cookie. Value of "userhash" in cookie.
+COOKIES = ""
+
 # # Environments / Multiple Workers
 # # Ref: https://developers.cloudflare.com/workers/platform/environments
 
 # [env.production]
-# name = "inkrss"
+# name = "xdnmb-watcher"
 # # workers_dev = false
 # # route = ""
 # # zone_id = ""
