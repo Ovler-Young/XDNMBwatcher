@@ -413,7 +413,7 @@ router.get(`/${secret_path}/jumpread`, async req => {
     );
   }
   sub[index].unread = 0;
-  lastreadto = sub[index].LastRead;
+  let lastreadto = sub[index].LastRead;
   const res = await fetch(
     `https://api.nmb.best/Api/thread?id=${id}`,
     {
