@@ -1,6 +1,6 @@
 const map = {
   "<": "&lt;",
   ">": "&gt;",
-  "&": "&amp;",
+  "&": "&amp;"
 };
-export const html = (string) => string.replace(/[\<\>\&]/g, (m) => map[m]);
+export const html = string => string.toString().replace(/[\<\>\&]/g, m => map[m]);

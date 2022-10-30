@@ -36,9 +36,9 @@ INK RSS 提供及时且多样的 rss 通知服务，借助现有的接口你可�
 已包含的订阅方式：
 网页，telegram bot
 
-已实现的通知方式：telegram（支持instant view），bark，微信
+已实现的通知方式：telegram（支持 instant view），bark，微信
 
-⚠️注意：由于测试有限，无法发现所有问题，当前无法保证项目的高可用性。如果部署的早期代码出现异常，请在网页删除worker和KV并部署最新版本。
+⚠️ 注意：由于测试有限，无法发现所有问题，当前无法保证项目的高可用性。如果部署的早期代码出现异常，请在网页删除 worker 和 KV 并部署最新版本。
 
 ## 特点
 
@@ -60,25 +60,25 @@ telegram 有不少开源的机器人，使用公益公开的机器人，隐私�
 
 ## TODO
 
--   [ ] 关键词过滤
+- [ ] 关键词过滤
 
--   [ ] 翻译功能
+- [ ] 翻译功能
 
--   [ ] 多语言支持
+- [ ] 多语言支持
 
 ## 注意事项
 
 1. 对于所有项目都可以使用网页进行订阅
 
-    <img src="https://user-images.githubusercontent.com/44235276/126451080-1c16cc60-9f7e-4423-b67a-ce8b26134a90.gif" alt="screen" style="zoom: 50%;" />
+   <img src="https://user-images.githubusercontent.com/44235276/126451080-1c16cc60-9f7e-4423-b67a-ce8b26134a90.gif" alt="screen" style="zoom: 50%;" />
 
 2. 使用 telegram 不仅可以使用网页，还包含借助 telegraph 提供的即时预览功能（instant view）以及一个提供增删查功能的机器人。部署后访问
 
-    ```
-    https://api.telegram.org/bot<your token>/setwebhook?url=https://example.com/secret_path
-    ```
+   ```
+   https://api.telegram.org/bot<your token>/setwebhook?url=https://example.com/secret_path
+   ```
 
-    即可开始使用 bot 进行订阅，注意替换 token 以及 url
+   即可开始使用 bot 进行订阅，注意替换 token 以及 url
 
 3. 连续更新 15 次失败后将会收到错误通知，并将暂时关闭此订阅源更新，如确认订阅源无误，可自行在网页中开启更新。如无法确保订阅源的高可用性，也可在配置中调高此数值。
 
@@ -92,7 +92,7 @@ telegram 有不少开源的机器人，使用公益公开的机器人，隐私�
 
 本项目不依赖于本地环境，但需要在本地进行打包和上传，推荐使用 mac os 系统或者 linux 系统进行以下操作。
 
--   前期准备
+- 前期准备
 
 1. 在[官网](https://workers.cloudflare.com)注册 cloudflare 账号，验证邮箱后找到 workers 界面，选择一个子域如 inkrss.workers.dev 即可。
 2. 畅通无阻的网络。
@@ -131,10 +131,10 @@ telegram 有不少开源的机器人，使用公益公开的机器人，隐私�
 
     ![login](https://user-images.githubusercontent.com/44235276/126451261-50b79eda-90f3-462e-8af4-2feaa0fe8ee6.png)
 
--   开始部署
+- 开始部署
 
 1.  克隆本项目并解压，复制 wrangler.example.toml 内容建立新配置文件 wrangler.toml
-    
+
     在文件夹目录打开命令行（windows 用户可直接在资源管理器输入 cmd 并回车）
 
     ```
@@ -151,12 +151,12 @@ telegram 有不少开源的机器人，使用公益公开的机器人，隐私�
 
     选择你的通知方式，出于覆盖性考虑目前支持以下方式，将支持 Slack，Discord，钉钉等其他通知方式。
 
-    -   telegram（包括即时预览和机器人订阅，功能丰富，受限于网络）
-    -   bark（部署最便捷，受限于平台）
-    -   wechat（部署较麻烦，仅支持纯文本，适用性广）
+    - telegram（包括即时预览和机器人订阅，功能丰富，受限于网络）
+    - bark（部署最便捷，受限于平台）
+    - wechat（部署较麻烦，仅支持纯文本，适用性广）
 
     定义 wrangler.toml 中环境变量 `[vars]`，其中必须定义的有：
-    
+
     - `NOTIFIER` 为想要的通知方式
     - `SECRET_PATH` 为 UI 页面路径
     - `PARSE_URL` 为 Feed Parser
@@ -171,47 +171,49 @@ telegram 有不少开源的机器人，使用公益公开的机器人，隐私�
 
     ![publish](https://user-images.githubusercontent.com/44235276/126451441-6af7df11-ae99-4bae-bad5-e1db46de1ef8.png)
 
-    wrangler 会自动安装相应的依赖，进行打包和上传，并返回一个部署好的 url,之后就可以立即在https://ink-rss.xxx.workers.dev/secret_path 访问到前端进行订阅.但由于cloudflare的一些延迟，定时计划可能在半小时后才会开始运行
+    wrangler 会自动安装相应的依赖，进行打包和上传，并返回一个部署好的 url,之后就可以立即在https://ink-rss.xxx.workers.dev/secret_path 访问到前端进行订阅.但由于 cloudflare 的一些延迟，定时计划可能在半小时后才会开始运行
 
-4. 多环境（Workers）
+4.  多环境（Workers）
 
-   可以在 wrangler.toml 中定义多个环境，并通过命令行发布，如若去掉 wrangler.example.toml 中的注释，并如下配置：
-   ```
-   # Environments / Multiple Workers
-   [env.production]
-   name = "inkrss-prod"
+    可以在 wrangler.toml 中定义多个环境，并通过命令行发布，如若去掉 wrangler.example.toml 中的注释，并如下配置：
 
-   kv_namespaces = [
-      { binding = "KV", id = "" }
-   ]
+    ```
+    # Environments / Multiple Workers
+    [env.production]
+    name = "inkrss-prod"
 
-   [env.production.vars]
-   NOTIFIER = "telegram" # bark, telegram or wechat
+    kv_namespaces = [
+       { binding = "KV", id = "" }
+    ]
 
-   PARSE_URL = "https://inkrssparse.vercel.app"
-   SECRET_PATH = "subscriptions"
+    [env.production.vars]
+    NOTIFIER = "telegram" # bark, telegram or wechat
 
-   # Telegram notification
-   TELEGRAPH_TOKEN = ""
-   TG_TOKEN = ""
+    PARSE_URL = "https://inkrssparse.vercel.app"
+    SECRET_PATH = "subscriptions"
 
-   TG_SENDID = "@channel_name"
-   TG_USERID = 12345678
-   ```
+    # Telegram notification
+    TELEGRAPH_TOKEN = ""
+    TG_TOKEN = ""
 
-   即可使用以下命令行来部署新的 Worker
-   ```
-   $ wrangler publish -e production
-   ```
-   
-   具体 wrangler.toml 多环境配置请参考：
-   - https://developers.cloudflare.com/workers/platform/environments
-   - https://developers.cloudflare.com/workers/cli-wrangler/configuration
+    TG_SENDID = "@channel_name"
+    TG_USERID = 12345678
+    ```
 
+    即可使用以下命令行来部署新的 Worker
+
+    ```
+    $ wrangler publish -e production
+    ```
+
+    具体 wrangler.toml 多环境配置请参考：
+
+    - https://developers.cloudflare.com/workers/platform/environments
+    - https://developers.cloudflare.com/workers/cli-wrangler/configuration
 
 ## 额外附赠
 
--   [IOS 桌面小插件](https://github.com/pureink/scripts/tree/master/scriptable/inkrss)
+- [IOS 桌面小插件](https://github.com/pureink/scripts/tree/master/scriptable/inkrss)
 
 
     <p align="center">
@@ -219,18 +221,17 @@ telegram 有不少开源的机器人，使用公益公开的机器人，隐私�
 
       默认部署后的 url 很长，使用此小部件可以一键跳转，并展示基本信息。
 
+- 功能丰富的 telegram bot（还没有做完）
 
-- 功能丰富的telegram bot（还没有做完）
+  cloudflare workers 开发机器人只能使用过时的框架并且开发体验较差。目前仅支持四个命令/list /sub /unsub /unsuball
 
-    cloudflare workers开发机器人只能使用过时的框架并且开发体验较差。目前仅支持四个命令/list /sub /unsub /unsuball
-
-    具有完整功能以及行内键盘支持的机器人将部署在其他无服务器平台
+  具有完整功能以及行内键盘支持的机器人将部署在其他无服务器平台
 
 ## 使用建议
 
--   由于对 cpu 时间的限制，cloudflare worker 会分批进行监测，如果订阅数过多，或者希望多渠道接收消息，只需要在 wrangler.toml 中修改名称重新部署即可部署多个 worker。
--   频繁的通知提醒会打扰到正常的生活，建议适量订阅。
--   建议和阅读器结合使用。
+- 由于对 cpu 时间的限制，cloudflare worker 会分批进行监测，如果订阅数过多，或者希望多渠道接收消息，只需要在 wrangler.toml 中修改名称重新部署即可部署多个 worker。
+- 频繁的通知提醒会打扰到正常的生活，建议适量订阅。
+- 建议和阅读器结合使用。
 
 ## 调查
 
