@@ -401,7 +401,7 @@ router.get(`/${secret_path}/jumpread`, async req => {
     return new Response(
       JSON.stringify({
         status: 400,
-        message: "Please verify your input!"
+        message: "id not found. Did you subscribe this thread?"
       }),
       {
         headers: {
@@ -413,7 +413,21 @@ router.get(`/${secret_path}/jumpread`, async req => {
     );
   }
   sub[index].unread = 0;
+  if (sub[index].LastRead === undefined) {
+    const res = await fetch(
+      `https://api.nmb.best/Api/thread?id=${id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          cookie: `userhash=${config.COOKIES}`
+        }
+      }
+    );
+    sub[index].LastRead = (await res.json()).ReplyCount;
+  }
   let lastreadto = sub[index].LastRead;
+  console.log(lastreadto);
   const res = await fetch(
     `https://api.nmb.best/Api/thread?id=${id}`,
     {
@@ -428,9 +442,9 @@ router.get(`/${secret_path}/jumpread`, async req => {
   await KV.put("sub", JSON.stringify(sub));
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
-    return Response.redirect(`https://www.nmbxd1.com/m/t/${id}?page=${Math.floor(lastreadto-1/9)+1}`, 302);
+    return Response.redirect(`https://www.nmbxd1.com/m/t/${id}?page=${Math.floor((lastreadto-1/9))+1}`, 307);
   }
-  return Response.redirect(`https://www.nmbxd1.com/t/${id}?page=${Math.floor(lastreadto-1/19)+1}`, 302);
+  return Response.redirect(`https://www.nmbxd1.com/t/${id}?page=${Math.floor((lastreadto-1/19))+1}`, 307);
 });
 router.get(`/${secret_path}/jumplast`, async req => {
   const id = req.url.split("?id=")[1];

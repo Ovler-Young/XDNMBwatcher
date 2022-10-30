@@ -41,12 +41,6 @@ export async function reply(feed, item) {
     }|${feed.LastRead
       ? `<a href="${`https://www.nmbxd1.com/t/${item.id}?page=${Math.floor((feed.LastRead - 1) / 19 + 1)}`}">Read</a>`
       : `<a href="${`https://www.nmbxd1.com/t/${item.id}?page=1`}">read</a>`
-    }|${feed.ReplyCountAll
-      ? `<a href="${`https://www.nmbxd1.com/m/t/${item.id}?page=${Math.floor((feed.ReplyCountAll - 1) / 9 + 1)}`}">M_Latest</a>`
-      : `<a href="${`https://www.nmbxd1.com/m/t/${item.id}?page=1`}">m_latest</a>`
-    }|${feed.LastRead
-      ? `<a href="${`https://www.nmbxd1.com/m/t/${item.id}?page=${Math.floor((feed.LastRead - 1) / 9 + 1)}`}">M_read</a>`
-      : `<a href="${`https://www.nmbxd1.com/m/t/${item.id}?page=1`}">m_read</a>`
     }\n${content_safe}`,
     { parse_mode: "HTML" }
   );
