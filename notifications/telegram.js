@@ -19,13 +19,12 @@ export async function reply(feed, item) {
   }
   await telegram.sendMessage(
     item.sendto,
-    `<b>${html(feed.title)}</b>\n#${html(feed.po)} | #id${html(feed.id)}${
-      feed.unread ? `|Unread: ${feed.unread}` : ""
-    }|${
-      feed.lastUpdateTime ? `${feed.lastUpdateTime.substring(14, 21)}\n` : ""
-    }${feed.telegraph ? (item.content ? await telegraph(item) : "") : ""}${
-      item.link ? `|<a href="${item.link}">Po</a>` : ""
-    }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${item.id}`}">Latest</a>|<a href="${`https://rssandmore.gcy.workers.dev/1/jumpread?id=${item.id}`}">Read</a>\n${content_safe}`,
+    `<b>${html(feed.title)}</b>\n#${html(feed.po)} | #id${html(
+      feed.id
+    )}|<a href="${`https://rssandmore.gcy.workers.dev/1/jumpread?id=${item.id}`}">Unread: ${feed.unread
+    }</a>|${feed.lastUpdateTime ? `${feed.lastUpdateTime.substring(14, 21)}|` : ""
+    }${feed.telegraph ? (item.content ? await telegraph(item) : "") : ""}${item.link ? `|<a href="${item.link}">Po</a>` : ""
+    }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${item.id}`}">Latest</a>\n${content_safe}`,
     { parse_mode: "HTML" }
   );
 }
