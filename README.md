@@ -55,6 +55,8 @@ XDNMB watcher 是一个监视 XDNMB 论坛的工具，可以在论坛帖子有�
 
 - [ ] [Bog岛支持](https://bog.ac)
 
+- [ ] i18n
+
 ## 注意事项
 
 ### Work in progress, 本章节文档尚未更新
