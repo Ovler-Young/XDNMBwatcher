@@ -11,6 +11,20 @@ const router = Router();
 if (mode === "telegram") {
   setTgBot(router);
 }
+const refreshunread = async (index) => {
+  const res = await fetch(
+    `https://api.nmb.best/Api/thread?id=${id}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        cookie: `userhash=${config.COOKIES}`
+      }
+    }
+  );
+  sub[index].LastRead = (await res.json()).ReplyCount;
+  await KV.put("sub", JSON.stringify(sub));
+};
 
 const errorHandler = error =>
   new Response(error.message || "Server Error", {
@@ -38,13 +52,9 @@ router.get(`/${secret_path}/feeds`, async () => {
   const raw = await KV.get("sub");
   // sort feed by unread if is not undefined or 0, otherwise sort by lastUpdateTime, and then by id
   const sub = JSON.parse(raw).sort((a, b) => {
-    if (a.unread === b.unread) {
-      let aTime = parseInt(a.lastUpdateTime.substring(0, 4)+a.lastUpdateTime.substring(5, 7)+a.lastUpdateTime.substring(8, 10)+a.lastUpdateTime.substring(13, 15)+a.lastUpdateTime.substring(16, 18)+a.lastUpdateTime.substring(19, 21));
-      let bTime = parseInt(b.lastUpdateTime.substring(0, 4)+b.lastUpdateTime.substring(5, 7)+b.lastUpdateTime.substring(8, 10)+b.lastUpdateTime.substring(13, 15)+b.lastUpdateTime.substring(16, 18)+b.lastUpdateTime.substring(19, 21));
-      return aTime === bTime ? a.id - b.id : bTime - aTime
-    } else {
-      return b.unread - a.unread;
-    }
+    let aTime = parseInt(a.lastUpdateTime.substring(0, 4)+a.lastUpdateTime.substring(5, 7)+a.lastUpdateTime.substring(8, 10)+a.lastUpdateTime.substring(13, 15)+a.lastUpdateTime.substring(16, 18)+a.lastUpdateTime.substring(19, 21));
+    let bTime = parseInt(b.lastUpdateTime.substring(0, 4)+b.lastUpdateTime.substring(5, 7)+b.lastUpdateTime.substring(8, 10)+b.lastUpdateTime.substring(13, 15)+b.lastUpdateTime.substring(16, 18)+b.lastUpdateTime.substring(19, 21));
+    return aTime === bTime ? a.id - b.id : bTime - aTime
   });
   return new Response(JSON.stringify(sub), {
     status: 200,
