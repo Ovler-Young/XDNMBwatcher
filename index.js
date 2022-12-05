@@ -436,31 +436,57 @@ router.get(`/${secret_path}/jumpread`, async req => {
     );
     sub[index].LastRead = (await res.json()).ReplyCount;
   }
+    // 设置回调函数
   let lastreadto = sub[index].LastRead;
-  console.log(lastreadto);
-  const res = await fetch(
-    `https://api.nmb.best/Api/thread?id=${id}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        cookie: `userhash=${config.COOKIES}`
+  let callback = async () => {
+    const res = await fetch(
+      `https://api.nmb.best/Api/thread?id=${id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          cookie: `userhash=${config.COOKIES}`
+        }
       }
-    }
-  );
-  sub[index].LastRead = (await res.json()).ReplyCount;
-  await KV.put("sub", JSON.stringify(sub));
-  // if ua is mobile, jump to app
+    );
+    sub[index].LastRead = (await res.json()).ReplyCount;
+    await KV.put("sub", JSON.stringify(sub));
+  }
+  // 返回重定向响应，并设置回调函数
   if (req.headers.get("user-agent").includes("Mobile")) {
     let page = Math.floor((lastreadto - 1)/9) + 1;
     console.log(page);
     console.log("mobile");
-    return Response.redirect(`https://www.nmbxd1.com/m/t/${id}?page=${page}`, 307);
+    return new Response(null, {
+      status: 307,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, HEAD",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Location": `https://www.nmbxd1.com/m/t/${id}?page=${page}`
+      },
+      body: JSON.stringify({
+        status: 200,
+        message: "Redirecting to thread...",
+        callback
+      })
+    });
   }
   let page = Math.floor((lastreadto - 1)/19) + 1;
-  console.log(page);
-  console.log("pc");
-  return Response.redirect(`https://www.nmbxd1.com/t/${id}?page=${page}`, 307);
+  return new Response(null, {
+    status: 307,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, HEAD",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Location": `https://www.nmbxd1.com/t/${id}?page=${page}`
+    },
+    body: JSON.stringify({
+      status: 200,
+      message: "Redirecting to thread...",
+      callback
+    })
+  });
 });
 router.get(`/${secret_path}/jumplast`, async req => {
   const id = req.url.split("?id=")[1];
