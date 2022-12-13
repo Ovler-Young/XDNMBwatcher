@@ -132,7 +132,7 @@ export async function handleScheduled(event) {
               // if sub[i].writer is not an array, it will be converted to an array with only one element.
               // if sub[i].writer is undefined, it will be converted to an array with only one element, which is the writer of the po.
               if (sub[i].writer === undefined) {
-                sub[i].writer = [data.Replies[0].user_hash];
+                sub[i].writer = [data.user_hash];
               } else if (typeof sub[i].writer === "string") {
                 sub[i].writer = [sub[i].writer];
               }
