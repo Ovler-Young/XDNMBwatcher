@@ -14,7 +14,7 @@ export async function handleScheduled(event) {
         if (sub[i].xd === undefined) {sub[i].xd = true}
         if (sub[i].xd === true) {
           if (sub[i].po === undefined) {sub[i].po = true}
-          if (sub[i].po = true) {
+          if (sub[i].po === true) {
             const resp = await fetch(
               `https://api.nmb.best/Api/po?id=${sub[i].id}`,
               {
@@ -33,35 +33,11 @@ export async function handleScheduled(event) {
               continue;
             }
             const ReplyCount = text.ReplyCount;
-            if (ReplyCount != sub[i].ReplyCount) {
+            if (sub[i].ReplyCount === undefined) {sub[i].ReplyCount = ReplyCount}
+            // while ReplyCount is more than what we have sent, we need to fetch more to avoid missing any replies, so code above is commented out
+            if (ReplyCount > sub[i].ReplyCount) {
               // 页码数 为 ReplyCount 对 19 取模
-              const page = parseInt((ReplyCount - 1) / 19) + 1;
-              const res = await fetch(
-                `https://api.nmb.best/Api/po?id=${sub[i].id}&page=${page}`,
-                {
-                  method: "GET",
-                  headers: {
-                    "Content-Type": "application/json; charset=utf-8",
-                    cookie: `userhash=${config.COOKIES}`
-                  }
-                }
-              );
-              u += 1;
-              const data = await res.json();
-              let length = data.Replies.length;
-              // const reply_id = data.Replies[length - 1].id;
-              let reply_title = data.Replies[length - 1].title;
-              if (reply_title === "无标题" || reply_title === "") {
-                reply_title = data.Replies[length - 1].id;
-              }
-              sub[i].errorTimes = 0;
-              sub[i].lastUpdateTime = data.Replies[length - 1].now;
-              sub[i].ReplyCount = ReplyCount;
-              if (sub[i].unread === undefined) {
-                sub[i].unread = 1;
-              } else {
-                sub[i].unread += 1;
-              }
+              // Get the total reply count first
               const res_2 = await fetch(
                 `https://api.nmb.best/Api/thread?id=${sub[i].id}`,
                 {
@@ -73,24 +49,75 @@ export async function handleScheduled(event) {
                 }
               );
               u += 1;
-              // parseInt((ReplyCount - 1) / 19) + 1
               sub[i].ReplyCountAll = (await res_2.json()).ReplyCount;
               console.log(sub[i].ReplyCountAll);
-              const item = {
-                id: sub[i].id,
-                link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
-                title: reply_title,
-                content: data.Replies[length - 1].content.replace(/<[^>]+>/g, ""),
-                telegraph: sub[i].telegraph,
-                active: sub[i].active,
-                lastUpdateTime: sub[i].lastUpdateTime,
-                writer: data.Replies[length - 1].user_hash,
-                page: page,
-                sendto: sub[i].sendto || config.TG_SENDID,
-              };
-              await reply(sub[i], item);
-              u += sub[i].telegraph ? 3 : 1;
-              kvupdate = true;
+              // calculate the start page and end page and how many replies can be sent.
+              // the web request is limited to 30 per time, so we need to split the request into several times
+              const pagestart = parseInt((sub[i].ReplyCount - 1) / 19) + 1;
+              const pageend = parseInt((ReplyCount - 1) / 19) + 1;
+              // if telegraph is enabled, we need to send 3 requests for each reply, or 1 requests for each reply
+              // and, for each page, we need another 1 request to get the reply content
+              // so, we need to calculate how many requests can be sent in total
+              // the limit is checked in the for loop below and each time we send a request.
+              for (let page = pagestart; page <= pageend; page++) {
+                // first check if we can send more
+                if (u >= 29) {
+                  break;
+                }
+                const res = await fetch(
+                  `https://api.nmb.best/Api/po?id=${sub[i].id}&page=${page}`,
+                  {
+                    method: "GET",
+                    headers: {
+                      "Content-Type": "application/json; charset=utf-8",
+                      cookie: `userhash=${config.COOKIES}`
+                    }
+                  }
+                );
+                u += 1;
+                const data = await res.json();
+                if (page === pageend) {
+                  length = ReplyCount % 19;
+                } else {
+                  length = 19;
+                }
+                for (let j = 0; j < length; j++) {
+                  // first check if we can send more
+                  if (u >= 30 - (sub[i].telegraph ? 3 : 1)) {
+                    break;
+                  }
+                  let reply_title = data.Replies[j].title;
+                  if (reply_title === "无标题" || reply_title === "") {
+                    reply_title = data.Replies[j].id;
+                  }
+                  sub[i].errorTimes = 0;
+                  sub[i].lastUpdateTime = data.Replies[j].now;
+                  // sub[i].ReplyCount = ReplyCount;
+                  // we'll not update ReplyCount to the real value, but to the value we have sent
+                  // so that we can avoid missing any replies
+                  sub[i].ReplyCount = 19 * (page - 1) + j + 1;
+                  if (sub[i].unread === undefined) {
+                    sub[i].unread = 1;
+                  } else {
+                    sub[i].unread += 1;
+                  }
+                  const item = {
+                    id: sub[i].id,
+                    link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
+                    title: reply_title,
+                    content: data.Replies[j].content.replace(/<[^>]+>/g, ""),
+                    telegraph: sub[i].telegraph,
+                    active: sub[i].active,
+                    lastUpdateTime: sub[i].lastUpdateTime,
+                    writer: data.Replies[j].user_hash,
+                    page: page,
+                    sendto: sub[i].sendto || config.TG_SENDID,
+                  };
+                  await reply(sub[i], item);
+                  u += sub[i].telegraph ? 3 : 1;
+                  kvupdate = true;
+                }
+              }
             }
           } else {
             // for writers other than po
@@ -113,6 +140,9 @@ export async function handleScheduled(event) {
             }
             const ReplyCount = text.ReplyCount;
             if (ReplyCount != sub[i].ReplyCount) {
+              if (u >= 25) {
+                break;
+              }
               // 页码数 为 ReplyCount 对 19 取模，截取最后一页
               const page = parseInt((ReplyCount - 1) / 19) + 1;
               const res = await fetch(
