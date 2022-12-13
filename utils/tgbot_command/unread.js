@@ -16,7 +16,7 @@ export async function botUnread(ctx) {
     });
     for (let i = 0; i < sub.length; i++) {
       if (sub[i].unread === undefined) {
-        sub[i].unread = 0;
+        sub[i].unread = 1;
         kvchange = true;
       } else if (sub[i].unread > 0) {
         msg += `${i}.\t<a href="${sub[i].url}">${html(sub[i].title)}</a>\n #id${sub[i].id}<code>Upd:${sub[i].lastUpdateTime.toLocaleString().substr(5,13)}</code><code> Unread: </code>${sub[i].unread}\n`;

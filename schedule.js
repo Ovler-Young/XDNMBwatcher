@@ -58,7 +58,7 @@ export async function handleScheduled(event) {
               sub[i].lastUpdateTime = data.Replies[length - 1].now;
               sub[i].ReplyCount = ReplyCount;
               if (sub[i].unread === undefined) {
-                sub[i].unread = 0;
+                sub[i].unread = 1;
               } else {
                 sub[i].unread += 1;
               }
@@ -94,6 +94,87 @@ export async function handleScheduled(event) {
             }
           } else {
             // for writers other than po
+            const resp = await fetch(
+              `https://api.nmb.best/Api/thread?id=${sub[i].id}`,
+              {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json; charset=utf-8",
+                  cookie: `userhash=${config.COOKIES}`
+                }
+              }
+            );
+            u += 1;
+            const text = await resp.json();
+            if (text.success === false) {
+              sub[i].errorTimes += 1;
+              kvupdate = true;
+              continue;
+            }
+            const ReplyCount = text.ReplyCount;
+            if (ReplyCount != sub[i].ReplyCount) {
+              // 页码数 为 ReplyCount 对 19 取模，截取最后一页
+              const page = parseInt((ReplyCount - 1) / 19) + 1;
+              const res = await fetch(
+                `https://api.nmb.best/Api/thread?id=${sub[i].id}&page=${page}`,
+                {
+                  method: "GET",
+                  headers: {
+                    "Content-Type": "application/json; charset=utf-8",
+                    cookie: `userhash=${config.COOKIES}`
+                  }
+                }
+              );
+              u += 1;
+              const data = await res.json();
+              let length = data.Replies.length;
+              // find the last reply by specified writer(s). The writer(s) is/are specified in the sub[i].writer, which is an array, like ["user1","user2"].
+              // if sub[i].writer is not an array, it will be converted to an array with only one element.
+              // if sub[i].writer is undefined, it will be converted to an array with only one element, which is the writer of the po.
+              if (sub[i].writer === undefined) {
+                sub[i].writer = [data.Replies[0].user_hash];
+              } else if (typeof sub[i].writer === "string") {
+                sub[i].writer = [sub[i].writer];
+              }
+              let j = length - 1;
+              while (j >= 0) {
+                if (sub[i].writer.includes(data.Replies[j].user_hash)) {
+                  break;
+                }
+                j -= 1;
+              }
+              if (j < 0) {
+                continue;
+              }
+              let reply_title = data.Replies[j].title;
+              if (reply_title === "无标题" || reply_title === "") {
+                reply_title = data.Replies[j].id;
+              }
+              sub[i].errorTimes = 0;
+              sub[i].lastUpdateTime = data.Replies[j].now;
+              sub[i].ReplyCount = ReplyCount;
+              if (sub[i].unread === undefined) {
+                sub[i].unread = 1;
+              } else {
+                sub[i].unread += 1;
+              }
+              // no need to get ReplyCountAll again
+              const item = {
+                id: sub[i].id,
+                link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
+                title: reply_title,
+                content: data.Replies[j].content.replace(/<[^>]+>/g, ""),
+                telegraph: sub[i].telegraph,
+                active: sub[i].active,
+                lastUpdateTime: sub[i].lastUpdateTime,
+                writer: data.Replies[j].user_hash,
+                page: page,
+                sendto: sub[i].sendto || config.TG_SENDID,
+              };
+              await reply(sub[i], item);
+              u += sub[i].telegraph ? 3 : 1;
+              kvupdate = true;
+            }
           }
         } else {
           // for XD
