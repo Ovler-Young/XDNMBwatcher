@@ -19,12 +19,12 @@ export async function reply(feed, item) {
   }
   await telegram.sendMessage(
     item.sendto,
-    `<b>${html(feed.title)}</b>\n#${html(feed.po)} | #id${html(
+    `<b>${html(feed.title)}</b>\n#${html(item.writer)} | #id${html(
       feed.id
     )}|${feed.telegraph ? (item.content ? await telegraph(item) : "") : ""}|${item.link ? `<a href="${item.link}">Po</a>` : ""
-    }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumpread?id=${item.id}`}">Unread: ${feed.unread
+    }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumpread?id=${feed.id}`}">Unread: ${feed.unread
     }</a>${feed.lastUpdateTime ? `|${feed.lastUpdateTime.substring(14, 21)}` : ""
-    }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${item.id}`}">Latest</a>\n${content_safe}`,
+    }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${feed.id}`}">Latest</a>|${item.id}\n${content_safe}`,
     { parse_mode: "HTML" }
   );
 }

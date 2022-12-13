@@ -11,6 +11,7 @@ export async function handleScheduled(event) {
   for (let i = 0; i < sub.length; i++) {
     if (sub[i].active === true) {
       try {
+        if (sub[i].sendto === undefined) {sub[i].sendto = config.TG_CHATID}
         if (sub[i].xd === undefined) {sub[i].xd = true}
         if (sub[i].xd === true) {
           if (sub[i].po === undefined) {sub[i].po = true}
@@ -76,15 +77,18 @@ export async function handleScheduled(event) {
                 );
                 u += 1;
                 const data = await res.json();
+                let length = 19
                 if (page === pageend) {
                   length = ReplyCount % 19;
-                } else {
-                  length = 19;
                 }
                 for (let j = 0; j < length; j++) {
                   // first check if we can send more
                   if (u >= 30 - (sub[i].telegraph ? 3 : 1)) {
                     break;
+                  }
+                  // next check if this is an ad
+                  if (data.Replies[j].user_hash === "Tips") {
+                    continue;
                   }
                   let reply_title = data.Replies[j].title;
                   if (reply_title === "无标题" || reply_title === "") {
@@ -102,7 +106,7 @@ export async function handleScheduled(event) {
                     sub[i].unread += 1;
                   }
                   const item = {
-                    id: sub[i].id,
+                    id: data.Replies[j].id,
                     link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
                     title: reply_title,
                     content: data.Replies[j].content.replace(/<[^>]+>/g, ""),
@@ -251,6 +255,8 @@ export async function handleScheduled(event) {
         await fetch (`https://rssandmore.gcy.workers.dev/test`);
         await KV.put("sub", JSON.stringify(sub));
         console.log("kv update");
+        console.log("u over 24");
+        console.log(sub);
       }
       break;
     }
