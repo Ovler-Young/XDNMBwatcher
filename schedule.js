@@ -62,7 +62,7 @@ export async function handleScheduled(event) {
               // the limit is checked in the for loop below and each time we send a request.
               for (let page = pagestart; page <= pageend; page++) {
                 // first check if we can send more
-                if (u >= 29) {
+                if (u >= 25) {
                   break;
                 }
                 const res = await fetch(
@@ -83,43 +83,46 @@ export async function handleScheduled(event) {
                 }
                 for (let j = 0; j < length; j++) {
                   // first check if we can send more
-                  if (u >= 30 - (sub[i].telegraph ? 3 : 1)) {
+                  if (u >= 25) {
                     break;
                   }
                   // next check if this is an ad
                   if (data.Replies[j].user_hash === "Tips") {
                     continue;
                   }
-                  let reply_title = data.Replies[j].title;
-                  if (reply_title === "无标题" || reply_title === "") {
-                    reply_title = data.Replies[j].id;
+                  // next, check if this reply is already sent
+                  if (sub[i].ReplyCount > 19 * (page - 1) + j + 1) {
+                    let reply_title = data.Replies[j].title;
+                    if (reply_title === "无标题" || reply_title === "") {
+                      reply_title = data.Replies[j].id;
+                    }
+                    sub[i].errorTimes = 0;
+                    sub[i].lastUpdateTime = data.Replies[j].now;
+                    // sub[i].ReplyCount = ReplyCount;
+                    // we'll not update ReplyCount to the real value, but to the value we have sent
+                    // so that we can avoid missing any replies
+                    sub[i].ReplyCount = 19 * (page - 1) + j + 1;
+                    if (sub[i].unread === undefined) {
+                      sub[i].unread = 1;
+                    } else {
+                      sub[i].unread += 1;
+                    }
+                    const item = {
+                      id: data.Replies[j].id,
+                      link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
+                      title: reply_title,
+                      content: data.Replies[j].content.replace(/<[^>]+>/g, ""),
+                      telegraph: sub[i].telegraph,
+                      active: sub[i].active,
+                      lastUpdateTime: sub[i].lastUpdateTime,
+                      writer: data.Replies[j].user_hash,
+                      page: page,
+                      sendto: sub[i].sendto || config.TG_SENDID,
+                    };
+                    await reply(sub[i], item);
+                    u += sub[i].telegraph ? 3 : 1;
+                    kvupdate = true;
                   }
-                  sub[i].errorTimes = 0;
-                  sub[i].lastUpdateTime = data.Replies[j].now;
-                  // sub[i].ReplyCount = ReplyCount;
-                  // we'll not update ReplyCount to the real value, but to the value we have sent
-                  // so that we can avoid missing any replies
-                  sub[i].ReplyCount = 19 * (page - 1) + j + 1;
-                  if (sub[i].unread === undefined) {
-                    sub[i].unread = 1;
-                  } else {
-                    sub[i].unread += 1;
-                  }
-                  const item = {
-                    id: data.Replies[j].id,
-                    link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
-                    title: reply_title,
-                    content: data.Replies[j].content.replace(/<[^>]+>/g, ""),
-                    telegraph: sub[i].telegraph,
-                    active: sub[i].active,
-                    lastUpdateTime: sub[i].lastUpdateTime,
-                    writer: data.Replies[j].user_hash,
-                    page: page,
-                    sendto: sub[i].sendto || config.TG_SENDID,
-                  };
-                  await reply(sub[i], item);
-                  u += sub[i].telegraph ? 3 : 1;
-                  kvupdate = true;
                 }
               }
             }
@@ -144,8 +147,9 @@ export async function handleScheduled(event) {
             }
             const ReplyCount = text.ReplyCount;
             if (ReplyCount != sub[i].ReplyCount) {
-              if (u >= 25) {
-                break;
+              if (u >= 26) {
+                console.log("Sent 26 requests, break.")
+                break; // will goto next sub
               }
               // 页码数 为 ReplyCount 对 19 取模，截取最后一页
               const page = parseInt((ReplyCount - 1) / 19) + 1;
