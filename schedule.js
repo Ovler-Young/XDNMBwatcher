@@ -4,7 +4,18 @@ export async function handleScheduled(event) {
   const subraw = await KV.get("sub");
   let sub = JSON.parse(subraw);
   //kv has write limit (1000)
-  sub.sort(() => Math.random() - 0.5); //random sort
+  // sub.sort(() => Math.random() - 0.5); //random sort
+  // No Random sort. If last try didn't finish, we should try to finish it first.
+  // first, if there unfinished is true, we should try to finish it first
+  // otherwise we will randomly sort the sub list
+  if (sub.length > 0) {
+    if (sub[sub.length - 1].unfinished === true) {
+      // move the unfinished to the front
+      sub.push(sub.pop());
+    } else {
+      sub.sort(() => Math.random() - 0.5); //random sort
+    }
+  }
   let k = 0;
   let kvupdate = false;
   let u = 0;
@@ -14,8 +25,8 @@ export async function handleScheduled(event) {
         if (sub[i].sendto === undefined) {sub[i].sendto = config.TG_CHATID}
         if (sub[i].xd === undefined) {sub[i].xd = true}
         if (sub[i].xd === true) {
-          if (sub[i].po === undefined) {sub[i].po = true}
-          if (sub[i].po === true) {
+          if (sub[i].issingle === undefined) {sub[i].issingle = true}
+          if (sub[i].issingle === true) {
             const resp = await fetch(
               `https://api.nmb.best/Api/po?id=${sub[i].id}`,
               {
@@ -34,6 +45,9 @@ export async function handleScheduled(event) {
               continue;
             }
             const ReplyCount = text.ReplyCount;
+            console.log("ReplyCount");
+            console.log(ReplyCount);
+            if (sub[i].po = true || sub[i].po === undefined || sub[i].po === false) { sub[i].po = text.user_hash }
             if (sub[i].ReplyCount === undefined) {sub[i].ReplyCount = ReplyCount}
             // while ReplyCount is more than what we have sent, we need to fetch more to avoid missing any replies, so code above is commented out
             if (ReplyCount > sub[i].ReplyCount) {
@@ -51,6 +65,7 @@ export async function handleScheduled(event) {
               );
               u += 1;
               sub[i].ReplyCountAll = (await res_2.json()).ReplyCount;
+              console.log("ReplyCountAll");
               console.log(sub[i].ReplyCountAll);
               // calculate the start page and end page and how many replies can be sent.
               // the web request is limited to 30 per time, so we need to split the request into several times
@@ -84,6 +99,7 @@ export async function handleScheduled(event) {
                 for (let j = 0; j < length; j++) {
                   // first check if we can send more
                   if (u >= 25) {
+                    sub[i].unfinished = true;
                     break;
                   }
                   // next check if this is an ad
@@ -91,14 +107,17 @@ export async function handleScheduled(event) {
                     continue;
                   }
                   // next, check if this reply is already sent
-                  if (sub[i].ReplyCount > 19 * (page - 1) + j + 1) {
+                  console.log("ReplyCount now");
+                  console.log(19 * (page - 1) + j + 1);
+                  if (sub[i].ReplyCount < 19 * (page - 1) + j + 1) {
+                    console.log("ReplyCount now");
+                    console.log(19 * (page - 1) + j + 1);
                     let reply_title = data.Replies[j].title;
                     if (reply_title === "无标题" || reply_title === "") {
                       reply_title = data.Replies[j].id;
                     }
                     sub[i].errorTimes = 0;
                     sub[i].lastUpdateTime = data.Replies[j].now;
-                    // sub[i].ReplyCount = ReplyCount;
                     // we'll not update ReplyCount to the real value, but to the value we have sent
                     // so that we can avoid missing any replies
                     sub[i].ReplyCount = 19 * (page - 1) + j + 1;
@@ -122,6 +141,9 @@ export async function handleScheduled(event) {
                     await reply(sub[i], item);
                     u += sub[i].telegraph ? 3 : 1;
                     kvupdate = true;
+                  } else {
+                    console.log("NOT SEND");
+                    console.log(19 * (page - 1) + j + 1);
                   }
                 }
               }
@@ -146,9 +168,25 @@ export async function handleScheduled(event) {
               continue;
             }
             const ReplyCount = text.ReplyCount;
+            if (sub[i].po = true || sub[i].po === undefined || sub[i].po === false) {
+              if (sub[i].writer === undefined) {
+                sub[i].writer = [data.user_hash];
+                sub[i].po = data.user_hash;
+              } else if (typeof sub[i].writer === "string") {
+                sub[i].po = sub[i].writer;
+                sub[i].writer = [sub[i].writer];
+              } else if (typeof sub[i].writer === "object" && sub[i].writer.length > 0) {
+                // convert all writers to string
+                sub[i].po = sub[i].writer.map((item) => item.toString());
+              } else {
+                sub[i].po = data.user_hash;
+                sub[i].writer = [data.user_hash];
+              }
+            }
             if (ReplyCount != sub[i].ReplyCount) {
               if (u >= 26) {
                 console.log("Sent 26 requests, break.")
+                sub[i].unfinished = true;
                 break; // will goto next sub
               }
               // 页码数 为 ReplyCount 对 19 取模，截取最后一页
@@ -166,14 +204,6 @@ export async function handleScheduled(event) {
               u += 1;
               const data = await res.json();
               let length = data.Replies.length;
-              // find the last reply by specified writer(s). The writer(s) is/are specified in the sub[i].writer, which is an array, like ["user1","user2"].
-              // if sub[i].writer is not an array, it will be converted to an array with only one element.
-              // if sub[i].writer is undefined, it will be converted to an array with only one element, which is the writer of the po.
-              if (sub[i].writer === undefined) {
-                sub[i].writer = [data.user_hash];
-              } else if (typeof sub[i].writer === "string") {
-                sub[i].writer = [sub[i].writer];
-              }
               let j = length - 1;
               while (j >= 0) {
                 if (sub[i].writer.includes(data.Replies[j].user_hash)) {
@@ -256,7 +286,6 @@ export async function handleScheduled(event) {
             return b.unread - a.unread;
           }
         });
-        await fetch (`https://rssandmore.gcy.workers.dev/test`);
         await KV.put("sub", JSON.stringify(sub));
         console.log("kv update");
         console.log("u over 24");

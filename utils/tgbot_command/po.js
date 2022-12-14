@@ -31,7 +31,7 @@ export async function botPO(ctx) {
       if (po === undefined || po === id) {
         await ctx.reply("获取错误", { reply_to_message_id: ctx.update.message.message_id });
       } else {
-        sub[find].po = false;
+        sub[find].issingle = false;
         if (sub[i].writer === undefined) {
             sub[i].writer = [data.user_hash];
         } else if (typeof sub[i].writer === "string") {
