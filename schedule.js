@@ -47,7 +47,7 @@ export async function handleScheduled(event) {
             const ReplyCount = text.ReplyCount;
             console.log("ReplyCount");
             console.log(ReplyCount);
-            if (sub[i].po = true || sub[i].po === undefined || sub[i].po === false) { sub[i].po = text.user_hash }
+            if (sub[i].po = true || sub[i].po === undefined || sub[i].po === false) { sub[i].po = text.user_hash ; kvupdate = true; }
             if (sub[i].ReplyCount === undefined) {sub[i].ReplyCount = ReplyCount}
             // while ReplyCount is more than what we have sent, we need to fetch more to avoid missing any replies, so code above is commented out
             if (ReplyCount > sub[i].ReplyCount) {
@@ -172,15 +172,19 @@ export async function handleScheduled(event) {
               if (sub[i].writer === undefined) {
                 sub[i].writer = [data.user_hash];
                 sub[i].po = data.user_hash;
+                kvupdate = true;
               } else if (typeof sub[i].writer === "string") {
                 sub[i].po = sub[i].writer;
                 sub[i].writer = [sub[i].writer];
+                kvupdate = true;
               } else if (typeof sub[i].writer === "object" && sub[i].writer.length > 0) {
                 // convert all writers to string
                 sub[i].po = sub[i].writer.map((item) => item.toString());
+                kvupdate = true;
               } else {
                 sub[i].po = data.user_hash;
                 sub[i].writer = [data.user_hash];
+                kvupdate = true;
               }
             }
             if (ReplyCount != sub[i].ReplyCount) {
