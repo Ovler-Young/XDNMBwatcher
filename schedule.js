@@ -47,7 +47,7 @@ export async function handleScheduled(event) {
             const ReplyCount = text.ReplyCount;
             console.log("ReplyCount");
             console.log(ReplyCount);
-            if (sub[i].po = true || sub[i].po === undefined || sub[i].po === false) { sub[i].po = text.user_hash ; kvupdate = true; }
+            if (sub[i].po === true || sub[i].po === undefined || sub[i].po === false) { sub[i].po = text.user_hash ; kvupdate = true; console.log("po"); console.log(sub[i].po); console.log(sub[i].id); }
             if (sub[i].ReplyCount === undefined) {sub[i].ReplyCount = ReplyCount}
             // while ReplyCount is more than what we have sent, we need to fetch more to avoid missing any replies, so code above is commented out
             if (ReplyCount > sub[i].ReplyCount) {
@@ -71,13 +71,14 @@ export async function handleScheduled(event) {
               // the web request is limited to 30 per time, so we need to split the request into several times
               const pagestart = parseInt((sub[i].ReplyCount - 1) / 19) + 1;
               const pageend = parseInt((ReplyCount - 1) / 19) + 1;
+              let content_all = "";
               // if telegraph is enabled, we need to send 3 requests for each reply, or 1 requests for each reply
               // and, for each page, we need another 1 request to get the reply content
               // so, we need to calculate how many requests can be sent in total
               // the limit is checked in the for loop below and each time we send a request.
               for (let page = pagestart; page <= pageend; page++) {
                 // first check if we can send more
-                if (u >= 25) {
+                if (u >= 26) {
                   break;
                 }
                 const res = await fetch(
@@ -97,11 +98,6 @@ export async function handleScheduled(event) {
                   length = ReplyCount % 19;
                 }
                 for (let j = 0; j < length; j++) {
-                  // first check if we can send more
-                  if (u >= 25) {
-                    sub[i].unfinished = true;
-                    break;
-                  }
                   // next check if this is an ad
                   if (data.Replies[j].user_hash === "Tips") {
                     continue;
@@ -126,27 +122,35 @@ export async function handleScheduled(event) {
                     } else {
                       sub[i].unread += 1;
                     }
-                    const item = {
-                      id: data.Replies[j].id,
-                      link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
-                      title: reply_title,
-                      content: data.Replies[j].content.replace(/<[^>]+>/g, ""),
-                      telegraph: sub[i].telegraph,
-                      active: sub[i].active,
-                      lastUpdateTime: sub[i].lastUpdateTime,
-                      writer: data.Replies[j].user_hash,
-                      page: page,
-                      sendto: sub[i].sendto || config.TG_SENDID,
-                    };
-                    await reply(sub[i], item);
-                    u += sub[i].telegraph ? 3 : 1;
-                    kvupdate = true;
+                    content_all += `<a href="https://nmb.best/p/${data.Replies[j].id}">${reply_title}</a>\n`;
+                    content_all += data.Replies[j].content.replace(/<[^>]+>/g, "");
                   } else {
                     console.log("NOT SEND");
                     console.log(19 * (page - 1) + j + 1);
                   }
+                  // check if we can send more
+                  if (u >= 27) {
+                    sub[i].unfinished = true;
+                    kvupdate = true;
+                    break;
+                  }
                 }
               }
+              item = {
+                id: sub[i].id,
+                link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
+                title: reply_title,
+                content: content_all,
+                telegraph: sub[i].telegraph,
+                active: sub[i].active,
+                lastUpdateTime: sub[i].lastUpdateTime,
+                writer: data.Replies[j].user_hash,
+                page: page,
+                sendto: sub[i].sendto || config.TG_SENDID,
+              };
+              await reply(sub[i], item);
+              u += sub[i].telegraph ? 3 : 1;
+              kvupdate = true;
             }
           } else {
             // for writers other than po
@@ -179,12 +183,11 @@ export async function handleScheduled(event) {
                 kvupdate = true;
               } else if (typeof sub[i].writer === "object" && sub[i].writer.length > 0) {
                 // convert all writers to string
-                sub[i].po = sub[i].writer.map((item) => item.toString());
-                kvupdate = true;
-              } else {
-                sub[i].po = data.user_hash;
-                sub[i].writer = [data.user_hash];
-                kvupdate = true;
+                poinstr = sub[i].writer.map((item) => item.toString());
+                if (poinstr !== sub[i].po) {
+                  sub[i].po = poinstr;
+                  kvupdate = true;
+                }
               }
             }
             if (ReplyCount != sub[i].ReplyCount) {
@@ -231,6 +234,7 @@ export async function handleScheduled(event) {
                 sub[i].unread += 1;
               }
               // no need to get ReplyCountAll again
+              // not send to telegram every time, but combine them              
               const item = {
                 id: sub[i].id,
                 link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
