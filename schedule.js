@@ -121,6 +121,9 @@ export async function handleScheduled(event) {
                       sub[i].unread += 1;
                     }
                     content_all += `<br/><a href="https://www.nmbxd1.com/t/${sub[i].id}?r=${data.Replies[j].id}">${reply_title}</a>\n`;
+                    if (data.Replies[j].ext !== "") {
+                      content_all += `<img src="https://image.nmb.best/image/${data.Replies[j].img}${data.Replies[j].ext}">`;
+                    }
                     content_all += data.Replies[j].content.replace(/<[^>]+>/g, "");
                   } else {
                   }
@@ -290,8 +293,9 @@ export async function handleScheduled(event) {
                   if (sub[i].writer.includes(data.Replies[j].user_hash)) {
                     let reply_title = data.Replies[j].title;
                     if (reply_title === "无标题" || reply_title === "") {
-                      reply_title = data.Replies[j].id;
+                      let reply_title = data.Replies[j].id;
                     }
+                    console.log(`reply_title: ${reply_title}`);
                     sub[i].errorTimes = 0;
                     sub[i].lastUpdateTime = data.Replies[j].now;
                     sub[i].ReplyCount = ReplyCount;
@@ -300,9 +304,15 @@ export async function handleScheduled(event) {
                     } else {
                       sub[i].unread += 1;
                     }
+                    // 图片
+                    // 图片地址为 https://image.nmb.best/ + data.Replies[j].img + data.Replies[j].ext
+                    // 如果 data.Replies[j].ext 为空，则没有图片
                     // no need to get ReplyCountAll again
                     // not send to telegram every time, but combine them
                     content_all += `<br/><a herf="https://www.nmbxd1.com/t/${sub[i].id}/page/${page}.html">${reply_title ? reply_title : data.Replies[j].id}</a><br/>`;
+                    if (data.Replies[j].ext !== "") {
+                      content_all += `<img src="https://image.nmb.best/image/${data.Replies[j].img}${data.Replies[j].ext}">`;
+                    }
                     content_all += data.Replies[j].content.replace(/<[^>]+>/g, "");
                   }
                 }
@@ -310,12 +320,12 @@ export async function handleScheduled(event) {
                   const item = {
                     id: sub[i].id,
                     link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
-                    title: reply_title,
-                    content: data.Replies[j].content.replace(/<[^>]+>/g, ""),
+                    title: `${sub[i].title} - ${sub[i].ReplyCount - sub[i].ReplyCountAll + 1}条新回复`,
+                    content: content_all,
                     telegraph: sub[i].telegraph,
                     active: sub[i].active,
                     lastUpdateTime: sub[i].lastUpdateTime,
-                    writer: data.Replies[j].user_hash,
+                    writer: sub[i].po,
                     page: page,
                     sendto: sub[i].sendto || config.TG_SENDID,
                   };
