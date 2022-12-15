@@ -20,7 +20,7 @@ export async function handleScheduled(event) {
   let kvupdate = false;
   let u = 0;
   for (let i = 0; i < sub.length; i++) {
-    if (sub[i].active === true) {
+    if (sub[i].active === true && sub[i].errorTimes < config.maxErrorCount) {
       try {
         if (sub[i].sendto === undefined) {sub[i].sendto = config.TG_CHATID}
         if (sub[i].xd === undefined) {sub[i].xd = true}
@@ -42,11 +42,10 @@ export async function handleScheduled(event) {
             if (text.success === false) {
               sub[i].errorTimes += 1;
               kvupdate = true;
+              console.log(`sub ${sub[i].id} errorTimes: ${sub[i].errorTimes} network error`);
               continue;
             }
             const ReplyCount = text.ReplyCount;
-            console.log("ReplyCount");
-            console.log(ReplyCount);
             if (sub[i].po === true || sub[i].po === undefined || sub[i].po === false) { sub[i].po = text.user_hash ; kvupdate = true; console.log("po"); console.log(sub[i].po); console.log(sub[i].id); }
             if (sub[i].ReplyCount === undefined) {sub[i].ReplyCount = ReplyCount}
             // while ReplyCount is more than what we have sent, we need to fetch more to avoid missing any replies, so code above is commented out
@@ -65,22 +64,24 @@ export async function handleScheduled(event) {
               );
               u += 1;
               sub[i].ReplyCountAll = (await res_2.json()).ReplyCount;
-              console.log("ReplyCountAll");
-              console.log(sub[i].ReplyCountAll);
+              console.log(`ReplyCountAll: ${sub[i].ReplyCountAll}`);
+              console.log(`Replycount in sub: ${sub[i].ReplyCount}`);
+              console.log(`Replycount in api: ${ReplyCount}`);
               // calculate the start page and end page and how many replies can be sent.
               // the web request is limited to 30 per time, so we need to split the request into several times
               const pagestart = parseInt((sub[i].ReplyCount - 1) / 19) + 1;
               const pageend = parseInt((ReplyCount - 1) / 19) + 1;
-              let content_all = "";
               // if telegraph is enabled, we need to send 3 requests for each reply, or 1 requests for each reply
               // and, for each page, we need another 1 request to get the reply content
               // so, we need to calculate how many requests can be sent in total
               // the limit is checked in the for loop below and each time we send a request.
               for (let page = pagestart; page <= pageend; page++) {
                 // first check if we can send more
+                console.log(`page: ${page}`);
                 if (u >= 26) {
                   break;
                 }
+                let content_all = "";
                 const res = await fetch(
                   `https://api.nmb.best/Api/po?id=${sub[i].id}&page=${page}`,
                   {
@@ -93,64 +94,63 @@ export async function handleScheduled(event) {
                 );
                 u += 1;
                 const data = await res.json();
-                let length = 19
-                if (page === pageend) {
-                  length = ReplyCount % 19;
-                }
+                console.log(`get page ${page} of ${sub[i].id}`);
+                let length = data.Replies.length;
+                console.log(`there are ${length} replies in this page`);
                 for (let j = 0; j < length; j++) {
                   // next check if this is an ad
                   if (data.Replies[j].user_hash === "Tips") {
                     continue;
                   }
                   // next, check if this reply is already sent
-                  console.log("ReplyCount now");
-                  console.log(19 * (page - 1) + j + 1);
                   if (sub[i].ReplyCount < 19 * (page - 1) + j + 1) {
-                    console.log("ReplyCount now");
-                    console.log(19 * (page - 1) + j + 1);
+                    console.log(`Reply now is ${19 * (page - 1) + j + 1}`);
+                    console.log(`It is not sent yet`);
                     let reply_title = data.Replies[j].title;
                     if (reply_title === "无标题" || reply_title === "") {
                       reply_title = data.Replies[j].id;
                     }
+                    console.log(reply_title);
                     sub[i].errorTimes = 0;
                     sub[i].lastUpdateTime = data.Replies[j].now;
-                    // we'll not update ReplyCount to the real value, but to the value we have sent
-                    // so that we can avoid missing any replies
-                    sub[i].ReplyCount = 19 * (page - 1) + j + 1;
+                    sub[i].ReplyCountNow = 19 * (page - 1) + j + 1;
+                    console.log(`ReplyCountNow: ${sub[i].ReplyCountNow}`);
                     if (sub[i].unread === undefined) {
                       sub[i].unread = 1;
                     } else {
                       sub[i].unread += 1;
                     }
-                    content_all += `<a href="https://nmb.best/p/${data.Replies[j].id}">${reply_title}</a>\n`;
+                    content_all += `<br/><a href="https://www.nmbxd1.com/t/${sub[i].id}?r=${data.Replies[j].id}">${reply_title}</a>\n`;
                     content_all += data.Replies[j].content.replace(/<[^>]+>/g, "");
                   } else {
-                    console.log("NOT SEND");
-                    console.log(19 * (page - 1) + j + 1);
                   }
                   // check if we can send more
                   if (u >= 27) {
                     sub[i].unfinished = true;
                     kvupdate = true;
                     break;
-                  }
+                  } 
+                }
+                if (content_all !== "") {
+                  let item = {
+                    id: sub[i].id,
+                    link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
+                    title: `【${sub[i].title}】page${page}`,
+                    content: content_all,
+                    telegraph: sub[i].telegraph,
+                    active: sub[i].active,
+                    lastUpdateTime: sub[i].lastUpdateTime,
+                    writer: sub[i].po,
+                    page: page,
+                    sendto: sub[i].sendto || config.TG_SENDID,
+                  };
+                  sub[i].ReplyCount = sub[i].ReplyCountNow;
+                  await reply(sub[i], item);
+                  u += sub[i].telegraph ? 3 : 1;
+                  kvupdate = true;
+                  console.log(`kvupdate after sent ${sub[i].title} page ${page}`);
                 }
               }
-              item = {
-                id: sub[i].id,
-                link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
-                title: reply_title,
-                content: content_all,
-                telegraph: sub[i].telegraph,
-                active: sub[i].active,
-                lastUpdateTime: sub[i].lastUpdateTime,
-                writer: data.Replies[j].user_hash,
-                page: page,
-                sendto: sub[i].sendto || config.TG_SENDID,
-              };
-              await reply(sub[i], item);
-              u += sub[i].telegraph ? 3 : 1;
-              kvupdate = true;
             }
           } else {
             // for writers other than po
@@ -169,25 +169,33 @@ export async function handleScheduled(event) {
             if (text.success === false) {
               sub[i].errorTimes += 1;
               kvupdate = true;
+              console.log("error");
               continue;
             }
             const ReplyCount = text.ReplyCount;
-            if (sub[i].po = true || sub[i].po === undefined || sub[i].po === false) {
+            if (sub[i].po === true || sub[i].po === undefined || sub[i].po === false) {
               if (sub[i].writer === undefined) {
                 sub[i].writer = [data.user_hash];
                 sub[i].po = data.user_hash;
                 kvupdate = true;
+                console.log(`1po changed to ${sub[i].po}`);
               } else if (typeof sub[i].writer === "string") {
                 sub[i].po = sub[i].writer;
                 sub[i].writer = [sub[i].writer];
                 kvupdate = true;
-              } else if (typeof sub[i].writer === "object" && sub[i].writer.length > 0) {
+                console.log(`2po changed to ${sub[i].po}`);
+              } else if (typeof sub[i].po === "object" && sub[i].writer.length > 0) {
                 // convert all writers to string
-                poinstr = sub[i].writer.map((item) => item.toString());
+                let poinstr = sub[i].writer.map((item) => item.toString());
                 if (poinstr !== sub[i].po) {
                   sub[i].po = poinstr;
                   kvupdate = true;
+                  console.log(`3po changed to ${sub[i].po}`);
                 }
+              } else {
+                sub[i].po = sub[i].writer[0];
+                kvupdate = true;
+                console.log(`4po changed to ${sub[i].po}`);
               }
             }
             if (ReplyCount != sub[i].ReplyCount) {
@@ -250,6 +258,7 @@ export async function handleScheduled(event) {
               await reply(sub[i], item);
               u += sub[i].telegraph ? 3 : 1;
               kvupdate = true;
+              console.log("update at line 257");
             }
           }
         } else {
@@ -270,6 +279,12 @@ export async function handleScheduled(event) {
         }
       }
       k += 1;
+    } else if (sub[i].errorTimes >= config.maxErrorCount) {
+      console.log("error over max start notify");
+      sub[i].active = false;
+      await replyWhenError(sub[i],err);
+      await KV.put("sub", JSON.stringify(sub));
+      break;
     }
     if (k === sub.length) {
       if (kvupdate === true) {
