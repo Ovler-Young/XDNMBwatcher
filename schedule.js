@@ -173,6 +173,7 @@ export async function handleScheduled(event) {
               continue;
             }
             const ReplyCount = text.ReplyCount;
+            sub[i].ReplyCountAll = ReplyCount;
             if (sub[i].po === true || sub[i].po === undefined || sub[i].po === false) {
               if (sub[i].writer === undefined) {
                 sub[i].writer = [data.user_hash];
@@ -204,61 +205,126 @@ export async function handleScheduled(event) {
                 sub[i].unfinished = true;
                 break; // will goto next sub
               }
-              // 页码数 为 ReplyCount 对 19 取模，截取最后一页
-              const page = parseInt((ReplyCount - 1) / 19) + 1;
-              const res = await fetch(
-                `https://api.nmb.best/Api/thread?id=${sub[i].id}&page=${page}`,
-                {
-                  method: "GET",
-                  headers: {
-                    "Content-Type": "application/json; charset=utf-8",
-                    cookie: `userhash=${config.COOKIES}`
+              // // 页码数 为 ReplyCount 对 19 取模，截取最后一页
+              // const page = parseInt((ReplyCount - 1) / 19) + 1;
+              // const res = await fetch(
+              //   `https://api.nmb.best/Api/thread?id=${sub[i].id}&page=${page}`,
+              //   {
+              //     method: "GET",
+              //     headers: {
+              //       "Content-Type": "application/json; charset=utf-8",
+              //       cookie: `userhash=${config.COOKIES}`
+              //     }
+              //   }
+              // );
+              // u += 1;
+              // const data = await res.json();
+              // let length = data.Replies.length;
+              // let j = length - 1;
+              // while (j >= 0) {
+              //   if (sub[i].writer.includes(data.Replies[j].user_hash)) {
+              //     break;
+              //   }
+              //   j -= 1;
+              // }
+              // if (j < 0) {
+              //   continue;
+              // }
+              // let reply_title = data.Replies[j].title;
+              // if (reply_title === "无标题" || reply_title === "") {
+              //   reply_title = data.Replies[j].id;
+              // }
+              // sub[i].errorTimes = 0;
+              // sub[i].lastUpdateTime = data.Replies[j].now;
+              // sub[i].ReplyCount = ReplyCount;
+              // if (sub[i].unread === undefined) {
+              //   sub[i].unread = 1;
+              // } else {
+              //   sub[i].unread += 1;
+              // }
+              // // no need to get ReplyCountAll again
+              // // not send to telegram every time, but combine them              
+              // const item = {
+              //   id: sub[i].id,
+              //   link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
+              //   title: reply_title,
+              //   content: data.Replies[j].content.replace(/<[^>]+>/g, ""),
+              //   telegraph: sub[i].telegraph,
+              //   active: sub[i].active,
+              //   lastUpdateTime: sub[i].lastUpdateTime,
+              //   writer: data.Replies[j].user_hash,
+              //   page: page,
+              //   sendto: sub[i].sendto || config.TG_SENDID,
+              // };
+              // await reply(sub[i], item);
+              // u += sub[i].telegraph ? 3 : 1;
+              // kvupdate = true;
+              // console.log("update at line 257");
+              // The above code might have some replys not sent to telegram
+              // So we need to get all replys and send them to telegram
+              // We can reuse the code above
+              console.log(`Replycount in sub: ${sub[i].ReplyCount}`);
+              console.log(`Replycount in api: ${sub[i].ReplyCountAll}`);
+              const pagestart = parseInt((sub[i].ReplyCount - 1) / 19) + 1;
+              const pageend = parseInt((sub[i].ReplyCountAll - 1) / 19) + 1;
+              console.log(`pagestart: ${pagestart}`);
+              console.log(`pageend: ${pageend}`);
+              for (let page = pagestart; page <= pageend; page++) {
+                console.log(`page: ${page}`);
+                const res = await fetch(
+                  `https://api.nmb.best/Api/thread?id=${sub[i].id}&page=${page}`,
+                  {
+                    method: "GET",
+                    headers: {
+                      "Content-Type": "application/json; charset=utf-8",
+                      cookie: `userhash=${config.COOKIES}`
+                    }
+                  }
+                );
+                u += 1;
+                let content_all = "";
+                const data = await res.json();
+                let length = data.Replies.length;
+                console.log(`length: ${length}`);
+                for (let j = 0; j < length; j++) {
+                  if (sub[i].writer.includes(data.Replies[j].user_hash)) {
+                    let reply_title = data.Replies[j].title;
+                    if (reply_title === "无标题" || reply_title === "") {
+                      reply_title = data.Replies[j].id;
+                    }
+                    sub[i].errorTimes = 0;
+                    sub[i].lastUpdateTime = data.Replies[j].now;
+                    sub[i].ReplyCount = ReplyCount;
+                    if (sub[i].unread === undefined) {
+                      sub[i].unread = 1;
+                    } else {
+                      sub[i].unread += 1;
+                    }
+                    // no need to get ReplyCountAll again
+                    // not send to telegram every time, but combine them
+                    content_all += `<br/><a herf="https://www.nmbxd1.com/t/${sub[i].id}/page/${page}.html">${reply_title ? reply_title : data.Replies[j].id}</a><br/>`;
+                    content_all += data.Replies[j].content.replace(/<[^>]+>/g, "");
                   }
                 }
-              );
-              u += 1;
-              const data = await res.json();
-              let length = data.Replies.length;
-              let j = length - 1;
-              while (j >= 0) {
-                if (sub[i].writer.includes(data.Replies[j].user_hash)) {
-                  break;
+                if (content_all !== "") {
+                  const item = {
+                    id: sub[i].id,
+                    link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
+                    title: reply_title,
+                    content: data.Replies[j].content.replace(/<[^>]+>/g, ""),
+                    telegraph: sub[i].telegraph,
+                    active: sub[i].active,
+                    lastUpdateTime: sub[i].lastUpdateTime,
+                    writer: data.Replies[j].user_hash,
+                    page: page,
+                    sendto: sub[i].sendto || config.TG_SENDID,
+                  };
+                  await reply(sub[i], item);
+                  u += sub[i].telegraph ? 3 : 1;
+                  kvupdate = true;
+                  console.log("send to telegram for non-po reply");
                 }
-                j -= 1;
               }
-              if (j < 0) {
-                continue;
-              }
-              let reply_title = data.Replies[j].title;
-              if (reply_title === "无标题" || reply_title === "") {
-                reply_title = data.Replies[j].id;
-              }
-              sub[i].errorTimes = 0;
-              sub[i].lastUpdateTime = data.Replies[j].now;
-              sub[i].ReplyCount = ReplyCount;
-              if (sub[i].unread === undefined) {
-                sub[i].unread = 1;
-              } else {
-                sub[i].unread += 1;
-              }
-              // no need to get ReplyCountAll again
-              // not send to telegram every time, but combine them              
-              const item = {
-                id: sub[i].id,
-                link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
-                title: reply_title,
-                content: data.Replies[j].content.replace(/<[^>]+>/g, ""),
-                telegraph: sub[i].telegraph,
-                active: sub[i].active,
-                lastUpdateTime: sub[i].lastUpdateTime,
-                writer: data.Replies[j].user_hash,
-                page: page,
-                sendto: sub[i].sendto || config.TG_SENDID,
-              };
-              await reply(sub[i], item);
-              u += sub[i].telegraph ? 3 : 1;
-              kvupdate = true;
-              console.log("update at line 257");
             }
           }
         } else {
