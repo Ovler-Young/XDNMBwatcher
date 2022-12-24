@@ -124,7 +124,8 @@ export async function handleScheduled(event) {
                     if (data.Replies[j].ext !== "") {
                       content_all += `<img src="https://image.nmb.best/image/${data.Replies[j].img}${data.Replies[j].ext}">`;
                     }
-                    content_all += data.Replies[j].content.replace(/<[^>]+>/g, "");
+                    // content_all += data.Replies[j].content.replace(/<[^>]+>/g, "");
+                    content_all += data.Replies[j].content.replace(/<[^>]+>/g, "").replace(/&gt;&gt;No\.(\d+)/g, `<a href="https://www.nmbxd1.com/Home/Forum/ref?id=$1">>>No.$1</a>`);
                   } else {
                   }
                   // check if we can send more
@@ -208,64 +209,6 @@ export async function handleScheduled(event) {
                 sub[i].unfinished = true;
                 break; // will goto next sub
               }
-              // // 页码数 为 ReplyCount 对 19 取模，截取最后一页
-              // const page = parseInt((ReplyCount - 1) / 19) + 1;
-              // const res = await fetch(
-              //   `https://api.nmb.best/Api/thread?id=${sub[i].id}&page=${page}`,
-              //   {
-              //     method: "GET",
-              //     headers: {
-              //       "Content-Type": "application/json; charset=utf-8",
-              //       cookie: `userhash=${config.COOKIES}`
-              //     }
-              //   }
-              // );
-              // u += 1;
-              // const data = await res.json();
-              // let length = data.Replies.length;
-              // let j = length - 1;
-              // while (j >= 0) {
-              //   if (sub[i].writer.includes(data.Replies[j].user_hash)) {
-              //     break;
-              //   }
-              //   j -= 1;
-              // }
-              // if (j < 0) {
-              //   continue;
-              // }
-              // let reply_title = data.Replies[j].title;
-              // if (reply_title === "无标题" || reply_title === "") {
-              //   reply_title = data.Replies[j].id;
-              // }
-              // sub[i].errorTimes = 0;
-              // sub[i].lastUpdateTime = data.Replies[j].now;
-              // sub[i].ReplyCount = ReplyCount;
-              // if (sub[i].unread === undefined) {
-              //   sub[i].unread = 1;
-              // } else {
-              //   sub[i].unread += 1;
-              // }
-              // // no need to get ReplyCountAll again
-              // // not send to telegram every time, but combine them              
-              // const item = {
-              //   id: sub[i].id,
-              //   link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
-              //   title: reply_title,
-              //   content: data.Replies[j].content.replace(/<[^>]+>/g, ""),
-              //   telegraph: sub[i].telegraph,
-              //   active: sub[i].active,
-              //   lastUpdateTime: sub[i].lastUpdateTime,
-              //   writer: data.Replies[j].user_hash,
-              //   page: page,
-              //   sendto: sub[i].sendto || config.TG_SENDID,
-              // };
-              // await reply(sub[i], item);
-              // u += sub[i].telegraph ? 3 : 1;
-              // kvupdate = true;
-              // console.log("update at line 257");
-              // The above code might have some replys not sent to telegram
-              // So we need to get all replys and send them to telegram
-              // We can reuse the code above
               console.log(`Replycount in sub: ${sub[i].ReplyCount}`);
               console.log(`Replycount in api: ${sub[i].ReplyCountAll}`);
               const pagestart = parseInt((sub[i].ReplyCount - 1) / 19) + 1;
@@ -290,6 +233,9 @@ export async function handleScheduled(event) {
                 let length = data.Replies.length;
                 console.log(`length: ${length}`);
                 for (let j = 0; j < length; j++) {
+                  if (j + 1 + (page - 1) * 19 <= sub[i].ReplyCount) {
+                    continue;
+                  }
                   if (sub[i].writer.includes(data.Replies[j].user_hash)) {
                     let reply_title = data.Replies[j].title;
                     if (reply_title === "无标题" || reply_title === "") {
@@ -309,11 +255,11 @@ export async function handleScheduled(event) {
                     // 如果 data.Replies[j].ext 为空，则没有图片
                     // no need to get ReplyCountAll again
                     // not send to telegram every time, but combine them
-                    content_all += `<br/><a herf="https://www.nmbxd1.com/t/${sub[i].id}/page/${page}.html">${reply_title ? reply_title : data.Replies[j].id}</a><br/>`;
                     if (data.Replies[j].ext !== "") {
                       content_all += `<img src="https://image.nmb.best/image/${data.Replies[j].img}${data.Replies[j].ext}">`;
                     }
-                    content_all += data.Replies[j].content.replace(/<[^>]+>/g, "");
+                    // content_all += data.Replies[j].content.replace(/<[^>]+>/g, "");
+                    content_all += data.Replies[j].content.replace(/<[^>]+>/g, "").replace(/&gt;&gt;No\.(\d+)/g, `<br/><a href="https://www.nmbxd1.com/Home/Forum/ref?id=$1">>>No.$1</a>`);
                   }
                 }
                 if (content_all !== "") {
