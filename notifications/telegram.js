@@ -30,6 +30,7 @@ export async function reply(feed, item) {
 }
 export async function replyWhenError(feed, err) {
   const telegram = new Telegram(config.TG_TOKEN);
+  let sendto = config.TG_SENDTO;
   await telegram.sendMessage(
     sendto,
     `<b>${html(feed.title)}</b>\n错误消息为：${err}.`,
