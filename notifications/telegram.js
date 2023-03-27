@@ -5,7 +5,7 @@ import { html } from "../utils/html";
 export async function reply(feed, item) {
   const telegram = new Telegram(config.TG_TOKEN);
   let content_all = item.content.replace(/<[^>]+>/g, "");
-  let lines = content_all.split("\n");
+  let lines = content_all.split("\n").slice(0, 20);
   console.log(lines);
   let content_safe_all = [];
   for (let i = 0; i < lines.length; i++) {
@@ -13,11 +13,8 @@ export async function reply(feed, item) {
       content_safe_all.push(lines[i]);
     }
   }
-  content_safe = content_safe_all.join("\n");
+  let content_safe = content_safe_all.join("\n");
   console.log(`选出: ${content_safe}`);
-  if (content_safe.lenth > 30) {
-    content_safe = content_safe.substring(0, 10);
-  }
   await telegram.sendMessage(
     item.sendto,
     `<b>${html(feed.title)}</b>\n#${html(item.writer)} | #id${html(
