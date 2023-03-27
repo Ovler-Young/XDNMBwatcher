@@ -4,6 +4,15 @@ import { telegraph } from "../utils/telegraph";
 import { html } from "../utils/html";
 export async function reply(feed, item) {
   const telegram = new Telegram(config.TG_TOKEN);
+
+  if (item.lastSendId && item.lastSendId != 0 && item.Autoremove == 1) {
+    try {
+      await telegram.deleteMessage(item.sendto, item.lastSendId);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   let content_all = item.content.replace(/<[^>]+>/g, "");
   let lines = content_all.split("\n").slice(0, 20);
   console.log(lines);
@@ -15,7 +24,7 @@ export async function reply(feed, item) {
   }
   let content_safe = content_safe_all.join("\n");
   console.log(`选出: ${content_safe}`);
-  await telegram.sendMessage(
+  let send = await telegram.sendMessage(
     item.sendto,
     `<b>${html(feed.title)}</b>\n#${html(item.writer)} | #id${html(
       feed.id
@@ -25,6 +34,7 @@ export async function reply(feed, item) {
     }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${feed.id}`}">Latest</a>|${item.id}\n${content_safe}`,
     { parse_mode: "HTML" }
   );
+  return send.message_id;
 }
 export async function replyWhenError(feed, err) {
   const telegram = new Telegram(config.TG_TOKEN);

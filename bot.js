@@ -13,6 +13,7 @@ import { botRoll } from "./utils/tgbot_command/roll_banner";
 import { botLatest } from "./utils/tgbot_command/latest";
 import { botReadAll } from "./utils/tgbot_command/readall";
 import { botPO } from "./utils/tgbot_command/po";
+import { botMute } from "./utils/tgbot_command/mute";
 const { Telegraf } = require("telegraf");
 import { config } from "./config";
 const bot = new Telegraf(config.TG_TOKEN);
@@ -35,6 +36,7 @@ bot.command("r", botRoll);
 bot.command("latest", botLatest);
 bot.command("readall", botReadAll);
 bot.command("po", botPO);
+bot.command("mute", botMute);
 bot.on("message", async ctx => {
   if (ctx.update.message.text.includes("nmbxd") || ctx.update.message.text.includes("#id")) {
     await botShare(ctx);

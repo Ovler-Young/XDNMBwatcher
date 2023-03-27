@@ -142,9 +142,12 @@ export async function handleScheduled(event) {
                     writer: sub[i].po,
                     page: page,
                     sendto: sub[i].sendto || config.TG_SENDID,
+                    lastSendId: sub[i].send_message_id || 0,
+                    Autoremove: sub[i].Autoremove || 0,
                   };
                   sub[i].ReplyCount = sub[i].ReplyCountNow;
-                  await reply(sub[i], item);
+                  sub[i].send_message_id = await reply(sub[i], item);
+                  console.log(`send_message_id: ${sub[i].send_message_id}`);
                   u += sub[i].telegraph ? 3 : 1;
                   kvupdate = true;
                   console.log(`kvupdate after sent ${sub[i].title} page ${page}`);
