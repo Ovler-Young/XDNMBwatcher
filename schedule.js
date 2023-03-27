@@ -81,7 +81,8 @@ export async function handleScheduled(event) {
                 if (u >= 26) {
                   break;
                 }
-                let content_all = "";
+                // let content_all = "";
+                let content_all = [];
                 const res = await fetch(
                   `https://api.nmb.best/Api/po?id=${sub[i].id}&page=${page}`,
                   {
@@ -104,28 +105,21 @@ export async function handleScheduled(event) {
                   }
                   // next, check if this reply is already sent
                   if (sub[i].ReplyCount < 19 * (page - 1) + j + 1) {
-                    console.log(`Reply now is ${19 * (page - 1) + j + 1}`);
-                    console.log(`It is not sent yet`);
                     let reply_title = data.Replies[j].title;
-                    if (reply_title === "无标题" || reply_title === "") {
-                      reply_title = data.Replies[j].id;
-                    }
-                    console.log(reply_title);
                     sub[i].errorTimes = 0;
                     sub[i].lastUpdateTime = data.Replies[j].now;
                     sub[i].ReplyCountNow = 19 * (page - 1) + j + 1;
-                    console.log(`ReplyCountNow: ${sub[i].ReplyCountNow}`);
                     if (sub[i].unread === undefined) {
                       sub[i].unread = 1;
                     } else {
                       sub[i].unread += 1;
                     }
-                    content_all += `<br/><a href="https://www.nmbxd1.com/t/${sub[i].id}?r=${data.Replies[j].id}">${reply_title}</a>\n`;
+                    content_all.push(`<br/><a href="https://www.nmbxd1.com/t/${sub[i].id}?r=${data.Replies[j].id}">${reply_title}</a>`);
                     if (data.Replies[j].ext !== "") {
-                      content_all += `<img src="https://image.nmb.best/image/${data.Replies[j].img}${data.Replies[j].ext}">`;
+                      content_all.push(`<img src="https://image.nmb.best/image/${data.Replies[j].img}${data.Replies[j].ext}">`);
                     }
                     // content_all += data.Replies[j].content.replace(/<[^>]+>/g, "");
-                    content_all += data.Replies[j].content.replace(/<[^>]+>/g, "").replace(/&gt;&gt;No\.(\d+)/g, `<a href="https://www.nmbxd1.com/Home/Forum/ref?id=$1">>>No.$1</a>`);
+                    content_all.push(data.Replies[j].content.replace(/<[^>]+>/g, "").replace(/&gt;&gt;No\.(\d+)/g, `<a href="https://www.nmbxd1.com/t/${sub[i].id}?r=$1">>>No.$1</a>`));
                   } else {
                   }
                   // check if we can send more
@@ -135,12 +129,13 @@ export async function handleScheduled(event) {
                     break;
                   } 
                 }
-                if (content_all !== "") {
+                let content_join = content_all.join("<br/>");
+                if (content_join !== "") {
                   let item = {
                     id: sub[i].id,
                     link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
                     title: `【${sub[i].title}】page${page}`,
-                    content: content_all,
+                    content: content_join,
                     telegraph: sub[i].telegraph,
                     active: sub[i].active,
                     lastUpdateTime: sub[i].lastUpdateTime,
@@ -228,7 +223,8 @@ export async function handleScheduled(event) {
                   }
                 );
                 u += 1;
-                let content_all = "";
+                // let content_all = "";
+                let content_all = [];
                 const data = await res.json();
                 let length = data.Replies.length;
                 console.log(`length: ${length}`);
@@ -256,18 +252,19 @@ export async function handleScheduled(event) {
                     // no need to get ReplyCountAll again
                     // not send to telegram every time, but combine them
                     if (data.Replies[j].ext !== "") {
-                      content_all += `<img src="https://image.nmb.best/image/${data.Replies[j].img}${data.Replies[j].ext}">`;
+                      content_all.push(`<img src="https://image.nmb.best/image/${data.Replies[j].img}${data.Replies[j].ext}">`);
                     }
                     // content_all += data.Replies[j].content.replace(/<[^>]+>/g, "");
-                    content_all += data.Replies[j].content.replace(/<[^>]+>/g, "").replace(/&gt;&gt;No\.(\d+)/g, `<br/><a href="https://www.nmbxd1.com/Home/Forum/ref?id=$1">>>No.$1</a>`);
+                    content_all.push(data.Replies[j].content.replace(/<[^>]+>/g, "").replace(/&gt;&gt;No\.(\d+)/g, `<br/><a href="https://www.nmbxd1.com/Home/Forum/ref?id=$1">>>No.$1</a>`));
                   }
                 }
-                if (content_all !== "") {
+                let content_join = content_all.join("<br/>");
+                if (content_join !== "") {
                   const item = {
                     id: sub[i].id,
                     link: `https://www.nmbxd1.com/Forum/po/id/${sub[i].id}/page/${page}.html`,
                     title: `${sub[i].title} - ${sub[i].ReplyCount - sub[i].ReplyCountAll + 1}条新回复`,
-                    content: content_all,
+                    content: content_join,
                     telegraph: sub[i].telegraph,
                     active: sub[i].active,
                     lastUpdateTime: sub[i].lastUpdateTime,
