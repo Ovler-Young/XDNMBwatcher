@@ -113,7 +113,7 @@ router.post(`/${secret_path}/subitem`, async req => {
         }
       );
     }
-    feed.id = msg;
+    feed.id = msg.toString();
     feed.url = `https://www.nmbxd1.com/t/${msg}`;
     feed.po = data.user_hash;
     // feed.title is data.title if it is not "无标题", otherwise feed.title is first line of data.content
@@ -526,6 +526,33 @@ router.get(`/${secret_path}/jumplast`, async req => {
 router.get("/test", async (req, e) => {
   // 测试
   e.waitUntil(handleScheduled(e));
+});
+router.get("/fixerror", async (req, e) => {
+  // 修复错误
+  const subraw = await KV.get("sub");
+  let sub = JSON.parse(subraw);
+  console.log(sub);
+  for (let i = 0; i < sub.length; i++) {
+    // 临时
+    if (typeof(sub[i].id) === "number") {
+      sub[i].id = sub[i].id.toString();
+    }
+  }
+  console.log(sub);
+  await KV.put("sub", JSON.stringify(sub));
+  return new Response(
+    JSON.stringify({
+      status: 200,
+      message: sub.toString()
+    }),
+    {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, HEAD",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
+    }
+  );
 });
 router.get("*", async (req, e) => {
   try {
