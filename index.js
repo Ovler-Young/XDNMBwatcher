@@ -569,7 +569,6 @@ router.get(`/${secret_path}/subscribe`, async req => {
         continue;
       }
       let item = {};
-    // [{"id":"56154624","url":"https://www.nmbxd1.com/t/56154624","po":"WJO99y2","title":"烂俗转生故事","telegraph":true,"active":true,"errorTimes":0,"ReplyCount":596,"fid":19,"sendto":1326561094,"lastUpdateTime":"2023-08-13(日)14:53:45","xd":true,"issingle":true,"ReplyCountAll":1816,"ReplyCountNow":596,"unread":79,"send_message_id":7305,"LastRead":1639}]
       item.id = feed[i].id;
       item.url = `https://www.nmbxd1.com/t/${feed[i].id}`;
       item.po = feed[i].user_hash;
