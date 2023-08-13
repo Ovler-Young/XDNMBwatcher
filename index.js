@@ -164,7 +164,7 @@ router.post(`/${secret_path}/subitem`, async req => {
       // decode the response
       // "\u8be5\u4e32\u4e0d\u5b58\u5728" (该串不存在) -> 该串不存在 
       const addFeedresText = await addFeedres.text();
-      if (addFeedresText === "该串不存在") {
+      if (addFeedresText === '"\u8be5\u4e32\u4e0d\u5b58\u5728"') {
         return new Response(
           JSON.stringify({
             status: 400,
@@ -180,7 +180,7 @@ router.post(`/${secret_path}/subitem`, async req => {
         );
       }
       // "\u8ba2\u9605\u5927\u6210\u529f\u2192_\u2192" (订阅大成功→_→) -> 订阅大成功→_→
-      else if (addFeedresText === "订阅大成功→_→") {
+      else if (addFeedresText === '"\u8ba2\u9605\u5927\u6210\u529f\u2192_\u2192"') {
         return new Response(
           JSON.stringify({
             status: 0,
