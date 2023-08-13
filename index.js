@@ -596,6 +596,7 @@ router.get(`/${secret_path}/subscribe`, async req => {
     }
     page++;  // Increase the page number for the next iteration
   }  // End of loop for multiple pages
+  await KV.put("sub", JSON.stringify(sub)); // Save the updated sub array
   return new Response(
     JSON.stringify({
       status: 0,
