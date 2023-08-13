@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "format": "prettier --write \"**/*.js\"",
-    "publish": "wrangler publish",
+    "publish": "wrangler deploy",
     "dev": "wrangler dev",
     "tail": "wrangler tail",
     "whoami": "wrangler whoami"
