@@ -1,4 +1,5 @@
 import { config } from "../../config.js";
+import { cfetch, errorresponse, successresponse } from "../util.js";
 export async function Check(ctx) {
   let message = ctx.update.message;
   let id = message.text.match(/\d{8}/);
@@ -18,16 +19,7 @@ export async function Check(ctx) {
     }
   }
   let frontend_page = 0;
-  const resp = await fetch(
-    `https://api.nmb.best/Api/thread?id=${id}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        cookie: `userhash=${config.COOKIES}`
-      }
-    }
-  )
+  const resp = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`)
   // find what we just posted
   if (resp.ok) {
       // if everything is fine, return the json
@@ -39,16 +31,7 @@ export async function Check(ctx) {
       // otherwise, return the error
       return resp;
   }
-  const lastpage = await fetch(
-    `https://api.nmb.best/Api/thread?id=${id}&page=${frontend_page}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        cookie: `userhash=${config.COOKIES}`
-      }
-    }
-  )
+  const lastpage = await cfetch(`https://api.nmb.best/Api/thread?id=${id}&page=${frontend_page}`)
   const data = await lastpage.json();
   console.log(data);
   try {for (let j = 0; j < data.Replies.length; j++) {

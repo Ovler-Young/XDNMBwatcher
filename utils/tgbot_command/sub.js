@@ -1,4 +1,5 @@
 import { config } from "../../config.js";
+import { cfetch } from "../util.js";
 export async function botSub(ctx) {
   let message = ctx.update.message;
   let id = message.text.match(/\d{8}/);
@@ -17,14 +18,7 @@ export async function botSub(ctx) {
       return;
     }
   }
-  const resp = await fetch(`https://api.nmb.best/Api/po?id=${id}`, {
-    //改成adnmb的只看po的接口
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      cookie: `userhash=${config.COOKIES}`
-    }
-  });
+  const resp = await cfetch(`https://api.nmb.best/Api/po?id=${id}`);
   if (resp.status === 200) {
     let feed = {};
     const data = await resp.json();

@@ -1,4 +1,6 @@
 import { config } from "../../config.js";
+import { cfetch } from "../util.js";
+
 export async function botRoll(ctx) {
   let msg = ``;
   let message = ctx.update.message;
@@ -50,14 +52,7 @@ export async function botRoll(ctx) {
   let try_count = 0;
   while (continues) {
     try_count++;
-    const resp = await fetch(`https://api.nmb.best/Api/timeline`, {
-      // 获取最新串
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        cookie: `userhash=${config.COOKIES}`,
-      },
-    });
+    const resp = await cfetch(`https://api.nmb.best/Api/timeline`);
     web_request_count += 1;
     const data = await resp.json();
     // the id we need is in data[*].Replies[0].id
@@ -156,13 +151,7 @@ export async function Reply(id, msg) {
 
 export async function Check(id, msg) {
   let frontend_page = 0;
-  const resp = await fetch(`https://api.nmb.best/Api/thread?id=${id}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      cookie: `userhash=${config.COOKIES}`,
-    },
-  });
+  const resp = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
   // find what we just posted
   if (resp.ok) {
     // if everything is fine, return the json
@@ -175,16 +164,7 @@ export async function Check(id, msg) {
     return resp;
   }
   console.log(`https://www.nmbxd1.com/t/${id}?page=${frontend_page}`);
-  const lastpage = await fetch(
-    `https://api.nmb.best/Api/thread?id=${id}&page=${frontend_page}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        cookie: `userhash=${config.COOKIES}`,
-      },
-    }
-  );
+  const lastpage = await cfetch(`https://api.nmb.best/Api/thread?id=${id}&page=${frontend_page}`);
   const data = await lastpage.json();
   console.log(data);
   console.log("data.Replies.length: " + data.Replies.length);

@@ -1,4 +1,5 @@
 import { config } from "../../config.js";
+import { cfetch } from "../util.js";
 export async function botShare(ctx) {
   console.log("GET BOTSHARE");
   const subraw = (await KV.get("sub")) || "[]";
@@ -25,16 +26,7 @@ export async function botShare(ctx) {
         sub[find].unread = 0;
         //await ctx.reply("已将该帖子标记为已读", { reply_to_message_id: ctx.update.message.message_id });
         msg += `已将帖子${sub[find].title}标记为已读\n`;
-        const res_2 = await fetch(
-          `https://api.nmb.best/Api/thread?id=${id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json; charset=utf-8",
-              cookie: `userhash=${config.COOKIES}`
-            }
-          }
-        );
+        const res_2 = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
         sub[find].LastRead = (await res_2.json()).ReplyCount;
         kvchange = true;
       }
@@ -48,13 +40,7 @@ export async function botShare(ctx) {
       await ctx.reply(msg, { reply_to_message_id: ctx.update.message.message_id });
       return;
     } else {
-      const resp = await fetch(`https://api.nmb.best/Api/po?id=${id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          cookie: `userhash=${config.COOKIES}`
-        }
-      });
+      const resp = await cfetch(`https://api.nmb.best/Api/po?id=${id}`);
       if (resp.status === 200) {
         let feed = {};
         const data = await resp.json();

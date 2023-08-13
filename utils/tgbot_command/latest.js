@@ -1,15 +1,9 @@
 import { config } from "../../config.js";
+import { cfetch } from "../util.js";
 export async function botLatest(ctx) {
     // 记时
     let start = new Date().getTime();
-    const resp = await fetch(`https://api.nmb.best/Api/timeline`, {
-        // 获取最新串
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          cookie: `userhash=${config.COOKIES}`,
-        }
-    });
+    const resp = await cfetch(`https://api.nmb.best/Api/timeline`);
     const data = await resp.json();
     let middle = new Date().getTime();
     // the id we need is in data[*].Replies[0].id
