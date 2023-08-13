@@ -1,21 +1,19 @@
 account_id = ""
 name = "xdnmb-watcher-dev"
-type = "webpack"
 workers_dev = true
-
-# These fields specify that the Worker(s) will deploy to a custom domain
-# route = ""
-# zone_id = ""
-
-target_type = "webpack"
-webpack_config = "webpack.config.js"
+main = "./dist/main.js"
+compatibility_date = "2023-08-07"
 
 kv_namespaces = [
   #   { binding = "KV", id = "", preview_id = "" }
+  # Don't bind __STATIC_CONTENT here. It will be bound automatically.
 ]
 
 [triggers]
 crons = ["*/1 * * * *"]
+
+[build]
+command = "webpack"
 
 [site]
 bucket = "./public"

@@ -3,5 +3,6 @@ node_modules/
 worker/
 dist/
 .cargo-ok
+.wrangler/
 
 wrangler.toml
