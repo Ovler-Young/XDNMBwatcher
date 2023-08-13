@@ -541,64 +541,58 @@ router.get(`/${secret_path}/subscribe`, async req => {
     );
   }
   await KV.put("uuid", uuid);
-  // https://api.nmb.best/Api/feed?uuid=xxx test
-  const res = await fetch(
-    `https://api.nmb.best/Api/feed?uuid=${uuid}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        cookie: `userhash=${config.COOKIES}`
-      }
-    }
-  );
-  // if uuid is invalid, the request will return "[]"
-  if ((await res.json()).length === 0) {
-    return new Response(
-      JSON.stringify({
-        status: 400,
-        message: "This uuid have no feed yet"
-      }),
+
+  let page = 1;
+  let count = 0;
+  let subraw = await KV.get("sub");
+  let sub = JSON.parse(subraw);
+  
+  while (true) {  // Start of loop for multiple pages
+    const res = await fetch(
+      `https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`,
       {
+        method: "GET",
         headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
+          "Content-Type": "application/json; charset=utf-8",
+          cookie: `userhash=${config.COOKIES}`
         }
       }
     );
-  }
-  const feed = await res.json();
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
-  let count = 0;
-  for (let i = 0; i < feed.length; i++) {
-    if (feed[i].id in sub.map(e => e.id)) {
-      continue;
+
+    let feed = await res.json();
+    // Break the loop if the feed is empty or less than 10 items
+    if (feed.length === 0 || feed.length < 10) {
+      break;  
     }
-    let item = {};
+    for (let i = 0; i < feed.length; i++) {
+      if (feed[i].id in sub.map(e => e.id)) {
+        continue;
+      }
+      let item = {};
     // [{"id":"56154624","url":"https://www.nmbxd1.com/t/56154624","po":"WJO99y2","title":"烂俗转生故事","telegraph":true,"active":true,"errorTimes":0,"ReplyCount":596,"fid":19,"sendto":1326561094,"lastUpdateTime":"2023-08-13(日)14:53:45","xd":true,"issingle":true,"ReplyCountAll":1816,"ReplyCountNow":596,"unread":79,"send_message_id":7305,"LastRead":1639}]
-    item.id = feed[i].id;
-    item.url = `https://www.nmbxd1.com/t/${feed[i].id}`;
-    item.po = feed[i].user_hash;
-    item.title = feed[i].title;
-    item.telegraph = true;
-    item.active = true;
-    item.errorTimes = 0;
-    item.ReplyCount = feed[i].reply_count;
-    item.fid = feed[i].fid;
-    item.sendto = config.TG_SENDID;
-    item.lastUpdateTime = feed[i].now;
-    item.xd = true;
-    item.issingle = true;
-    item.ReplyCountAll = feed[i].reply_count;
-    item.ReplyCountNow = feed[i].reply_count;
-    item.unread = 0;
-    item.send_message_id = null;
-    item.LastRead = feed[i].reply_count;
-    sub.push(item);
-    count++;
-  }
+      item.id = feed[i].id;
+      item.url = `https://www.nmbxd1.com/t/${feed[i].id}`;
+      item.po = feed[i].user_hash;
+      item.title = feed[i].title;
+      item.telegraph = true;
+      item.active = true;
+      item.errorTimes = 0;
+      item.ReplyCount = feed[i].reply_count;
+      item.fid = feed[i].fid;
+      item.sendto = config.TG_SENDID;
+      item.lastUpdateTime = feed[i].now;
+      item.xd = true;
+      item.issingle = true;
+      item.ReplyCountAll = feed[i].reply_count;
+      item.ReplyCountNow = feed[i].reply_count;
+      item.unread = 0;
+      item.send_message_id = null;
+      item.LastRead = feed[i].reply_count;
+      sub.push(item);
+      count++;
+    }
+    page++;  // Increase the page number for the next iteration
+  }  // End of loop for multiple pages
   return new Response(
     JSON.stringify({
       status: 0,
