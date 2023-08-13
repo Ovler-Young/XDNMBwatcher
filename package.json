@@ -14,9 +14,10 @@
   "license": "MIT",
   "devDependencies": {
     "@cloudflare/wrangler": "^1.19.12",
+    "node-polyfill-webpack-plugin": "^2.0.1",
     "prettier": "^1.17.0",
-    "webpack": "^5.74.0",
-    "webpack-cli": "^4.10.0"
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
   },
   "dependencies": {
     "@cloudflare/kv-asset-handler": "^0.1.3",
