@@ -4,5 +4,6 @@ worker/
 dist/
 .cargo-ok
 .wrangler/
+/public/
 
 wrangler.toml
