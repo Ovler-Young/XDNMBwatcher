@@ -560,8 +560,8 @@ router.get(`/${secret_path}/subscribe`, async req => {
     );
 
     let feed = await res.json();
-    // Break the loop if the feed is empty or less than 10 items
-    if (feed.length === 0 || feed.length < 10) {
+    // Break the loop if the feed is empty
+    if (feed.length === 0) {
       break;  
     }
     for (let i = 0; i < feed.length; i++) {
@@ -590,6 +590,9 @@ router.get(`/${secret_path}/subscribe`, async req => {
       item.LastRead = feed[i].reply_count;
       sub.push(item);
       count++;
+    }
+    if (feed.length < 10) {
+      break;  
     }
     page++;  // Increase the page number for the next iteration
   }  // End of loop for multiple pages
