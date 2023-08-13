@@ -149,19 +149,69 @@ router.post(`/${secret_path}/subitem`, async req => {
       feed.lastUpdateTime = now;
       sub.push(feed);
       await KV.put("sub", JSON.stringify(sub));
-      return new Response(
-        JSON.stringify({
-          status: 0,
-          message: `${feed.title} add succeed`
-        }),
+      // https://api.nmb.best/Api/addFeed?uuid=xxx&tid=xxx
+      const uuid = await KV.get("uuid");
+      const addFeedres = await fetch(
+        `https://api.nmb.best/Api/addFeed?uuid=${uuid}&tid=${msg}`,
         {
+          method: "GET",
           headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, HEAD",
-            "Access-Control-Allow-Headers": "Content-Type"
+            "Content-Type": "application/json; charset=utf-8",
+            cookie: `userhash=${config.COOKIES}`
           }
         }
       );
+      // decode the response
+      // "\u8be5\u4e32\u4e0d\u5b58\u5728" (该串不存在) -> 该串不存在 
+      const addFeedresText = await addFeedres.text();
+      if (addFeedresText === "该串不存在") {
+        return new Response(
+          JSON.stringify({
+            status: 400,
+            message: "该串不存在"
+          }),
+          {
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "GET, POST, HEAD",
+              "Access-Control-Allow-Headers": "Content-Type"
+            }
+          }
+        );
+      }
+      // "\u8ba2\u9605\u5927\u6210\u529f\u2192_\u2192" (订阅大成功→_→) -> 订阅大成功→_→
+      else if (addFeedresText === "订阅大成功→_→") {
+        return new Response(
+          JSON.stringify({
+            status: 0,
+            message: `${feed.title} add succeed`
+          }),
+          {
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "GET, POST, HEAD",
+              "Access-Control-Allow-Headers": "Content-Type"
+            }
+          }
+        );
+      }
+      else {
+        // error
+        // return the error message
+        return new Response(
+          JSON.stringify({
+            status: 400,
+            message: addFeedresText
+          }),
+          {
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "GET, POST, HEAD",
+              "Access-Control-Allow-Headers": "Content-Type"
+            }
+          }
+        );
+      }
     }
   } else {
     return new Response(
