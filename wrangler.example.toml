@@ -14,6 +14,7 @@ crons = ["*/1 * * * *"]
 
 [build]
 command = "webpack && cd frontend && pnpm install && pnpm build"
+# command = "pwsh build.ps1" if you are using Windows. This powershell script will check if the frontend is edited and will skip if not modified.
 
 [site]
 bucket = "./frontend/out"
