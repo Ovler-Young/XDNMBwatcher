@@ -13,11 +13,10 @@ kv_namespaces = [
 crons = ["*/1 * * * *"]
 
 [build]
-command = "webpack"
+command = "webpack && cd frontend && pnpm install && pnpm build"
 
 [site]
-bucket = "./public"
-entry-point = "./"
+bucket = "./frontend/out"
 
 # Global variables can be used by the Worker scripts.
 # NOT inherited. Need to define in each environment.
