@@ -11,17 +11,10 @@ const router = Router();
 if (mode === "telegram") {
   setTgBot(router);
 }
+import { cfetch, errorresponse, successresponse } from "./utils/util";
+
 const refreshunread = async (index) => {
-  const res = await fetch(
-    `https://api.nmb.best/Api/thread?id=${id}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        cookie: `userhash=${config.COOKIES}`
-      }
-    }
-  );
+  const res = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`)
   sub[index].LastRead = (await res.json()).ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
 };
@@ -72,46 +65,15 @@ router.post(`/${secret_path}/subitem`, async req => {
   const body = await req.json();
   if (body.url === undefined) {
     // 没回传url
-    return new Response(
-      JSON.stringify({
-        status: 400,
-        message: "Url not found"
-      }),
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      }
-    );
+    errorresponse("Url not found");
   }
   const msg = body.url; // 回传的url
-  const resp = await fetch(`https://api.nmb.best/Api/po?id=${msg}`, {
-    //改成adnmb的只看po的接口
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      cookie: `userhash=${config.COOKIES}`
-    }
-  });
+  const resp = await cfetch(`https://api.nmb.best/Api/po?id=${msg}`);
   if (resp.status === 200) {
     let feed = {};
     const data = await resp.json();
     if (data.success === false) {
-      return new Response(
-        JSON.stringify({
-          status: 400,
-          message: data.error
-        }),
-        {
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, HEAD",
-            "Access-Control-Allow-Headers": "Content-Type"
-          }
-        }
-      );
+      errorresponse(data.error);
     }
     feed.id = msg.toString();
     feed.url = `https://www.nmbxd1.com/t/${msg}`;
@@ -131,19 +93,7 @@ router.post(`/${secret_path}/subitem`, async req => {
     if (
       sub.findIndex(e => e.url === feed.url) != -1 // 如果已经存在了
     ) {
-      return new Response(
-        JSON.stringify({
-          status: 400,
-          message: "Already subscribed"
-        }),
-        {
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, HEAD",
-            "Access-Control-Allow-Headers": "Content-Type"
-          }
-        }
-      );
+      errorresponse("Already subscribed");
     } else {
       const now = new Date();
       feed.lastUpdateTime = now;
@@ -151,80 +101,27 @@ router.post(`/${secret_path}/subitem`, async req => {
       await KV.put("sub", JSON.stringify(sub));
       // https://api.nmb.best/Api/addFeed?uuid=xxx&tid=xxx
       const uuid = await KV.get("uuid");
-      const addFeedres = await fetch(
-        `https://api.nmb.best/Api/addFeed?uuid=${uuid}&tid=${msg}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json; charset=utf-8",
-            cookie: `userhash=${config.COOKIES}`
-          }
-        }
+      const addFeedres = await cfetch(
+        `https://api.nmb.best/Api/addFeed?uuid=${uuid}&tid=${msg}`
       );
       // decode the response
       // "\u8be5\u4e32\u4e0d\u5b58\u5728" (该串不存在) -> 该串不存在 
       const addFeedresText = await addFeedres.text();
       if (addFeedresText === '"\u8be5\u4e32\u4e0d\u5b58\u5728"') {
-        return new Response(
-          JSON.stringify({
-            status: 400,
-            message: "该串不存在"
-          }),
-          {
-            headers: {
-              "Access-Control-Allow-Origin": "*",
-              "Access-Control-Allow-Methods": "GET, POST, HEAD",
-              "Access-Control-Allow-Headers": "Content-Type"
-            }
-          }
-        );
+        errorresponse("该串不存在");
       }
       // "\u8ba2\u9605\u5927\u6210\u529f\u2192_\u2192" (订阅大成功→_→) -> 订阅大成功→_→
       else if (addFeedresText === '"\u8ba2\u9605\u5927\u6210\u529f\u2192_\u2192"') {
-        return new Response(
-          JSON.stringify({
-            status: 0,
-            message: `${feed.title} add succeed`
-          }),
-          {
-            headers: {
-              "Access-Control-Allow-Origin": "*",
-              "Access-Control-Allow-Methods": "GET, POST, HEAD",
-              "Access-Control-Allow-Headers": "Content-Type"
-            }
-          }
-        );
+        successresponse(`${feed.title} add succeed`);
       }
       else {
         // error
         // return the error message
-        return new Response(
-          JSON.stringify({
-            status: 400,
-            message: addFeedresText
-          }),
-          {
-            headers: {
-              "Access-Control-Allow-Origin": "*",
-              "Access-Control-Allow-Methods": "GET, POST, HEAD",
-              "Access-Control-Allow-Headers": "Content-Type"
-            }
-          }
-        );
+        errorresponse(addFeedresText);
       }
     }
   } else {
-    return new Response(
-      JSON.stringify({
-        status: 400,
-        message: "Network error",
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      })
-    );
+    errorresponse("Network error");
   }
 });
 router.post(`/${secret_path}/deleteitem`, async req => {
@@ -235,35 +132,11 @@ router.post(`/${secret_path}/deleteitem`, async req => {
   const url = body.url;
   const index = sub.findIndex(e => e.url === url);
   if (index === -1) {
-    return new Response(
-      JSON.stringify({
-        status: 400,
-        message: "未找到该订阅"
-      }),
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      }
-    );
+    errorresponse("未找到该订阅");
   } else {
     sub.splice(index, 1);
     await KV.put("sub", JSON.stringify(sub));
-    return new Response(
-      JSON.stringify({
-        status: 0,
-        message: "Delete succeed!"
-      }),
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      }
-    );
+    successresponse("删除成功");
   }
 });
 router.post(`/${secret_path}/active`, async req => {
@@ -275,38 +148,13 @@ router.post(`/${secret_path}/active`, async req => {
   const state = body.state;
   const index = sub.findIndex(e => e.url === url);
   if (index === -1 || state === undefined) {
-    return new Response(
-      JSON.stringify({
-        status: 400,
-        message: "Please verify your input!"
-      }),
-      {
-        status: 400,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      }
-    );
+    errorresponse("Please verify your input!");
   }
   sub[index].active = state;
   sub[index].lastUpdateTime = new Date();
   sub[index].errorTimes = 0;
   await KV.put("sub", JSON.stringify(sub));
-  return new Response(
-    JSON.stringify({
-      status: 0,
-      message: `修改成功，当前状态为 ${state ? "on" : "off"}`
-    }),
-    {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, HEAD",
-        "Access-Control-Allow-Headers": "Content-Type"
-      }
-    }
-  );
+  successresponse(`修改成功，当前状态为 ${state ? "on" : "off"}`);
 });
 router.post(`/${secret_path}/telegraph`, async req => {
   // 激活/禁用 Telegraph
@@ -317,35 +165,11 @@ router.post(`/${secret_path}/telegraph`, async req => {
   const state = body.state;
   const index = sub.findIndex(e => e.url === url);
   if (index === -1 || state === undefined) {
-    return new Response(
-      JSON.stringify({
-        status: 400,
-        message: "Please verify your input!"
-      }),
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      }
-    );
+    errorresponse("Please verify your input!");
   }
   sub[index].telegraph = state;
   await KV.put("sub", JSON.stringify(sub));
-  return new Response(
-    JSON.stringify({
-      status: 0,
-      message: `修改成功，当前 Telegraph 状态为 ${state ? "on" : "off"}`
-    }),
-    {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, HEAD",
-        "Access-Control-Allow-Headers": "Content-Type"
-      }
-    }
-  );
+  successresponse(`修改成功，当前 Telegraph 状态为 ${state ? "on" : "off"}`);
 });
 router.post(`/${secret_path}/title`, async req => {
   // 修改订阅标题
@@ -356,35 +180,11 @@ router.post(`/${secret_path}/title`, async req => {
   const title = body.title;
   const index = sub.findIndex(e => e.url === url);
   if (index === -1 || title === undefined) {
-    return new Response(
-      JSON.stringify({
-        status: 400,
-        message: "Please verify your input!"
-      }),
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      }
-    );
+    errorresponse("Please verify your input!");
   }
   sub[index].title = title;
   await KV.put("sub", JSON.stringify(sub));
-  return new Response(
-    JSON.stringify({
-      status: 0,
-      message: `修改成功，当前该订阅源标题为 ${title}`
-    }),
-    {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, HEAD",
-        "Access-Control-Allow-Headers": "Content-Type"
-      }
-    }
-  );
+  successresponse(`修改成功，当前该订阅源标题为 ${title}`);
 });
 router.post(`/${secret_path}/unread`, async req => {
   // 修改订阅未读数
@@ -394,110 +194,35 @@ router.post(`/${secret_path}/unread`, async req => {
   const url = body.url || "";
   const index = sub.findIndex(e => e.url === url);
   if (index === -1) {
-    return new Response(
-      JSON.stringify({
-        status: 400,
-        message: "Please verify your input!"
-      }),
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      }
-    );
+    errorresponse("Please verify your input!");
   }
   let id = sub[index].id;
   sub[index].unread = 0; 
-  const res = await fetch(
-    `https://api.nmb.best/Api/thread?id=${id}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        cookie: `userhash=${config.COOKIES}`
-      }
-    }
-  );
+  const res = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
   sub[index].LastRead = (await res.json()).ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
-  return new Response(
-    JSON.stringify({
-      status: 0,
-      message: `修改成功，已清空该订阅源未读`
-    }),
-    {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, HEAD",
-        "Access-Control-Allow-Headers": "Content-Type"
-      }
-    }
-  );
+  successresponse(`修改成功，已清空该订阅源未读`);
 });
 router.get(`/${secret_path}/jumpread`, async req => {
   // 通过search里的id跳转到指定帖子
   const id = req.url.split("?id=")[1];
   if (id === undefined) {
-    return new Response(
-      JSON.stringify({
-        status: 400,
-        message: "Please verify your input!"
-      }),
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      }
-    );
+    errorresponse("Please verify your input!");
   }
   const subraw = await KV.get("sub");
   let sub = JSON.parse(subraw);
   const index = sub.findIndex(e => e.id === id);
   if (index === -1) {
-    return new Response(
-      JSON.stringify({
-        status: 400,
-        message: "id not found. Did you subscribe this thread?"
-      }),
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      }
-    );
+    errorresponse("id not found. Did you subscribe this thread?");
   }
   sub[index].unread = 0;
   if (sub[index].LastRead === undefined) {
-    const res = await fetch(
-      `https://api.nmb.best/Api/thread?id=${id}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          cookie: `userhash=${config.COOKIES}`
-        }
-      }
-    );
+    const res = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
     sub[index].LastRead = (await res.json()).ReplyCount;
   }
   let lastreadto = sub[index].LastRead;
   console.log(lastreadto);
-  const res = await fetch(
-    `https://api.nmb.best/Api/thread?id=${id}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        cookie: `userhash=${config.COOKIES}`
-      }
-    }
-  );
+  const res = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
   sub[index].LastRead = (await res.json()).ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
   // if ua is mobile, jump to app
@@ -515,49 +240,16 @@ router.get(`/${secret_path}/jumpread`, async req => {
 router.get(`/${secret_path}/jumplast`, async req => {
   const id = req.url.split("?id=")[1];
   if (id === undefined) {
-    return new Response(
-      JSON.stringify({
-        status: 400,
-        message: "Please verify your input!"
-      }),
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      }
-    );
+    errorresponse("Please verify your input!");
   }
   const subraw = await KV.get("sub");
   let sub = JSON.parse(subraw);
   const index = sub.findIndex(e => e.id === id);
   if (index === -1) {
-    return new Response(
-      JSON.stringify({
-        status: 400,
-        message: "Please verify your input!"
-      }),
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      }
-    );
+    errorresponse("Please verify your input!");
   }
   sub[index].unread = 0;
-  const res = await fetch(
-    `https://api.nmb.best/Api/thread?id=${id}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        cookie: `userhash=${config.COOKIES}`
-      }
-    }
-  );
+  const res = await fetch(`https://api.nmb.best/Api/thread?id=${id}`);
   sub[index].LastRead = (await res.json()).ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
   let lastreadto = sub[index].LastRead;
@@ -576,19 +268,7 @@ router.get(`/${secret_path}/jumplast`, async req => {
 router.get(`/${secret_path}/subscribe`, async req => {
   const uuid = req.url.split("?uuid=")[1];
   if (uuid === undefined) {
-    return new Response(
-      JSON.stringify({
-        status: 400,
-        message: "Please verify your input!"
-      }),
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      }
-    );
+    errorresponse("Please verify your input!");
   }
   await KV.put("uuid", uuid);
 
@@ -598,17 +278,7 @@ router.get(`/${secret_path}/subscribe`, async req => {
   let sub = JSON.parse(subraw);
   
   while (true) {  // Start of loop for multiple pages
-    const res = await fetch(
-      `https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          cookie: `userhash=${config.COOKIES}`
-        }
-      }
-    );
-
+    const res = await fetch(`https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`);
     let feed = await res.json();
     // Break the loop if the feed is empty
     if (feed.length === 0) {
@@ -646,19 +316,7 @@ router.get(`/${secret_path}/subscribe`, async req => {
     page++;  // Increase the page number for the next iteration
   }  // End of loop for multiple pages
   await KV.put("sub", JSON.stringify(sub)); // Save the updated sub array
-  return new Response(
-    JSON.stringify({
-      status: 0,
-      message: "Subscribe succeed! " + count + " new feeds added"
-    }),
-    {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, HEAD",
-        "Access-Control-Allow-Headers": "Content-Type"
-      }
-    }
-  );
+  successresponse(`${count} new feeds added`);
 });
 router.get("/test", async (req, e) => {
   // 测试
