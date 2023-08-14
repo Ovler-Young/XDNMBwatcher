@@ -327,6 +327,30 @@ router.get("/fixerror", async (req, e) => {
   const subraw = await KV.get("sub");
   let sub = JSON.parse(subraw);
   console.log(sub);
+  // 重复id只保留一个，保留该项目子元素最多的那个
+  let id = [];
+  for (let i = 0; i < sub.length; i++) {
+    if (id.indexOf(sub[i].id) === -1) {
+      id.push(sub[i].id);
+    }
+  }
+  console.log(id);
+  let newsub = [];
+  for (let i = 0; i < id.length; i++) {
+    let max = 0;
+    let index = 0;
+    for (let j = 0; j < sub.length; j++) {
+      if (sub[j].id === id[i]) {
+        if (sub[j].ReplyCount > max) {
+          max = sub[j].ReplyCount;
+          index = j;
+        }
+      }
+    }
+    newsub.push(sub[index]);
+  }
+  console.log(newsub);
+  sub = newsub;
   for (let i = 0; i < sub.length; i++) {
     // 临时
     if (typeof(sub[i].id) === "number") {
@@ -338,7 +362,7 @@ router.get("/fixerror", async (req, e) => {
   return new Response(
     JSON.stringify({
       status: 200,
-      message: sub.toString()
+      message: sub
     }),
     {
       headers: {
@@ -348,6 +372,96 @@ router.get("/fixerror", async (req, e) => {
       }
     }
   );
+});
+router.get("/sync", async (req, e) => {
+  // 同步
+  const subraw = await KV.get("sub");
+  const uuid = await KV.get("uuid");
+  let r = 0;
+  let page = 1;
+  let got = 0;
+  let push = 0;
+  let feedid = [];
+  let sub = JSON.parse(subraw);
+  let subids = sub.map(e => e.id);
+  while (true) {
+    const res = await cfetch(`https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`);
+    r ++;
+    let feed = await res.json();
+    if (feed.length === 0) {
+      break;
+    }
+    for (let i = 0; i < feed.length; i++) {
+      feedid.push(feed[i].id);
+      if (typeof(feed[i].id) === "number") {
+        feed[i].id = feed[i].id.toString();
+      }
+      if (feed[i].id in subids) {
+        console.log("已经订阅过了" + feed[i].id);
+      }
+      else {
+        let item = {};
+        item.id = feed[i].id;
+        item.url = `https://www.nmbxd1.com/t/${feed[i].id}`;
+        item.po = feed[i].user_hash;
+        item.title = feed[i].title;
+        item.telegraph = true;
+        item.active = true;
+        item.errorTimes = 0;
+        item.ReplyCount = feed[i].reply_count;
+        item.fid = feed[i].fid;
+        item.sendto = config.TG_SENDID;
+        item.lastUpdateTime = feed[i].now;
+        item.xd = true;
+        item.issingle = true;
+        item.ReplyCountAll = feed[i].reply_count;
+        item.ReplyCountNow = feed[i].reply_count;
+        item.unread = 0;
+        item.send_message_id = null;
+        item.LastRead = feed[i].reply_count;
+        sub.push(item);
+        got ++;
+      }
+    }
+    if (r >= 48) {
+      errorresponse("同步失败，是不是订阅太多了？上限是48页哦，不用的记得清~~");
+      break;
+    }
+    page ++;
+  }
+  // log the feedid and its length
+  console.log("length of feedid: " + feedid.length + "\n" + feedid);
+  // log the sub and its length
+  console.log("length of sub: " + sub.length + "\n" + sub.map(e => e.id));
+  await KV.put("sub", JSON.stringify(sub));
+  for (let i = 0; i < sub.length;i ++) {
+    if (r >= 48) {
+      return successresponse(`同步成功，共获取到${got}个新串，推送${push}个新串`);
+    }
+    if (feedid.indexOf(sub[i].id) === -1) {
+      // add to feed
+      const res = await fetch(`https://api.nmb.best/Api/addFeed?uuid=${uuid}&tid=${sub[i].id}`);
+      const addFeedresText = await res.json();
+      if (addFeedresText === '该串不存在') {
+        console.log("该串不存在");
+        // remove the feed from sub
+        sub.splice(i, 1);
+        i --;
+        KV.put("sub", JSON.stringify(sub));
+        r ++;
+      }
+      else if (addFeedresText === "订阅大成功→_→") {
+        push ++;
+      }
+      else {
+        // error
+        // return the error message
+        console.log(addFeedresText);
+      }
+      r ++;
+    }
+  }
+  return successresponse(`同步成功，共获取到${got}个新串，推送${push}个新串`);
 });
 router.get("*", async (req, e) => {
   try {
