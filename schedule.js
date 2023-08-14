@@ -78,7 +78,7 @@ export async function handleScheduled(event) {
               for (let page = pagestart; page <= pageend; page++) {
                 // first check if we can send more
                 console.log(`page: ${page}`);
-                if (u >= 26) {
+                if (u >= 46) {
                   break;
                 }
                 // let content_all = "";
@@ -123,7 +123,7 @@ export async function handleScheduled(event) {
                   } else {
                   }
                   // check if we can send more
-                  if (u >= 27) {
+                  if (u >= 47) {
                     sub[i].unfinished = true;
                     kvupdate = true;
                     break;
@@ -202,7 +202,7 @@ export async function handleScheduled(event) {
               }
             }
             if (ReplyCount != sub[i].ReplyCount) {
-              if (u >= 26) {
+              if (u >= 46) {
                 console.log("Sent 26 requests, break.")
                 sub[i].unfinished = true;
                 break; // will goto next sub
@@ -290,8 +290,10 @@ export async function handleScheduled(event) {
         sub[i].errorTimes += 1;
         console.log(err);
         if (sub[i].errorTimes >= config.maxErrorCount) {
-          console.log("error over max start notify");
+          console.log("error over max start notifyfor " + sub[i].errorTimes + " times");
+          console.log(sub[i]);
           sub[i].active = false;
+          kvupdate = true;
           await replyWhenError(sub[i],err);
           await KV.put("sub", JSON.stringify(sub));
           break;
@@ -303,8 +305,13 @@ export async function handleScheduled(event) {
       k += 1;
     } else if (sub[i].errorTimes >= config.maxErrorCount) {
       console.log("error over max start notify");
+      console.log(sub[i]);
       sub[i].active = false;
-      await replyWhenError(sub[i],err);
+      kvupdate = true;
+      // remove the sub from the list
+      sub.splice(i, 1);
+      i -= 1;
+      await replyWhenError(sub[i],"error over max start notify for " + sub[i].errorTimes + " times");
       await KV.put("sub", JSON.stringify(sub));
       break;
     }
@@ -322,7 +329,7 @@ export async function handleScheduled(event) {
       }
       break;
     }
-    if (u >= 24) {
+    if (u >= 44) {
       if (kvupdate === true) {
         sub.sort((a, b) => {
           if (a.unread === b.unread) {
