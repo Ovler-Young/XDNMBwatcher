@@ -38,10 +38,10 @@ export async function reply(feed, item) {
 }
 export async function replyWhenError(feed, err) {
   const telegram = new Telegram(config.TG_TOKEN);
-  let sendto = config.TG_SENDTO;
+  let sendto = config.TG_SENDID;
   await telegram.sendMessage(
     sendto,
-    `<b>${html(feed.title)}</b>\n错误消息为：${err}.`,
+    `<b>${html(feed.title)}</b>, id ${feed.id} 发生错误\n错误消息为：${err}.`,
     { parse_mode: "HTML" }
   );
 }
