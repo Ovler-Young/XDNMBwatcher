@@ -383,7 +383,6 @@ router.get("/sync", async (req, e) => {
   let push = 0;
   let feedid = [];
   let sub = JSON.parse(subraw);
-  let subids = sub.map(e => e.id);
   while (true) {
     const res = await cfetch(`https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`);
     r ++;
@@ -393,13 +392,11 @@ router.get("/sync", async (req, e) => {
     }
     for (let i = 0; i < feed.length; i++) {
       feedid.push(feed[i].id);
-      if (typeof(feed[i].id) === "number") {
-        feed[i].id = feed[i].id.toString();
-      }
-      if (feed[i].id in subids) {
-        console.log("已经订阅过了" + feed[i].id);
-      }
-      else {
+      // find the index of the feed in sub
+      let index = sub.findIndex(e => e.id === feed[i].id);
+      if (index === -1) {
+        // not found
+        console.log("未找到" + feed[i].id);
         let item = {};
         item.id = feed[i].id;
         item.url = `https://www.nmbxd1.com/t/${feed[i].id}`;
