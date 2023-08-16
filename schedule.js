@@ -1,13 +1,70 @@
 import { mode, config } from "./config";
-const { reply, replyWhenError } = require(`./notifications/${mode}`);
+const { reply, replyWhenError, sendNotice } = require(`./notifications/${mode}`);
+import { cfetch } from "./utils/util";
 export async function handleScheduled(event) {
   const subraw = await KV.get("sub");
   let sub = JSON.parse(subraw);
+  const uuid = await KV.get("uuid");
+  let idtocheck = [];
+  idtocheck = sub.map((item) => item.id);
+  console.log("idtocheck: " + idtocheck.length + " " + idtocheck);
+  let u = 2; // 请求次数
+
+ 
+  // 访问 feed 接口，check 是否有新帖子
+  let page = 1;  while (true) {
+    const res = await fetch(`https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`);
+    u ++;
+    let feed = await res.json();
+    if (feed.length === 0) {
+      break;
+    }
+    for (let i = 0; i < feed.length; i++) {
+      let index = sub.findIndex(e => e.id === feed[i].id);
+      if (index === -1) {
+        // not found
+        console.log("未找到" + feed[i].id + "，标题为‘" + feed[i].title||feed[i].content.split("<br />")[0].substring(0, 20) + "’，添加到订阅列表");
+        let item = {};
+        item.id = feed[i].id;
+        item.url = `https://www.nmbxd1.com/t/${feed[i].id}`;
+        item.po = feed[i].user_hash;
+        item.title = feed[i].title || feed[i].content.split("<br />")[0].substring(0, 20);
+        item.telegraph = true;
+        item.active = true;
+        item.errorTimes = 0;
+        item.ReplyCount = feed[i].reply_count;
+        item.fid = feed[i].fid;
+        item.sendto = config.TG_SENDID;
+        item.lastUpdateTime = feed[i].now;
+        item.xd = true;
+        item.issingle = true;
+        item.ReplyCountAll = feed[i].reply_count;
+        item.ReplyCountNow = feed[i].reply_count;
+        item.unread = 0;
+        item.send_message_id = null;
+        item.LastRead = feed[i].reply_count;
+        sub.push(item);
+        let message = `#添加订阅 #id${item.id} <b> ${item.title} </b> \n\n <a href="https://www.nmbxd1.com/t/${feed[i].id}">点击查看</a><a href="https://api.nmb.best/Api/delFeed?tid=${item.id}&uuid=${uuid}">点击删除</a>`
+        sendNotice(message);
+        console.log("sendNotice with message: " + message);
+      } else {
+        if (sub[index].ReplyCountAll === feed[i].reply_count) {
+          idtocheck.splice(idtocheck.indexOf(feed[i].id), 1);
+          console.log("id: " + feed[i].id + "title" + feed[i].title + "未更新");
+        }
+      }
+    }
+    page ++;
+  }
+
   //kv has write limit (1000)
   // sub.sort(() => Math.random() - 0.5); //random sort
   // No Random sort. If last try didn't finish, we should try to finish it first.
   // first, if there unfinished is true, we should try to finish it first
   // otherwise we will randomly sort the sub list
+  let notinclude = sub.filter((item) => !idtocheck.includes(item.id));
+  sub = sub.filter((item) => idtocheck.includes(item.id));
+  console.log("sub: " + sub.length + " " + sub.map((item) => item.id));
   if (sub.length > 0) {
     if (sub[sub.length - 1].unfinished === true) {
       // move the unfinished to the front
@@ -15,10 +72,12 @@ export async function handleScheduled(event) {
     } else {
       sub.sort(() => Math.random() - 0.5); //random sort
     }
+  } else {
+    console.log("无有新回复的订阅");
+    return;
   }
   let k = 0;
   let kvupdate = false;
-  let u = 0;
   for (let i = 0; i < sub.length; i++) {
     if (sub[i].active === true && sub[i].errorTimes < config.maxErrorCount) {
       try {
@@ -27,16 +86,7 @@ export async function handleScheduled(event) {
         if (sub[i].xd === true) {
           if (sub[i].issingle === undefined) {sub[i].issingle = true}
           if (sub[i].issingle === true) {
-            const resp = await fetch(
-              `https://api.nmb.best/Api/po?id=${sub[i].id}`,
-              {
-                method: "GET",
-                headers: {
-                  "Content-Type": "application/json; charset=utf-8",
-                  cookie: `userhash=${config.COOKIES}`
-                }
-              }
-            );
+            const resp = await cfetch(`https://api.nmb.best/Api/po?id=${sub[i].id}`);
             u += 1;
             const text = await resp.json();
             if (text.success === false) {
@@ -52,16 +102,7 @@ export async function handleScheduled(event) {
             if (ReplyCount > sub[i].ReplyCount) {
               // 页码数 为 ReplyCount 对 19 取模
               // Get the total reply count first
-              const res_2 = await fetch(
-                `https://api.nmb.best/Api/thread?id=${sub[i].id}`,
-                {
-                  method: "GET",
-                  headers: {
-                    "Content-Type": "application/json; charset=utf-8",
-                    cookie: `userhash=${config.COOKIES}`
-                  }
-                }
-              );
+              const res_2 = await cfetch(`https://api.nmb.best/Api/thread?id=${sub[i].id}`);
               u += 1;
               sub[i].ReplyCountAll = (await res_2.json()).ReplyCount;
               console.log(`ReplyCountAll: ${sub[i].ReplyCountAll}`);
@@ -83,16 +124,7 @@ export async function handleScheduled(event) {
                 }
                 // let content_all = "";
                 let content_all = [];
-                const res = await fetch(
-                  `https://api.nmb.best/Api/po?id=${sub[i].id}&page=${page}`,
-                  {
-                    method: "GET",
-                    headers: {
-                      "Content-Type": "application/json; charset=utf-8",
-                      cookie: `userhash=${config.COOKIES}`
-                    }
-                  }
-                );
+                const res = await cfetch(`https://api.nmb.best/Api/po?id=${sub[i].id}&page=${page}`);
                 u += 1;
                 const data = await res.json();
                 console.log(`get page ${page} of ${sub[i].id}`);
@@ -156,16 +188,7 @@ export async function handleScheduled(event) {
             }
           } else {
             // for writers other than po
-            const resp = await fetch(
-              `https://api.nmb.best/Api/thread?id=${sub[i].id}`,
-              {
-                method: "GET",
-                headers: {
-                  "Content-Type": "application/json; charset=utf-8",
-                  cookie: `userhash=${config.COOKIES}`
-                }
-              }
-            );
+            const resp = await cfetch(`https://api.nmb.best/Api/thread?id=${sub[i].id}`);
             u += 1;
             const text = await resp.json();
             if (text.success === false) {
@@ -215,16 +238,7 @@ export async function handleScheduled(event) {
               console.log(`pageend: ${pageend}`);
               for (let page = pagestart; page <= pageend; page++) {
                 console.log(`page: ${page}`);
-                const res = await fetch(
-                  `https://api.nmb.best/Api/thread?id=${sub[i].id}&page=${page}`,
-                  {
-                    method: "GET",
-                    headers: {
-                      "Content-Type": "application/json; charset=utf-8",
-                      cookie: `userhash=${config.COOKIES}`
-                    }
-                  }
-                );
+                const res = await cfetch(`https://api.nmb.best/Api/thread?id=${sub[i].id}&page=${page}`);
                 u += 1;
                 // let content_all = "";
                 let content_all = [];
@@ -294,12 +308,16 @@ export async function handleScheduled(event) {
           console.log(sub[i]);
           sub[i].active = false;
           kvupdate = true;
+          // merge sub and notinclude
+          sub = sub.concat(notinclude);
           await replyWhenError(sub[i],err);
           await KV.put("sub", JSON.stringify(sub));
           break;
         } else {
           await replyWhenError(sub[i],err);
+          sub = sub.concat(notinclude);
           await KV.put("sub", JSON.stringify(sub));
+          break;
         }
       }
       k += 1;
@@ -312,6 +330,7 @@ export async function handleScheduled(event) {
       sub.splice(i, 1);
       i -= 1;
       await replyWhenError(sub[i],"error over max start notify for " + sub[i].errorTimes + " times");
+      sub = sub.concat(notinclude);
       await KV.put("sub", JSON.stringify(sub));
       break;
     }
@@ -324,6 +343,7 @@ export async function handleScheduled(event) {
             return b.unread - a.unread;
           }
         });
+        sub = sub.concat(notinclude);
         await KV.put("sub", JSON.stringify(sub));
         console.log("kv update");
       }
@@ -338,6 +358,7 @@ export async function handleScheduled(event) {
             return b.unread - a.unread;
           }
         });
+        sub = sub.concat(notinclude);
         await KV.put("sub", JSON.stringify(sub));
         console.log("kv update");
         console.log("u over 24");

@@ -45,3 +45,9 @@ export async function replyWhenError(feed, err) {
     { parse_mode: "HTML" }
   );
 }
+
+export async function sendNotice(message) {
+  const telegram = new Telegram(config.TG_TOKEN);
+  let sendto = config.TG_SENDID;
+  await telegram.sendMessage(sendto, message, { parse_mode: "HTML" });
+}
