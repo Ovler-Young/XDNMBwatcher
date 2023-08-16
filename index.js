@@ -401,7 +401,7 @@ router.get("/sync", async (req, e) => {
         item.id = feed[i].id;
         item.url = `https://www.nmbxd1.com/t/${feed[i].id}`;
         item.po = feed[i].user_hash;
-        item.title = feed[i].title;
+        item.title = feed[i].title || feed[i].content.split("<br />")[0].substring(0, 20);
         item.telegraph = true;
         item.active = true;
         item.errorTimes = 0;
@@ -417,6 +417,12 @@ router.get("/sync", async (req, e) => {
         item.send_message_id = null;
         item.LastRead = feed[i].reply_count;
         sub.push(item);
+        got ++;
+      }
+      else if (sub[index].title == "") 
+      {
+        sub[index].title = feed[i].content.split("<br />")[0].substring(0, 20);
+        sub[index].lastUpdateTime = feed[i].now;
         got ++;
       }
     }
