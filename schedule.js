@@ -13,7 +13,7 @@ export async function handleScheduled(event) {
  
   // 访问 feed 接口，check 是否有新帖子
   let page = 1;  while (true) {
-    const res = await fetch(`https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`);
+    const res = await cfetch(`https://www.nmbxd1.com/Api/feed?uuid=${uuid}&page=${page}`);
     u ++;
     let feed = await res.json();
     if (feed.length === 0) {
@@ -44,9 +44,10 @@ export async function handleScheduled(event) {
         item.send_message_id = null;
         item.LastRead = feed[i].reply_count;
         sub.push(item);
-        let message = `#添加订阅 #id${item.id} <b> ${item.title} </b> \n\n <a href="https://www.nmbxd1.com/t/${feed[i].id}">点击查看</a><a href="https://api.nmb.best/Api/delFeed?tid=${item.id}&uuid=${uuid}">点击删除</a>`
+        let message = `#添加订阅 #id${item.id} <b> ${item.title} </b>\n${feed[i].content.split("<br />")[0]}\n<a href="https://www.nmbxd1.com/t/${feed[i].id}">点击查看</a>`;
         sendNotice(message);
         console.log("sendNotice with message: " + message);
+        KV.put("sub", JSON.stringify(sub));
       } else {
         if (sub[index].ReplyCountAll === feed[i].reply_count) {
           idtocheck.splice(idtocheck.indexOf(feed[i].id), 1);
@@ -86,7 +87,7 @@ export async function handleScheduled(event) {
         if (sub[i].xd === true) {
           if (sub[i].issingle === undefined) {sub[i].issingle = true}
           if (sub[i].issingle === true) {
-            const resp = await cfetch(`https://api.nmb.best/Api/po?id=${sub[i].id}`);
+            const resp = await cfetch(`https://www.nmbxd1.com/Api/po?id=${sub[i].id}`);
             u += 1;
             const text = await resp.json();
             if (text.success === false) {
