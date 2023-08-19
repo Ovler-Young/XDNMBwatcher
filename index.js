@@ -101,27 +101,27 @@ router.post(`/${secret_path}/subitem`, async req => {
       await KV.put("sub", JSON.stringify(sub));
       // https://api.nmb.best/Api/addFeed?uuid=xxx&tid=xxx
       const uuid = await KV.get("uuid");
-      const addFeedres = await cfetch(
+      const addFeedres = await fetch(
         `https://api.nmb.best/Api/addFeed?uuid=${uuid}&tid=${msg}`
       );
       // decode the response
       // "\u8be5\u4e32\u4e0d\u5b58\u5728" (该串不存在) -> 该串不存在 
-      const addFeedresText = await addFeedres.text();
-      if (addFeedresText === '"\u8be5\u4e32\u4e0d\u5b58\u5728"') {
-        errorresponse("该串不存在");
+      const addFeedresText = await addFeedres.json();
+      if (addFeedresText === '该串不存在') {
+        return errorresponse("该串不存在");
       }
       // "\u8ba2\u9605\u5927\u6210\u529f\u2192_\u2192" (订阅大成功→_→) -> 订阅大成功→_→
-      else if (addFeedresText === '"\u8ba2\u9605\u5927\u6210\u529f\u2192_\u2192"') {
-        successresponse(`${feed.title} add succeed`);
+      else if (addFeedresText === '订阅大成功→_→') {
+        return successresponse(`${feed.title} add succeed`);
       }
       else {
         // error
         // return the error message
-        errorresponse(addFeedresText);
+        return errorresponse(addFeedresText);
       }
     }
   } else {
-    errorresponse("Network error");
+    return errorresponse("Network error");
   }
 });
 router.post(`/${secret_path}/deleteitem`, async req => {
@@ -132,11 +132,27 @@ router.post(`/${secret_path}/deleteitem`, async req => {
   const url = body.url;
   const index = sub.findIndex(e => e.url === url);
   if (index === -1) {
-    errorresponse("未找到该订阅");
+    return errorresponse("未找到该订阅");
   } else {
+    const uuid = await KV.get("uuid");
+    console.log(uuid);
+    const addFeedres = await fetch(
+      `https://api.nmb.best/Api/delFeed?uuid=${uuid}&tid=${sub[index].id}`
+    );
+    // decode the response
+    // ""\u53d6\u6d88\u8ba2\u9605\u6210\u529f!"" （取消订阅成功！） -> 取消订阅成功！
+    const addFeedresText = await addFeedres.json();
+    console.log(addFeedresText);
     sub.splice(index, 1);
+    console.log(sub);
     await KV.put("sub", JSON.stringify(sub));
-    successresponse("删除成功");
+    if (addFeedresText === '取消订阅成功!') {
+      return successresponse("删除成功");
+    } else {
+      // error
+      // return the error message
+      return errorresponse(addFeedresText);
+    }
   }
 });
 router.post(`/${secret_path}/active`, async req => {
@@ -148,13 +164,13 @@ router.post(`/${secret_path}/active`, async req => {
   const state = body.state;
   const index = sub.findIndex(e => e.url === url);
   if (index === -1 || state === undefined) {
-    errorresponse("Please verify your input!");
+    return errorresponse("Please verify your input!");
   }
   sub[index].active = state;
   sub[index].lastUpdateTime = new Date();
   sub[index].errorTimes = 0;
   await KV.put("sub", JSON.stringify(sub));
-  successresponse(`修改成功，当前状态为 ${state ? "on" : "off"}`);
+  return successresponse(`修改成功，当前状态为 ${state ? "on" : "off"}`);
 });
 router.post(`/${secret_path}/telegraph`, async req => {
   // 激活/禁用 Telegraph
@@ -165,11 +181,11 @@ router.post(`/${secret_path}/telegraph`, async req => {
   const state = body.state;
   const index = sub.findIndex(e => e.url === url);
   if (index === -1 || state === undefined) {
-    errorresponse("Please verify your input!");
+    return errorresponse("Please verify your input!");
   }
   sub[index].telegraph = state;
   await KV.put("sub", JSON.stringify(sub));
-  successresponse(`修改成功，当前 Telegraph 状态为 ${state ? "on" : "off"}`);
+  return successresponse(`修改成功，当前 Telegraph 状态为 ${state ? "on" : "off"}`);
 });
 router.post(`/${secret_path}/title`, async req => {
   // 修改订阅标题
@@ -180,11 +196,11 @@ router.post(`/${secret_path}/title`, async req => {
   const title = body.title;
   const index = sub.findIndex(e => e.url === url);
   if (index === -1 || title === undefined) {
-    errorresponse("Please verify your input!");
+    return errorresponse("Please verify your input!");
   }
   sub[index].title = title;
   await KV.put("sub", JSON.stringify(sub));
-  successresponse(`修改成功，当前该订阅源标题为 ${title}`);
+  return successresponse(`修改成功，当前该订阅源标题为 ${title}`);
 });
 router.post(`/${secret_path}/unread`, async req => {
   // 修改订阅未读数
@@ -194,26 +210,26 @@ router.post(`/${secret_path}/unread`, async req => {
   const url = body.url || "";
   const index = sub.findIndex(e => e.url === url);
   if (index === -1) {
-    errorresponse("Please verify your input!");
+    return errorresponse("Please verify your input!");
   }
   let id = sub[index].id;
   sub[index].unread = 0; 
   const res = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
   sub[index].LastRead = (await res.json()).ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
-  successresponse(`修改成功，已清空该订阅源未读`);
+  return successresponse(`修改成功，已清空该订阅源未读`);
 });
 router.get(`/${secret_path}/jumpread`, async req => {
   // 通过search里的id跳转到指定帖子
   const id = req.url.split("?id=")[1];
   if (id === undefined) {
-    errorresponse("Please verify your input!");
+    return errorresponse("Please verify your input!");
   }
   const subraw = await KV.get("sub");
   let sub = JSON.parse(subraw);
   const index = sub.findIndex(e => e.id === id);
   if (index === -1) {
-    errorresponse("id not found. Did you subscribe this thread?");
+    return errorresponse("id not found. Did you subscribe this thread?");
   }
   sub[index].unread = 0;
   if (sub[index].LastRead === undefined) {
@@ -240,13 +256,13 @@ router.get(`/${secret_path}/jumpread`, async req => {
 router.get(`/${secret_path}/jumplast`, async req => {
   const id = req.url.split("?id=")[1];
   if (id === undefined) {
-    errorresponse("Please verify your input!");
+    return errorresponse("Please verify your input!");
   }
   const subraw = await KV.get("sub");
   let sub = JSON.parse(subraw);
   const index = sub.findIndex(e => e.id === id);
   if (index === -1) {
-    errorresponse("Please verify your input!");
+    return errorresponse("Please verify your input!");
   }
   sub[index].unread = 0;
   const res = await fetch(`https://api.nmb.best/Api/thread?id=${id}`);
@@ -268,7 +284,7 @@ router.get(`/${secret_path}/jumplast`, async req => {
 router.get(`/${secret_path}/subscribe`, async req => {
   const uuid = req.url.split("?uuid=")[1];
   if (uuid === undefined) {
-    errorresponse("Please verify your input!");
+    return errorresponse("Please verify your input!");
   }
   await KV.put("uuid", uuid);
 
@@ -316,7 +332,7 @@ router.get(`/${secret_path}/subscribe`, async req => {
     page++;  // Increase the page number for the next iteration
   }  // End of loop for multiple pages
   await KV.put("sub", JSON.stringify(sub)); // Save the updated sub array
-  successresponse(`${count} new feeds added`);
+  return successresponse(`${count} new feeds added`);
 });
 router.get("/test", async (req, e) => {
   // 测试
@@ -355,6 +371,10 @@ router.get("/fixerror", async (req, e) => {
     // 临时
     if (typeof(sub[i].id) === "number") {
       sub[i].id = sub[i].id.toString();
+    }
+    // deal with url
+    if (sub[i].url === undefined) {
+      sub[i].url = `https://www.nmbxd1.com/t/${sub[i].id}`;
     }
   }
   console.log(sub);
@@ -422,12 +442,14 @@ router.get("/sync", async (req, e) => {
       else if (sub[index].title == "") 
       {
         sub[index].title = feed[i].content.split("<br />")[0].substring(0, 20);
-        sub[index].lastUpdateTime = feed[i].now;
         got ++;
+      }
+      else if ( sub[index].recent_replies === undefined ) {
+        sub[index].recent_replies = feed[i].recent_replies; 
       }
     }
     if (r >= 48) {
-      errorresponse("同步失败，是不是订阅太多了？上限是48页哦，不用的记得清~~");
+      return errorresponse("同步失败，是不是订阅太多了？上限是48页哦，不用的记得清~~");
       break;
     }
     page ++;
@@ -465,6 +487,86 @@ router.get("/sync", async (req, e) => {
     }
   }
   return successresponse(`同步成功，共获取到${got}个新串，推送${push}个新串`);
+});
+router.get("/removelongunupdaye", async (req, e) => {
+  // 删除长时间未更新的订阅
+  const { sendNotice } = require(`./notifications/${mode}`);
+  const subraw = await KV.get("sub");
+  let sub = JSON.parse(subraw);
+  // 重复id只保留一个，保留该项目子元素最多的那个
+  let id = [];
+  for (let i = 0; i < sub.length; i++) {
+    if (id.indexOf(sub[i].id) === -1) {
+      id.push(sub[i].id);
+    }
+  }
+  let newsub = [];
+  for (let i = 0; i < id.length; i++) {
+    let max = 0;
+    let index = 0;
+    for (let j = 0; j < sub.length; j++) {
+      if (sub[j].id === id[i]) {
+        if (sub[j].ReplyCount > max) {
+          max = sub[j].ReplyCount;
+          index = j;
+        }
+      }
+    }
+    newsub.push(sub[index]);
+  }
+  sub = newsub;
+  let removed = 0;
+  let recent_replies = [];
+  let last_reply = 99999999;
+  const uuid = await KV.get("uuid");
+  let reqcount = 0;
+  for (let i = 0; i < sub.length; i++) {
+    // get recent_replies
+    if (sub[i].recent_replies === undefined) {
+      console.log("id: " + sub[i].id + " recent_replies undefined")
+      continue;
+    }
+    recent_replies = sub[i].recent_replies.toString().split("[")[1].split("]")[0].split(",").map((item) => parseInt(item)).reverse();;
+    last_reply = recent_replies[0] || 99999999;
+    if (last_reply <= 56515865 ) { // 2023-03-30 00:00:00
+      // too old, remove
+      console.log("remove " + sub[i].id);
+      const delFeedres = await fetch(
+        `https://api.nmb.best/Api/delFeed?uuid=${uuid}&tid=${sub[i].id}`
+      );
+      // decode the response
+      const delFeedresText = await delFeedres.json();
+      reqcount ++;
+      console.log("串" + sub[i].id + "，标题" + sub[i].title + "，最新id" + last_reply + "，删除结果" + delFeedresText);
+      // send notice
+      sendNotice("#自动删除 #id" + sub[i].id + " " +sub[i].title + "\n该串长时间未更新，已自动取消订阅，最新id为" + last_reply + "\nhttps://www.nmbxd1.com/t/" + sub[i].id);
+      reqcount ++;
+      sub.splice(i, 1);
+      await KV.put("sub", JSON.stringify(sub));
+      reqcount ++;
+      i --;
+      removed ++;
+    }
+    if (reqcount >= 40) {
+      break;
+    }
+  }
+  console.log(sub);
+  await KV.put("sub", JSON.stringify(sub));
+  reqcount ++;
+  return new Response(
+    JSON.stringify({
+      status: 200,
+      message: `成功删除${removed}个订阅`,
+    }),
+    {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, HEAD",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
+    }
+  );
 });
 router.get("*", async (req, e) => {
   try {
