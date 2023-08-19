@@ -8,13 +8,17 @@ export async function botSub(ctx) {
       message = message.reply_to_message;
       id = message.text.match(/\d{8}/);
       if (id === null) {
-        await ctx.reply("未在 该消息 及 回复 中找到帖子ID", { reply_to_message_id: ctx.update.message.message_id });
+        await ctx.reply("未在 该消息 及 回复 中找到帖子ID", {
+          reply_to_message_id: ctx.update.message.message_id
+        });
         return;
       } else {
         id = id[0];
       }
     } else {
-      await ctx.reply("未在该消息中找到帖子ID", { reply_to_message_id: ctx.update.message.message_id });
+      await ctx.reply("未在该消息中找到帖子ID", {
+        reply_to_message_id: ctx.update.message.message_id
+      });
       return;
     }
   }
@@ -23,7 +27,9 @@ export async function botSub(ctx) {
     let feed = {};
     const data = await resp.json();
     if (data.success === false) {
-      await ctx.reply(data.error, { reply_to_message_id: ctx.update.message.message_id });
+      await ctx.reply(data.error, {
+        reply_to_message_id: ctx.update.message.message_id
+      });
     } else {
       const subraw = (await KV.get("sub")) || "[]";
       let sub = JSON.parse(subraw);
@@ -43,16 +49,22 @@ export async function botSub(ctx) {
       feed.fid = data.fid;
       feed.sendto = ctx.update.message.chat.id;
       if (sub.findIndex(e => e.url === feed.url) != -1) {
-        await ctx.reply("已经订阅过此信息源", { reply_to_message_id: ctx.update.message.message_id });
+        await ctx.reply("已经订阅过此信息源", {
+          reply_to_message_id: ctx.update.message.message_id
+        });
       } else {
         const now = new Date();
         feed.lastUpdateTime = now;
         sub.push(feed);
         await KV.put("sub", JSON.stringify(sub));
-        await ctx.reply(`成功订阅 ${feed.title}`, { reply_to_message_id: ctx.update.message.message_id });
+        await ctx.reply(`成功订阅 ${feed.title}`, {
+          reply_to_message_id: ctx.update.message.message_id
+        });
       }
     }
   } else {
-    await ctx.reply("订阅失败", { reply_to_message_id: ctx.update.message.message_id });
+    await ctx.reply("订阅失败", {
+      reply_to_message_id: ctx.update.message.message_id
+    });
   }
 }

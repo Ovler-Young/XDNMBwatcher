@@ -1,5 +1,5 @@
 // webpack.config.js
-const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
+const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
 
 module.exports = {
   target: "webworker",
@@ -7,12 +7,12 @@ module.exports = {
   mode: "production",
   resolve: {
     fallback: {
-      fs: false,
-    },
+      fs: false
+    }
   },
   plugins: [new NodePolyfillPlugin()],
   performance: {
-    hints: false,
+    hints: false
   },
   module: {
     rules: [
@@ -23,8 +23,8 @@ module.exports = {
       },
       {
         test: /\.md$/,
-        use:{ loader: "raw-loader" },
-      },
+        use: { loader: "raw-loader" }
+      }
     ]
   }
 };

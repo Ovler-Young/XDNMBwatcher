@@ -14,5 +14,8 @@ export async function botHelp(ctx) {
   msg += `<code>/help</code> - 再次显示帮助\n`;
   msg += `直接分享响应链接到对话自动添加订阅源\n`;
   msg += `直接转发响应链接到对话自动绑定订阅源\n`;
-  await ctx.reply(msg, { parse_mode: "HTML", reply_to_message_id: ctx.update.message.message_id });
+  await ctx.reply(msg, {
+    parse_mode: "HTML",
+    reply_to_message_id: ctx.update.message.message_id
+  });
 }

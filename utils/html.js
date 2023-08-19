@@ -3,4 +3,5 @@ const map = {
   ">": "&gt;",
   "&": "&amp;"
 };
-export const html = string => string.toString().replace(/[\<\>\&]/g, m => map[m]);
+export const html = string =>
+  string.toString().replace(/[\<\>\&]/g, m => map[m]);

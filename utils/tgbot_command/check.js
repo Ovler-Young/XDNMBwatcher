@@ -19,34 +19,37 @@ export async function Check(ctx) {
     }
   }
   let frontend_page = 0;
-  const resp = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`)
+  const resp = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
   // find what we just posted
   if (resp.ok) {
-      // if everything is fine, return the json
-      if (resp.status === 200) {
-          frontend_page = parseInt((((await resp.json()).ReplyCount)-1) / 19) + 1;
-          console.log(`frontend_page: ${frontend_page}`);
-      }
+    // if everything is fine, return the json
+    if (resp.status === 200) {
+      frontend_page = parseInt(((await resp.json()).ReplyCount - 1) / 19) + 1;
+      console.log(`frontend_page: ${frontend_page}`);
+    }
   } else {
-      // otherwise, return the error
-      return resp;
+    // otherwise, return the error
+    return resp;
   }
-  const lastpage = await cfetch(`https://api.nmb.best/Api/thread?id=${id}&page=${frontend_page}`)
+  const lastpage = await cfetch(
+    `https://api.nmb.best/Api/thread?id=${id}&page=${frontend_page}`
+  );
   const data = await lastpage.json();
   console.log(data);
-  try {for (let j = 0; j < data.Replies.length; j++) {
+  try {
+    for (let j = 0; j < data.Replies.length; j++) {
       if (data.Replies[j].Content === msg) {
-          console.log(`my_id: ${data.Replies[j].Content}`);
-          console.log(`user_hash: ${data.Replies[j].user_hash}`);
-          console.log(`id: ${data.Replies[j].id}`);
-          if (data.Replies[j].user_hash === "RRbLdfa") {
-              console.log(`my_id: ${data.Replies[j].id}`);
-              return data.Replies[j].id;
-          }
+        console.log(`my_id: ${data.Replies[j].Content}`);
+        console.log(`user_hash: ${data.Replies[j].user_hash}`);
+        console.log(`id: ${data.Replies[j].id}`);
+        if (data.Replies[j].user_hash === "RRbLdfa") {
+          console.log(`my_id: ${data.Replies[j].id}`);
+          return data.Replies[j].id;
+        }
       }
-  }}
-  catch (e) {
-      console.log(e);
-      return e;
+    }
+  } catch (e) {
+    console.log(e);
+    return e;
   }
 }

@@ -8,7 +8,7 @@ import { botBind } from "./utils/tgbot_command/bind";
 import { botShare } from "./utils/tgbot_command/share";
 import { botUnread } from "./utils/tgbot_command/unread";
 import { botTelegraph } from "./utils/tgbot_command/telegraph";
-import { botListAll } from "./utils/tgbot_command/all"; 
+import { botListAll } from "./utils/tgbot_command/all";
 import { botRoll } from "./utils/tgbot_command/roll_banner";
 import { botLatest } from "./utils/tgbot_command/latest";
 import { botReadAll } from "./utils/tgbot_command/readall";
@@ -22,7 +22,9 @@ bot.command("list", botList);
 bot.command("sub", botSub);
 bot.command("unsuball", botUnSubAll);
 bot.command("unsub", botUnSub);
-bot.command("ping", ctx => ctx.reply("pong", { reply_to_message_id: ctx.update.message.message_id }));
+bot.command("ping", ctx =>
+  ctx.reply("pong", { reply_to_message_id: ctx.update.message.message_id })
+);
 bot.command("help", botHelp);
 bot.command("retitle", botRetitle);
 bot.command("bind", botBind);
@@ -38,7 +40,10 @@ bot.command("readall", botReadAll);
 bot.command("po", botPO);
 bot.command("mute", botMute);
 bot.on("message", async ctx => {
-  if (ctx.update.message.text.includes("nmbxd") || ctx.update.message.text.includes("#id")) {
+  if (
+    ctx.update.message.text.includes("nmbxd") ||
+    ctx.update.message.text.includes("#id")
+  ) {
     await botShare(ctx);
   }
 });

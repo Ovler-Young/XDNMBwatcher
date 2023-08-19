@@ -13,8 +13,8 @@ if (mode === "telegram") {
 }
 import { cfetch, errorresponse, successresponse } from "./utils/util";
 
-const refreshunread = async (index) => {
-  const res = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`)
+const refreshunread = async index => {
+  const res = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
   sub[index].LastRead = (await res.json()).ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
 };
@@ -45,9 +45,23 @@ router.get(`/${secret_path}/feeds`, async () => {
   const raw = await KV.get("sub");
   // sort feed by unread if is not undefined or 0, otherwise sort by lastUpdateTime, and then by id
   const sub = JSON.parse(raw).sort((a, b) => {
-    let aTime = parseInt(a.lastUpdateTime.substring(0, 4)+a.lastUpdateTime.substring(5, 7)+a.lastUpdateTime.substring(8, 10)+a.lastUpdateTime.substring(13, 15)+a.lastUpdateTime.substring(16, 18)+a.lastUpdateTime.substring(19, 21));
-    let bTime = parseInt(b.lastUpdateTime.substring(0, 4)+b.lastUpdateTime.substring(5, 7)+b.lastUpdateTime.substring(8, 10)+b.lastUpdateTime.substring(13, 15)+b.lastUpdateTime.substring(16, 18)+b.lastUpdateTime.substring(19, 21));
-    return aTime === bTime ? a.id - b.id : bTime - aTime
+    let aTime = parseInt(
+      a.lastUpdateTime.substring(0, 4) +
+        a.lastUpdateTime.substring(5, 7) +
+        a.lastUpdateTime.substring(8, 10) +
+        a.lastUpdateTime.substring(13, 15) +
+        a.lastUpdateTime.substring(16, 18) +
+        a.lastUpdateTime.substring(19, 21)
+    );
+    let bTime = parseInt(
+      b.lastUpdateTime.substring(0, 4) +
+        b.lastUpdateTime.substring(5, 7) +
+        b.lastUpdateTime.substring(8, 10) +
+        b.lastUpdateTime.substring(13, 15) +
+        b.lastUpdateTime.substring(16, 18) +
+        b.lastUpdateTime.substring(19, 21)
+    );
+    return aTime === bTime ? a.id - b.id : bTime - aTime;
   });
   return new Response(JSON.stringify(sub), {
     status: 200,
@@ -105,16 +119,15 @@ router.post(`/${secret_path}/subitem`, async req => {
         `https://api.nmb.best/Api/addFeed?uuid=${uuid}&tid=${msg}`
       );
       // decode the response
-      // "\u8be5\u4e32\u4e0d\u5b58\u5728" (该串不存在) -> 该串不存在 
+      // "\u8be5\u4e32\u4e0d\u5b58\u5728" (该串不存在) -> 该串不存在
       const addFeedresText = await addFeedres.json();
-      if (addFeedresText === '该串不存在') {
+      if (addFeedresText === "该串不存在") {
         return errorresponse("该串不存在");
       }
       // "\u8ba2\u9605\u5927\u6210\u529f\u2192_\u2192" (订阅大成功→_→) -> 订阅大成功→_→
-      else if (addFeedresText === '订阅大成功→_→') {
+      else if (addFeedresText === "订阅大成功→_→") {
         return successresponse(`${feed.title} add succeed`);
-      }
-      else {
+      } else {
         // error
         // return the error message
         return errorresponse(addFeedresText);
@@ -146,7 +159,7 @@ router.post(`/${secret_path}/deleteitem`, async req => {
     sub.splice(index, 1);
     console.log(sub);
     await KV.put("sub", JSON.stringify(sub));
-    if (addFeedresText === '取消订阅成功!') {
+    if (addFeedresText === "取消订阅成功!") {
       return successresponse("删除成功");
     } else {
       // error
@@ -185,7 +198,9 @@ router.post(`/${secret_path}/telegraph`, async req => {
   }
   sub[index].telegraph = state;
   await KV.put("sub", JSON.stringify(sub));
-  return successresponse(`修改成功，当前 Telegraph 状态为 ${state ? "on" : "off"}`);
+  return successresponse(
+    `修改成功，当前 Telegraph 状态为 ${state ? "on" : "off"}`
+  );
 });
 router.post(`/${secret_path}/title`, async req => {
   // 修改订阅标题
@@ -213,7 +228,7 @@ router.post(`/${secret_path}/unread`, async req => {
     return errorresponse("Please verify your input!");
   }
   let id = sub[index].id;
-  sub[index].unread = 0; 
+  sub[index].unread = 0;
   const res = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
   sub[index].LastRead = (await res.json()).ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
@@ -243,12 +258,15 @@ router.get(`/${secret_path}/jumpread`, async req => {
   await KV.put("sub", JSON.stringify(sub));
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
-    let page = Math.floor((lastreadto - 1)/9) + 1;
+    let page = Math.floor((lastreadto - 1) / 9) + 1;
     console.log(page);
     console.log("mobile");
-    return Response.redirect(`https://www.nmbxd1.com/m/t/${id}?page=${page}`, 307);
+    return Response.redirect(
+      `https://www.nmbxd1.com/m/t/${id}?page=${page}`,
+      307
+    );
   }
-  let page = Math.floor((lastreadto - 1)/19) + 1;
+  let page = Math.floor((lastreadto - 1) / 19) + 1;
   console.log(page);
   console.log("pc");
   return Response.redirect(`https://www.nmbxd1.com/t/${id}?page=${page}`, 307);
@@ -271,12 +289,15 @@ router.get(`/${secret_path}/jumplast`, async req => {
   let lastreadto = sub[index].LastRead;
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
-    let page = Math.floor((lastreadto - 1)/9) + 1;
+    let page = Math.floor((lastreadto - 1) / 9) + 1;
     console.log(page);
     console.log("mobile");
-    return Response.redirect(`https://www.nmbxd1.com/m/t/${id}?page=${page}`, 307);
+    return Response.redirect(
+      `https://www.nmbxd1.com/m/t/${id}?page=${page}`,
+      307
+    );
   }
-  let page = Math.floor((lastreadto - 1)/19) + 1;
+  let page = Math.floor((lastreadto - 1) / 19) + 1;
   console.log(page);
   console.log("pc");
   return Response.redirect(`https://www.nmbxd1.com/t/${id}?page=${page}`, 307);
@@ -292,13 +313,16 @@ router.get(`/${secret_path}/subscribe`, async req => {
   let count = 0;
   let subraw = await KV.get("sub");
   let sub = JSON.parse(subraw);
-  
-  while (true) {  // Start of loop for multiple pages
-    const res = await fetch(`https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`);
+
+  while (true) {
+    // Start of loop for multiple pages
+    const res = await fetch(
+      `https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`
+    );
     let feed = await res.json();
     // Break the loop if the feed is empty
     if (feed.length === 0) {
-      break;  
+      break;
     }
     for (let i = 0; i < feed.length; i++) {
       if (feed[i].id in sub.map(e => e.id)) {
@@ -327,10 +351,10 @@ router.get(`/${secret_path}/subscribe`, async req => {
       count++;
     }
     if (feed.length < 10) {
-      break;  
+      break;
     }
-    page++;  // Increase the page number for the next iteration
-  }  // End of loop for multiple pages
+    page++; // Increase the page number for the next iteration
+  } // End of loop for multiple pages
   await KV.put("sub", JSON.stringify(sub)); // Save the updated sub array
   return successresponse(`${count} new feeds added`);
 });
@@ -369,7 +393,7 @@ router.get("/fixerror", async (req, e) => {
   sub = newsub;
   for (let i = 0; i < sub.length; i++) {
     // 临时
-    if (typeof(sub[i].id) === "number") {
+    if (typeof sub[i].id === "number") {
       sub[i].id = sub[i].id.toString();
     }
     // deal with url
@@ -404,8 +428,10 @@ router.get("/sync", async (req, e) => {
   let feedid = [];
   let sub = JSON.parse(subraw);
   while (true) {
-    const res = await cfetch(`https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`);
-    r ++;
+    const res = await cfetch(
+      `https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`
+    );
+    r++;
     let feed = await res.json();
     if (feed.length === 0) {
       break;
@@ -421,7 +447,8 @@ router.get("/sync", async (req, e) => {
         item.id = feed[i].id;
         item.url = `https://www.nmbxd1.com/t/${feed[i].id}`;
         item.po = feed[i].user_hash;
-        item.title = feed[i].title || feed[i].content.split("<br />")[0].substring(0, 20);
+        item.title =
+          feed[i].title || feed[i].content.split("<br />")[0].substring(0, 20);
         item.telegraph = true;
         item.active = true;
         item.errorTimes = 0;
@@ -437,53 +464,54 @@ router.get("/sync", async (req, e) => {
         item.send_message_id = null;
         item.LastRead = feed[i].reply_count;
         sub.push(item);
-        got ++;
-      }
-      else if (sub[index].title == "") 
-      {
+        got++;
+      } else if (sub[index].title == "") {
         sub[index].title = feed[i].content.split("<br />")[0].substring(0, 20);
-        got ++;
-      }
-      else if ( sub[index].recent_replies === undefined ) {
-        sub[index].recent_replies = feed[i].recent_replies; 
+        got++;
+      } else if (sub[index].recent_replies === undefined) {
+        sub[index].recent_replies = feed[i].recent_replies;
       }
     }
     if (r >= 48) {
-      return errorresponse("同步失败，是不是订阅太多了？上限是48页哦，不用的记得清~~");
+      return errorresponse(
+        "同步失败，是不是订阅太多了？上限是48页哦，不用的记得清~~"
+      );
       break;
     }
-    page ++;
+    page++;
   }
   // log the feedid and its length
   console.log("length of feedid: " + feedid.length + "\n" + feedid);
   // log the sub and its length
   console.log("length of sub: " + sub.length + "\n" + sub.map(e => e.id));
   await KV.put("sub", JSON.stringify(sub));
-  for (let i = 0; i < sub.length;i ++) {
+  for (let i = 0; i < sub.length; i++) {
     if (r >= 48) {
-      return successresponse(`同步成功，共获取到${got}个新串，推送${push}个新串`);
+      return successresponse(
+        `同步成功，共获取到${got}个新串，推送${push}个新串`
+      );
     }
     if (feedid.indexOf(sub[i].id) === -1) {
       // add to feed
-      const res = await fetch(`https://api.nmb.best/Api/addFeed?uuid=${uuid}&tid=${sub[i].id}`);
+      const res = await fetch(
+        `https://api.nmb.best/Api/addFeed?uuid=${uuid}&tid=${sub[i].id}`
+      );
       const addFeedresText = await res.json();
-      if (addFeedresText === '该串不存在') {
+      if (addFeedresText === "该串不存在") {
         console.log("该串不存在");
         // remove the feed from sub
         sub.splice(i, 1);
-        i --;
+        i--;
         KV.put("sub", JSON.stringify(sub));
-        r ++;
-      }
-      else if (addFeedresText === "订阅大成功→_→") {
-        push ++;
-      }
-      else {
+        r++;
+      } else if (addFeedresText === "订阅大成功→_→") {
+        push++;
+      } else {
         // error
         // return the error message
         console.log(addFeedresText);
       }
-      r ++;
+      r++;
     }
   }
   return successresponse(`同步成功，共获取到${got}个新串，推送${push}个新串`);
@@ -523,12 +551,19 @@ router.get("/removelongunupdaye", async (req, e) => {
   for (let i = 0; i < sub.length; i++) {
     // get recent_replies
     if (sub[i].recent_replies === undefined) {
-      console.log("id: " + sub[i].id + " recent_replies undefined")
+      console.log("id: " + sub[i].id + " recent_replies undefined");
       continue;
     }
-    recent_replies = sub[i].recent_replies.toString().split("[")[1].split("]")[0].split(",").map((item) => parseInt(item)).reverse();;
+    recent_replies = sub[i].recent_replies
+      .toString()
+      .split("[")[1]
+      .split("]")[0]
+      .split(",")
+      .map(item => parseInt(item))
+      .reverse();
     last_reply = recent_replies[0] || 99999999;
-    if (last_reply <= 56515865 ) { // 2023-03-30 00:00:00
+    if (last_reply <= 56515865) {
+      // 2023-03-30 00:00:00
       // too old, remove
       console.log("remove " + sub[i].id);
       const delFeedres = await fetch(
@@ -536,16 +571,34 @@ router.get("/removelongunupdaye", async (req, e) => {
       );
       // decode the response
       const delFeedresText = await delFeedres.json();
-      reqcount ++;
-      console.log("串" + sub[i].id + "，标题" + sub[i].title + "，最新id" + last_reply + "，删除结果" + delFeedresText);
+      reqcount++;
+      console.log(
+        "串" +
+          sub[i].id +
+          "，标题" +
+          sub[i].title +
+          "，最新id" +
+          last_reply +
+          "，删除结果" +
+          delFeedresText
+      );
       // send notice
-      sendNotice("#自动删除 #id" + sub[i].id + " " +sub[i].title + "\n该串长时间未更新，已自动取消订阅，最新id为" + last_reply + "\nhttps://www.nmbxd1.com/t/" + sub[i].id);
-      reqcount ++;
+      sendNotice(
+        "#自动删除 #id" +
+          sub[i].id +
+          " " +
+          sub[i].title +
+          "\n该串长时间未更新，已自动取消订阅，最新id为" +
+          last_reply +
+          "\nhttps://www.nmbxd1.com/t/" +
+          sub[i].id
+      );
+      reqcount++;
       sub.splice(i, 1);
       await KV.put("sub", JSON.stringify(sub));
-      reqcount ++;
-      i --;
-      removed ++;
+      reqcount++;
+      i--;
+      removed++;
     }
     if (reqcount >= 40) {
       break;
@@ -553,11 +606,11 @@ router.get("/removelongunupdaye", async (req, e) => {
   }
   console.log(sub);
   await KV.put("sub", JSON.stringify(sub));
-  reqcount ++;
+  reqcount++;
   return new Response(
     JSON.stringify({
       status: 200,
-      message: `成功删除${removed}个订阅`,
+      message: `成功删除${removed}个订阅`
     }),
     {
       headers: {

@@ -68,11 +68,13 @@ export async function botRoll(ctx) {
     let endwith = max_id % 10;
     if (send.includes(endwith)) {
       msg += `用了${try_count}次抽取成功！\n`;
-      msg += `在 t = ${new Date().toISOString().substring(11,19)} 时，最新串ID为 ${max_id}\n`;
+      msg += `在 t = ${new Date()
+        .toISOString()
+        .substring(11, 19)} 时，最新串ID为 ${max_id}\n`;
       continues = false;
       ctx.reply(msg, {
         parse_mode: "HTML",
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
       let start = new Date().getTime();
       let Reply_status = await Reply(id, "r");
@@ -84,14 +86,14 @@ export async function botRoll(ctx) {
         console.log(`my_id2342456756: ${my_id}`);
         ctx.reply(`回复成功！耗时 ${time}ms\n帖子ID：${id}\n串ID：${my_id}\n`, {
           parse_mode: "HTML",
-          reply_to_message_id: ctx.update.message.message_id,
+          reply_to_message_id: ctx.update.message.message_id
         });
       } else {
         ctx.reply(
           `发送失败！\n帖子ID：${id}\n直达链接：https://www.nmbxd1.com/t/${id}`,
           {
             parse_mode: "HTML",
-            reply_to_message_id: ctx.update.message.message_id,
+            reply_to_message_id: ctx.update.message.message_id
           }
         );
       }
@@ -102,11 +104,11 @@ export async function botRoll(ctx) {
       msg += `已尝试 ${try_num} 次，最新串ID：${max_id}\n`;
       ctx.reply(msg, {
         parse_mode: "HTML",
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
       break;
     }
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise(res => setTimeout(res, 1000));
   }
 }
 
@@ -119,9 +121,9 @@ export async function Reply(id, msg) {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         cookie: `userhash=${config.COOKIES}`,
-        "User-Agent": "adnmbposter",
+        "User-Agent": "adnmbposter"
       },
-      body: `fid=0&resto=${id}&content=${message}`,
+      body: `fid=0&resto=${id}&content=${message}`
     }
   );
   // check if the response is ok
@@ -164,7 +166,9 @@ export async function Check(id, msg) {
     return resp;
   }
   console.log(`https://www.nmbxd1.com/t/${id}?page=${frontend_page}`);
-  const lastpage = await cfetch(`https://api.nmb.best/Api/thread?id=${id}&page=${frontend_page}`);
+  const lastpage = await cfetch(
+    `https://api.nmb.best/Api/thread?id=${id}&page=${frontend_page}`
+  );
   const data = await lastpage.json();
   console.log(data);
   console.log("data.Replies.length: " + data.Replies.length);

@@ -7,7 +7,9 @@ export async function botShare(ctx) {
   let id = message.text.match(/\d{8}/);
   let sub = JSON.parse(subraw);
   if (id == null) {
-    await ctx.reply("未能在消息中找到帖子ID", { reply_to_message_id: ctx.update.message.message_id });
+    await ctx.reply("未能在消息中找到帖子ID", {
+      reply_to_message_id: ctx.update.message.message_id
+    });
     return;
   } else {
     id = id[0];
@@ -34,10 +36,12 @@ export async function botShare(ctx) {
         await KV.put("sub", JSON.stringify(sub));
         msg += "已更新订阅列表";
       }
-      if (msg === ""){
+      if (msg === "") {
         msg = "处理完成";
       }
-      await ctx.reply(msg, { reply_to_message_id: ctx.update.message.message_id });
+      await ctx.reply(msg, {
+        reply_to_message_id: ctx.update.message.message_id
+      });
       return;
     } else {
       const resp = await cfetch(`https://api.nmb.best/Api/po?id=${id}`);
@@ -45,7 +49,9 @@ export async function botShare(ctx) {
         let feed = {};
         const data = await resp.json();
         if (data.success === false) {
-          await ctx.reply(data.error, { reply_to_message_id: ctx.update.message.message_id });
+          await ctx.reply(data.error, {
+            reply_to_message_id: ctx.update.message.message_id
+          });
         } else {
           feed.id = id;
           feed.url = `https://www.nmbxd1.com/t/${id}`;
@@ -66,10 +72,14 @@ export async function botShare(ctx) {
           feed.lastUpdateTime = now;
           sub.push(feed);
           await KV.put("sub", JSON.stringify(sub));
-          await ctx.reply(`成功订阅${feed.title}`, { reply_to_message_id: ctx.update.message.message_id });
+          await ctx.reply(`成功订阅${feed.title}`, {
+            reply_to_message_id: ctx.update.message.message_id
+          });
         }
       } else {
-        await ctx.reply("订阅失败，网络错误，请稍后再试", { reply_to_message_id: ctx.update.message.message_id });
+        await ctx.reply("订阅失败，网络错误，请稍后再试", {
+          reply_to_message_id: ctx.update.message.message_id
+        });
       }
     }
   }

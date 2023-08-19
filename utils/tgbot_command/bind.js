@@ -25,14 +25,18 @@ export async function botBind(ctx) {
     let chat_id = ctx.update.message.chat.id;
     const find = sub.findIndex(e => e.url === `https://www.nmbxd1.com/t/${id}`);
     if (find === -1) {
-      await ctx.reply("没有找到相关到订阅源", { reply_to_message_id: ctx.update.message.message_id });
+      await ctx.reply("没有找到相关到订阅源", {
+        reply_to_message_id: ctx.update.message.message_id
+      });
     } else {
       if (chat_id === null || chat_id === undefined) {
         await ctx.reply("获取错误");
       } else {
         sub[find].sendto = chat_id;
         await KV.put("sub", JSON.stringify(sub));
-        await ctx.reply(`成功修改id为${id}的订阅源发送到${chat_id}\n`, { reply_to_message_id: ctx.update.message.message_id });
+        await ctx.reply(`成功修改id为${id}的订阅源发送到${chat_id}\n`, {
+          reply_to_message_id: ctx.update.message.message_id
+        });
       }
     }
   }
