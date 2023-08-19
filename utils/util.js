@@ -1,36 +1,46 @@
 import { config } from "./../config";
 
-const cfetch = async (url, option) => {
-    let phpssid = await KV.get("phpssid");
-    const timeout = 3000;
-    AbortSignal.timeout ??= function timeout(ms) {
-        const ctrl = new AbortController()
-        setTimeout(() => ctrl.abort(), ms)
-        return ctrl.signal
-      }
+const cfetch = async (url, option, phpssid) => {
+    let retry = 0;
+    if (phpssid === undefined) {
+        phpssid = await KV.get("phpssid");
+    }
+    if (phpssid === null || phpssid === undefined) {
+        for (retry = 0; retry < 4; retry++) {
+            // fetch phpssid
+            const phpssidurl = "https://www.nmbxd1.com/Forum";
+            const phpssidoption = { method: "GET" };
+            phpssidoption.signal = AbortSignal.timeout(1700 * (retry + 1));
+            let phpssidresponse = await fetch(phpssidurl, phpssidoption);
+            phpssid = phpssidresponse.headers.get("set-cookie").split(";")[0].split("=")[1];
+            await KV.put("phpssid", phpssid, { expirationTtl: 3600 });
+        }
+    }
+    const timeout = 1700;
     const defaultOption = {
         method: "GET",
         headers: {
             'user-agent' : 'xdnmb',
-            'cookie' : `userhash=${config.COOKIES}; PHPSESSID=${phpssid}`,
+            'cookie' : `userhash=${config.COOKIES}; PHPSESSID=${phpssid};`,
             'host' : 'www.nmbxd1.com',
             'accept-encoding' : 'gzip'
-            },
+        },
         redirect: "follow",
         httpVersion: "1.1",
         "same-origin": true,
-        timeout: timeout,
-        signal: AbortSignal.timeout(60000),
+        signal: AbortSignal.timeout(timeout),
     };
-    const maxRetries = 5;
-    for(let i = 0; i < maxRetries; i++){
-        try{
-            const response = await fetch(url, Object.assign(defaultOption, option));
+    for (retry = 0; retry < 4; retry++) {
+        try {
+            //await new Promise(r => setTimeout(r, 200)); 
+            defaultOption.signal = AbortSignal.timeout(timeout * (retry + 1));     
+            let response = await fetch(url, Object.assign({}, defaultOption, option));
             return response;
-        }catch(e){
-            if(i === maxRetries - 1) throw e; // If it's the last retry, throw the error
+        } catch (e) {
+            console.log(e.name);
         }
     }
+    return cfetch(url, option);
 }
 
 const errorresponse = (message) => {
