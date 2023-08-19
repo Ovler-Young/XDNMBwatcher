@@ -27,7 +27,8 @@ export async function handleScheduled(event) {
 
  
   // 访问 feed 接口，check 是否有新帖子
-  let page = 1;  while (true) {
+  let page = 1;
+  while (true) {
     const res = await cfetch(`https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`, phpssid=phpssid);
     u ++;
     let feed = await res.json();
