@@ -31,7 +31,7 @@ export async function reply(feed, item) {
     )}|${feed.telegraph ? (item.content ? await telegraph(item) : "") : ""}|${item.link ? `<a href="${item.link}">Po</a>` : ""
     }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumpread?id=${feed.id}`}">Unread: ${feed.unread
     }</a>${feed.lastUpdateTime ? `|${feed.lastUpdateTime.substring(14, 21)}` : ""
-    }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${feed.id}`}">Latest</a>|${item.id}\n${content_safe}`,
+    }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${feed.id}`}">Latest</a>\n${content_safe}`,
     { parse_mode: "HTML" }
   );
   return send.message_id;
