@@ -119,9 +119,7 @@ export async function handleScheduled(event) {
               console.log(reverse);
               let res = null;
               let data = null;
-              res = await cfetch(
-                `https://api.nmb.best/Api/ref?id=${reverse[j]}, phpssid=phpssid`
-              );
+              res = await cfetch(`https://api.nmb.best/Api/ref?id=${reverse[j]}`, phpssid=phpssid);
               u += 1;
               data = await res.json();
               console.log(data);
