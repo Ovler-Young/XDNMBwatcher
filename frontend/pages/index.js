@@ -438,34 +438,34 @@ export default function Test() {
                   </Td>
                   <Td>
                     <Link
-                      href={feed.fid === 19
+                      href={feed.fid === "19"
                         ? "https://www.nmbxd1.com/f/小说"
-                        : feed.fid === 81
+                        : feed.fid === "81"
                         ? "https://www.nmbxd1.com/f/怪谈"
-                        : feed.fid === 111
+                        : feed.fid === "111"
                         ? "https://www.nmbxd1.com/f/跑团"
-                        : feed.fid === 4
+                        : feed.fid === "4"
                         ? "https://www.nmbxd1.com/f/综合版1"
-                        : feed.fid === 20
+                        : feed.fid === "20"
                         ? "https://www.nmbxd1.com/f/都市怪谈"
-                        : feed.fid === 112
+                        : feed.fid === "112"
                         ? "https://www.nmbxd1.com/f/ROLL点"
                         : feed.fid
                       }
                       fontSize="s"
                       fontWeight="light"
                       >
-                      {feed.fid === 19
+                      {feed.fid === "19"
                         ? "小说"
-                        : feed.fid === 81
+                        : feed.fid === "81"
                         ? "怪谈"
-                        : feed.fid === 111
+                        : feed.fid === "111"
                         ? "跑团"
-                        : feed.fid === 4
+                        : feed.fid === "4"
                         ? "中医"
-                        : feed.fid === 20
+                        : feed.fid === "20"
                         ? "怪谈"
-                        : feed.fid === 112
+                        : feed.fid === "112"
                         ? "R 点"
                         : feed.fid
                       }
