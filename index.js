@@ -362,6 +362,25 @@ router.get("/test", async (req, e) => {
   // 测试
   e.waitUntil(handleScheduled(e));
 });
+router.get("/forcetest", async (req, e) => {
+  // 强制测试
+  const subraw = await KV.get("sub");
+  let sub = JSON.parse(subraw);
+  let indexs = [];
+  for (let i = 0; i < sub.length; i++) {
+    if (sub[i].active === true) {
+      indexs.push(i);
+    }
+  }
+  let index = null;
+  for (let i = 0; i < 5; i++) {
+    index = indexs[indexs.length - 1 - i];
+    sub[index].ReplyCountAll -= 5;
+    sub[index].recent_replies = '[]'
+  }
+  await KV.put("sub", JSON.stringify(sub));
+  return successresponse("已强制测试");
+});
 router.get("/fixerror", async (req, e) => {
   // 修复错误
   const subraw = await KV.get("sub");
