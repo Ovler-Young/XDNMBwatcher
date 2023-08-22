@@ -125,11 +125,15 @@ export async function handleScheduled(event) {
               console.log(data);
               // check if this is sent by po
               // if (data.id in sub[index].recent_replies) { sub[index].recent_replies are string
-              if (sub[index].recent_replies.includes(data.id)) {
+              try {
+                if (sub[index].recent_replies.includes(data.id)) {
                 // 跳过
                 console.log("跳过");
                 // skip to next
                 continue;
+                }
+              }
+              catch (err) {
               }
               if (
                 data.user_hash === sub[index].po ||
