@@ -42,6 +42,19 @@ export async function botShare(ctx) {
       await ctx.reply(msg, {
         reply_to_message_id: ctx.update.message.message_id
       });
+      if (sub[find].sendto == chatid) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        // delete this message
+        await ctx.telegram.deleteMessage(
+          ctx.update.message.chat.id,
+          ctx.update.message.message_id
+        );
+        // delete last message
+        await ctx.telegram.deleteMessage(
+          ctx.update.message.chat.id,
+          ctx.update.message.message_id + 1 
+        );
+      }
       return;
     } else {
       const resp = await cfetch(`https://api.nmb.best/Api/po?id=${id}`);
