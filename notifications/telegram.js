@@ -1,6 +1,6 @@
 import { config } from "../config";
 const { Telegram } = require("telegraf");
-import { telegraph } from "../utils/telegraph";
+import { edittelegraph } from "../utils/telegraph";
 import { html } from "../utils/html";
 export async function reply(feed, item) {
   const telegram = new Telegram(config.TG_TOKEN);
@@ -24,10 +24,18 @@ export async function reply(feed, item) {
   }
   let content_safe = content_safe_all.join("\n");
   console.log(`选出: ${content_safe}`);
+  let telegraph_link = "";
+  if (feed.telegraph) {
+    if (item.content) {
+      telegraph_link = await edittelegraph(item);
+      console.log(`telegraph_link: ${telegraph_link}`);
+    }
+  }
+
   let send = await telegram.sendMessage(
     item.sendto,
     `<b>${html(feed.title)}</b>\n#${html(item.writer)} | #id${html(feed.id)}|${
-      feed.telegraph ? (item.content ? await telegraph(item) : "") : ""
+      feed.telegraph ? (item.content ? telegraph_link : "") : ""
     }|${
       item.link ? `<a href="${item.link}">Po</a>` : ""
     }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumpread?id=${feed.id}`}">Unread: ${
