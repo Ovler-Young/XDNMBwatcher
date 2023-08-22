@@ -26,7 +26,7 @@ export async function handleScheduled(event) {
         .get("set-cookie")
         .split(";")[0]
         .split("=")[1];
-      await KV.put("phpssid", phpssid, { expirationTtl: 3600 });
+      await KV.put("phpssid", phpssid, { expirationTtl: 7200 });
       u++;
     }
   }
@@ -124,6 +124,13 @@ export async function handleScheduled(event) {
               data = await res.json();
               console.log(data);
               // check if this is sent by po
+              // if (data.id in sub[index].recent_replies) { sub[index].recent_replies are string
+              if (sub[index].recent_replies.includes(data.id)) {
+                // 跳过
+                console.log("跳过");
+                // skip to next
+                continue;
+              }
               if (
                 data.user_hash === sub[index].po ||
                 (sub[index].issingle === false &&
@@ -136,9 +143,11 @@ export async function handleScheduled(event) {
                   );
                 } else {
                   content_all.push(
-                    `<a href="https://www.nmbxd1.com/t/${feed[i].id}?r=${data.id}">#${data.id}</a><br/>`
+                    `<a href="https://www.nmbxd1.com/t/${feed[i].id}?r=${data.id}">#${data.id}</a>`
                   );
                 }
+                // <br/>
+                content_all.push("<br/>");
                 // if so, we need to get the content
                 content_all.push(
                   data.content
@@ -185,6 +194,7 @@ export async function handleScheduled(event) {
             sub[index].errorTimes = 0;
             sub[index].ReplyCountAll = feed[i].reply_count;
             sub[index].ReplyCount = feed[i].reply_count;
+            sub[index].recent_replies = feed[i].recent_replies;
             if (sub[index].unread === undefined || sub[index].unread === null) {
               sub[index].unread = unread;
             } else {
