@@ -139,3 +139,23 @@ export async function Unsubscribe(id) {
   }
   return {success, msg}
 }
+
+// mark as read
+export async function MarkAsRead(id) {
+  const subraw = (await KV.get("sub")) || "[]";
+  let sub = JSON.parse(subraw);
+  let success = true;
+  let msg = "";
+  const index = sub.findIndex(e => e.id === id);
+  if (index === -1) {
+    success = false;
+    msg = "未订阅该串";
+  } else {
+    sub[index].unread = 0;
+    sub[index].LastRead = sub[index].ReplyCount;
+    await KV.put("sub", JSON.stringify(sub));
+    await KV.delete(`telegraph-${id}`);
+    msg = "修改成功，已清空该订阅源未读并删除缓存";
+  }
+  return {success, msg}
+}

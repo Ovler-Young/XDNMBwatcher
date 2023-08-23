@@ -6,7 +6,7 @@ import {
 import { handleScheduled } from "./schedule";
 import { config, mode } from "./config";
 import { setTgBot } from "./bot";
-import { GetID, Subscribe, Unsubscribe } from "./utils/functions";
+import { GetID, Subscribe, Unsubscribe, MarkAsRead } from "./utils/functions";
 const secret_path = config.SECRET_PATH;
 const router = Router();
 if (mode === "telegram") {
@@ -137,20 +137,10 @@ router.post(`/${secret_path}/title`, async req => {
 });
 router.post(`/${secret_path}/unread`, async req => {
   // 修改订阅未读数
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
-  const body = await req.json();
-  const url = body.url || "";
-  const index = sub.findIndex(e => e.url === url);
-  if (index === -1) {
-    return errorresponse("Please verify your input!");
-  }
-  let id = sub[index].id;
-  sub[index].unread = 0;
-  const res = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
-  sub[index].LastRead = (await res.json()).ReplyCount;
-  await KV.put("sub", JSON.stringify(sub));
-  return successresponse(`修改成功，已清空该订阅源未读`);
+  let { getid, id } = await GetID(req);
+  if (getid === false) {return errorresponse(id);}
+  let { success, msg } = await MarkAsRead(id);
+  return success ? successresponse(msg) : errorresponse(msg);
 });
 router.get(`/${secret_path}/jumpread`, async req => {
   // 通过search里的id跳转到指定帖子
