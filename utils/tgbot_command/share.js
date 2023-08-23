@@ -27,9 +27,9 @@ export async function botShare(ctx) {
       if (sub[find].unread !== 0) {
         sub[find].unread = 0;
         //await ctx.reply("已将该帖子标记为已读", { reply_to_message_id: ctx.update.message.message_id });
+        await KV.delete(`telegraph-${id}`);
         msg += `已将帖子${sub[find].title}标记为已读\n`;
-        const res_2 = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
-        sub[find].LastRead = (await res_2.json()).ReplyCount;
+        sub[find].LastRead = sub[find].ReplyCount;
         kvchange = true;
       }
       if (kvchange) {
