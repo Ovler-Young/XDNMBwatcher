@@ -70,3 +70,27 @@ export async function Subscribe(id) {
     // return both success and msg
     return {success, msg}
 }
+
+export async function GetID(req) {
+  const body = await req.json();
+  if (body.url === undefined) {
+    // 没回传url
+    errorresponse("Url not found");
+  }
+  let url = body.url;
+  let id = url;
+  let success = true;
+  if (/^\d{8}$/.test(url)) {
+    // 如果是url，提取id
+    id = url.match(/\d{8}/)[0];
+  } else {
+    // 如果是id，提取id
+    id = url.match(/\d{8}/)[0];
+  }
+  // check if the id is valid 8 digits number
+  if (!/^\d{8}$/.test(id)) {
+    success = false;
+    id = "ID格式错误";
+  }
+  return { success, id };
+}

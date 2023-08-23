@@ -6,7 +6,7 @@ import {
 import { handleScheduled } from "./schedule";
 import { config, mode } from "./config";
 import { setTgBot } from "./bot";
-import { Subscribe } from "./utils/functions";
+import { Subscribe, GetID } from "./utils/functions";
 const secret_path = config.SECRET_PATH;
 const router = Router();
 if (mode === "telegram") {
@@ -74,31 +74,10 @@ router.get(`/${secret_path}/feeds`, async () => {
   });
 });
 router.post(`/${secret_path}/subitem`, async req => {
-  // 添加订阅
-  const body = await req.json();
-  if (body.url === undefined) {
-    // 没回传url
-    errorresponse("Url not found");
-  }
-  let url = body.url;
-  let id = url;
-  if (/^\d{8}$/.test(url)) {
-    // 如果是url，提取id
-    id = url.match(/\d{8}/)[0];
-  } else {
-    // 如果是id，提取id
-    id = url.match(/\d{8}/)[0];
-  }
-  // check if the id is valid 8 digits number
-  if (!/^\d{8}$/.test(id)) {
-    return errorresponse("Please verify your input!");
-  }
-  const { success, msg } = await Subscribe(id);
-  if (success) {
-    return successresponse(msg);
-  } else {
-    return errorresponse(msg);
-  }
+  let { getid, id } = await GetID(req);
+  if (getid === false) {return errorresponse(id);}
+  let { success, msg } = await Subscribe(id);
+  return success ? successresponse(msg) : errorresponse(msg);
 });
 router.post(`/${secret_path}/deleteitem`, async req => {
   // 删除订阅
