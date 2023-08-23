@@ -1,3 +1,5 @@
+import { cfetch } from "../util.js";
+import { config } from "../../config.js";
 export async function Subscribe(id) {
     const subraw = (await KV.get("sub")) || "[]";
     let sub = JSON.parse(subraw);
@@ -26,6 +28,7 @@ export async function Subscribe(id) {
       feed.ReplyCount = data.ReplyCount;
       feed.fid = data.fid;
       feed.sendto = config.TG_SENDID;
+      feed.Autoremove = 1;
       if (
         sub.findIndex(e => e.url === feed.url) != -1 // 如果已经存在了
       ) {
@@ -36,6 +39,8 @@ export async function Subscribe(id) {
         feed.lastUpdateTime = now;
         sub.push(feed);
         await KV.put("sub", JSON.stringify(sub));
+        console.log(`ID: ${id} subscribed`);
+        msg = `成功订阅${feed.title}`;
         // https://api.nmb.best/Api/addFeed?uuid=xxx&tid=xxx
         const uuid = await KV.get("uuid");
         const addFeedres = await fetch(
@@ -50,7 +55,6 @@ export async function Subscribe(id) {
         }
         // "\u8ba2\u9605\u5927\u6210\u529f\u2192_\u2192" (订阅大成功→_→) -> 订阅大成功→_→
         else if (addFeedresText === "订阅大成功→_→") {
-          success = true;
           msg = "订阅成功";
         } else {
           // error
@@ -63,5 +67,6 @@ export async function Subscribe(id) {
       success = false;
       msg = "订阅失败，网络错误，请稍后再试";
     }
-    return { success: success, msg: msg };
+    // return both success and msg
+    return {success, msg}
 }

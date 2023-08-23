@@ -6,6 +6,7 @@ import {
 import { handleScheduled } from "./schedule";
 import { config, mode } from "./config";
 import { setTgBot } from "./bot";
+import { Subscribe } from "./utils/command/sub";
 const secret_path = config.SECRET_PATH;
 const router = Router();
 if (mode === "telegram") {
@@ -74,67 +75,29 @@ router.get(`/${secret_path}/feeds`, async () => {
 });
 router.post(`/${secret_path}/subitem`, async req => {
   // 添加订阅
-  const subraw = (await KV.get("sub")) || "[]";
-  let sub = JSON.parse(subraw);
   const body = await req.json();
   if (body.url === undefined) {
     // 没回传url
     errorresponse("Url not found");
   }
-  const msg = body.url; // 回传的url
-  const resp = await cfetch(`https://api.nmb.best/Api/po?id=${msg}`);
-  if (resp.status === 200) {
-    let feed = {};
-    const data = await resp.json();
-    if (data.success === false) {
-      errorresponse(data.error);
-    }
-    feed.id = msg.toString();
-    feed.url = `https://www.nmbxd1.com/t/${msg}`;
-    feed.po = data.user_hash;
-    // feed.title is data.title if it is not "无标题", otherwise feed.title is first line of data.content
-    if (data.title === "无标题" || data.title === "") {
-      feed.title = data.content.split("<br />")[0];
-    } else {
-      feed.title = data.title;
-    }
-    feed.telegraph = true;
-    feed.active = true;
-    feed.errorTimes = 0;
-    feed.ReplyCount = data.ReplyCount;
-    feed.fid = data.fid;
-    feed.sendto = config.TG_SENDID;
-    if (
-      sub.findIndex(e => e.url === feed.url) != -1 // 如果已经存在了
-    ) {
-      errorresponse("Already subscribed");
-    } else {
-      const now = new Date();
-      feed.lastUpdateTime = now;
-      sub.push(feed);
-      await KV.put("sub", JSON.stringify(sub));
-      // https://api.nmb.best/Api/addFeed?uuid=xxx&tid=xxx
-      const uuid = await KV.get("uuid");
-      const addFeedres = await fetch(
-        `https://api.nmb.best/Api/addFeed?uuid=${uuid}&tid=${msg}`
-      );
-      // decode the response
-      // "\u8be5\u4e32\u4e0d\u5b58\u5728" (该串不存在) -> 该串不存在
-      const addFeedresText = await addFeedres.json();
-      if (addFeedresText === "该串不存在") {
-        return errorresponse("该串不存在");
-      }
-      // "\u8ba2\u9605\u5927\u6210\u529f\u2192_\u2192" (订阅大成功→_→) -> 订阅大成功→_→
-      else if (addFeedresText === "订阅大成功→_→") {
-        return successresponse(`${feed.title} add succeed`);
-      } else {
-        // error
-        // return the error message
-        return errorresponse(addFeedresText);
-      }
-    }
+  let url = body.url;
+  let id = url;
+  if (/^\d{8}$/.test(url)) {
+    // 如果是url，提取id
+    id = url.match(/\d{8}/)[0];
   } else {
-    return errorresponse("Network error");
+    // 如果是id，提取id
+    id = url.match(/\d{8}/)[0];
+  }
+  // check if the id is valid 8 digits number
+  if (!/^\d{8}$/.test(id)) {
+    return errorresponse("Please verify your input!");
+  }
+  const { success, msg } = await Subscribe(id);
+  if (success) {
+    return successresponse(msg);
+  } else {
+    return errorresponse(msg);
   }
 });
 router.post(`/${secret_path}/deleteitem`, async req => {
