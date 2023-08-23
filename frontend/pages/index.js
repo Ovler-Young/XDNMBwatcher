@@ -312,7 +312,7 @@ export default function Test() {
                           isChecked={feed.unread}
                           jump={feed.unread
                             ? `https://www.nmbxd1.com/m/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 9 + 1)}`
-                            : `https://www.nmbxd1.com/m/t/${feed.id}?page=${Math.floor((feed.ReplyCountAll - 1) / 9 + 1)}`
+                            : `https://www.nmbxd1.com/m/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 9 + 1)}`
                           }
                           onClick={handleUnread}
                         > {feed.unread}
@@ -323,7 +323,7 @@ export default function Test() {
                       id={feed.id}
                       url={feed.unread
                         ? `https://www.nmbxd1.com/m/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 9 + 1)}`
-                        : `https://www.nmbxd1.com/m/t/${feed.id}?page=${Math.floor((feed.ReplyCountAll - 1) / 9 + 1)}`
+                        : `https://www.nmbxd1.com/m/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 9 + 1)}`
                       }
                       variant="ghost"
                       isChecked={feed.unread}
@@ -421,7 +421,7 @@ export default function Test() {
                       id={feed.id}
                       url={feed.unread
                         ? `https://www.nmbxd1.com/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 19 + 1)}`
-                        : `https://www.nmbxd1.com/t/${feed.id}?page=${Math.floor((feed.ReplyCountAll - 1) / 19 + 1)}`
+                        : `https://www.nmbxd1.com/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 19 + 1)}`
                       }
                       variant="ghost"
                       fontWeight="light"

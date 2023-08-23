@@ -156,13 +156,11 @@ router.get(`/${secret_path}/jumpread`, async req => {
   }
   sub[index].unread = 0;
   if (sub[index].LastRead === undefined) {
-    const res = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
-    sub[index].LastRead = (await res.json()).ReplyCount;
+    sub[index].LastRead = sub[index].ReplyCount;
   }
   let lastreadto = sub[index].LastRead;
   console.log(lastreadto);
-  const res = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
-  sub[index].LastRead = (await res.json()).ReplyCount;
+  sub[index].LastRead = sub[index].ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
@@ -191,8 +189,7 @@ router.get(`/${secret_path}/jumplast`, async req => {
     return errorresponse("Please verify your input!");
   }
   sub[index].unread = 0;
-  const res = await fetch(`https://api.nmb.best/Api/thread?id=${id}`);
-  sub[index].LastRead = (await res.json()).ReplyCount;
+  sub[index].LastRead = sub[index].ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
   let lastreadto = sub[index].LastRead;
   // if ua is mobile, jump to app
@@ -250,8 +247,6 @@ router.get(`/${secret_path}/subscribe`, async req => {
       item.lastUpdateTime = feed[i].now;
       item.xd = true;
       item.issingle = true;
-      item.ReplyCountAll = feed[i].reply_count;
-      item.ReplyCountNow = feed[i].reply_count;
       item.unread = 0;
       item.send_message_id = null;
       item.LastRead = feed[i].reply_count;
@@ -283,7 +278,7 @@ router.get("/forcetest", async (req, e) => {
   let index = null;
   for (let i = 0; i < 5; i++) {
     index = indexs[indexs.length - 1 - i];
-    sub[index].ReplyCountAll -= 5;
+    sub[index].ReplyCount -= 5;
     sub[index].recent_replies = '[]'
   }
   await KV.put("sub", JSON.stringify(sub));
@@ -385,8 +380,6 @@ router.get("/sync", async (req, e) => {
         item.lastUpdateTime = feed[i].now;
         item.xd = true;
         item.issingle = true;
-        item.ReplyCountAll = feed[i].reply_count;
-        item.ReplyCountNow = feed[i].reply_count;
         item.unread = 0;
         item.send_message_id = null;
         item.LastRead = feed[i].reply_count;

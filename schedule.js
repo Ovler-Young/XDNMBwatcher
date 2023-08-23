@@ -69,7 +69,6 @@ export async function handleScheduled(event) {
         item.xd = true;
         item.issingle = true;
         item.ReplyCountAll = feed[i].reply_count;
-        item.ReplyCountNow = feed[i].reply_count;
         item.unread = 0;
         item.send_message_id = null;
         item.LastRead = feed[i].reply_count;
@@ -83,7 +82,7 @@ export async function handleScheduled(event) {
       } else {
         allid.splice(allid.indexOf(feed[i].id), 1);
         if (
-          sub[index].ReplyCountAll === feed[i].reply_count ||
+          sub[index].ReplyCount === feed[i].reply_count ||
           sub[index].active === false
         ) {
           idtocheck.splice(idtocheck.indexOf(feed[i].id), 1);
@@ -196,7 +195,6 @@ export async function handleScheduled(event) {
               console.log(`send_message_id: ${sub[index].send_message_id}`);
             }
             sub[index].errorTimes = 0;
-            sub[index].ReplyCountAll = feed[i].reply_count;
             sub[index].ReplyCount = feed[i].reply_count;
             sub[index].recent_replies = feed[i].recent_replies;
             if (sub[index].unread === undefined || sub[index].unread === null) {

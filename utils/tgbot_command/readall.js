@@ -12,7 +12,7 @@ export async function botReadAll(ctx) {
       if (sub[i].unread > 0) {
         n += 1;
         sub[i].unread = 0;
-        sub[i].LastRead = sub[i].ReplyCountAll;
+        sub[i].LastRead = sub[i].ReplyCount;
       }
     }
     msg += `已将 ${n} 个订阅标记为已读`;
