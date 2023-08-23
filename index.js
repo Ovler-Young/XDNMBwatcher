@@ -6,7 +6,7 @@ import {
 import { handleScheduled } from "./schedule";
 import { config, mode } from "./config";
 import { setTgBot } from "./bot";
-import { Subscribe, GetID } from "./utils/functions";
+import { GetID, Subscribe, Unsubscribe } from "./utils/functions";
 const secret_path = config.SECRET_PATH;
 const router = Router();
 if (mode === "telegram") {
@@ -81,34 +81,10 @@ router.post(`/${secret_path}/subitem`, async req => {
 });
 router.post(`/${secret_path}/deleteitem`, async req => {
   // 删除订阅
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
-  const body = await req.json();
-  const url = body.url;
-  const index = sub.findIndex(e => e.url === url);
-  if (index === -1) {
-    return errorresponse("未找到该订阅");
-  } else {
-    const uuid = await KV.get("uuid");
-    console.log(uuid);
-    const addFeedres = await fetch(
-      `https://api.nmb.best/Api/delFeed?uuid=${uuid}&tid=${sub[index].id}`
-    );
-    // decode the response
-    // ""\u53d6\u6d88\u8ba2\u9605\u6210\u529f!"" （取消订阅成功！） -> 取消订阅成功！
-    const addFeedresText = await addFeedres.json();
-    console.log(addFeedresText);
-    sub.splice(index, 1);
-    console.log(sub);
-    await KV.put("sub", JSON.stringify(sub));
-    if (addFeedresText === "取消订阅成功!") {
-      return successresponse("删除成功");
-    } else {
-      // error
-      // return the error message
-      return errorresponse(addFeedresText);
-    }
-  }
+  let { getid, id } = await GetID(req);
+  if (getid === false) {return errorresponse(id);}
+  let { success, msg } = await Unsubscribe(id);
+  return success ? successresponse(msg) : errorresponse(msg);
 });
 router.post(`/${secret_path}/active`, async req => {
   // 激活/禁用订阅

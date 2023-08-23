@@ -25,6 +25,18 @@ export async function GetID(req) {
   return { success, id };
 }
 
+export async function GetIndex(id) {
+  const subraw = (await KV.get("sub")) || "[]";
+  let sub = JSON.parse(subraw);
+  let index = sub.findIndex(e => e.id === id);
+  let success = true;
+  if (index === -1) {
+    success = false;
+    index = "未订阅该串";
+  }
+  return { success, index };
+}
+
 export async function Subscribe(id) {
     const subraw = (await KV.get("sub")) || "[]";
     let sub = JSON.parse(subraw);
@@ -94,4 +106,36 @@ export async function Subscribe(id) {
     }
     // return both success and msg
     return {success, msg}
+}
+
+// 删除订阅
+export async function Unsubscribe(id) {
+  const subraw = (await KV.get("sub")) || "[]";
+  let sub = JSON.parse(subraw);
+  let success = true;
+  let msg = "";
+  const index = sub.findIndex(e => e.id === id);
+  if (index === -1) {
+    success = false;
+    msg = "未订阅该串";
+  } else {
+    // https://api.nmb.best/Api/delFeed?uuid=xxx&tid=xxx
+    const uuid = await KV.get("uuid");
+    const delFeedres = await fetch(
+      `https://api.nmb.best/Api/delFeed?uuid=${uuid}&tid=${id}`
+    );
+    // decode the response
+    const delFeedresText = await delFeedres.json();
+    if (delFeedresText === "取消订阅成功!") {
+      msg = "取消远程订阅成功";
+      sub.splice(index, 1);
+      await KV.put("sub", JSON.stringify(sub));
+      console.log(`ID: ${id} unsubscribed`);
+      msg = "取消订阅成功";
+    } else {
+      success = false;
+      msg = delFeedresText;
+    }
+  }
+  return {success, msg}
 }
