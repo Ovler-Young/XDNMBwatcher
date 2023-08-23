@@ -8,3 +8,4 @@ dist/
 
 wrangler.toml
 .buildtime
+jsconfig.json
