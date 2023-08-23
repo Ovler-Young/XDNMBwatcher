@@ -6,7 +6,7 @@ import {
 import { handleScheduled } from "./schedule";
 import { config, mode } from "./config";
 import { setTgBot } from "./bot";
-import { Subscribe } from "./utils/command/sub";
+import { Subscribe } from "./utils/functions";
 const secret_path = config.SECRET_PATH;
 const router = Router();
 if (mode === "telegram") {

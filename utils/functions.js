@@ -1,5 +1,5 @@
-import { cfetch } from "../util.js";
-import { config } from "../../config.js";
+import { cfetch } from "./util.js";
+import { config } from "../config.js";
 export async function Subscribe(id) {
     const subraw = (await KV.get("sub")) || "[]";
     let sub = JSON.parse(subraw);
