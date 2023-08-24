@@ -1,6 +1,6 @@
 import { botList } from "./utils/tgbot_command/list";
 import { botSub } from "./utils/tgbot_command/sub";
-import { botUnSub } from "./utils/tgbot_command/unsub";
+import { botUnSub } from "./utils/tgbot.js";
 import { botUnSubAll } from "./utils/tgbot_command/unsuball";
 import { botHelp } from "./utils/tgbot_command/help";
 import { botRetitle } from "./utils/tgbot_command/retitle";
