@@ -153,12 +153,11 @@ export async function Unsubscribe(id) {
     // decode the response
     const delFeedresText = await delFeedres.json();
     if (delFeedresText === "取消订阅成功!") {
-      msg = "取消远程订阅成功";
+      msg = `成功取消订阅${id}-${sub[index].title}`;
       sub.splice(index, 1);
       await KV.put("sub", JSON.stringify(sub));
       await KV.delete(`telegraph-${id}`);
       console.log(`ID: ${id} unsubscribed`);
-      msg = `成功取消订阅${id}-${sub[index].title}`;
     } else {
       success = false;
       msg = delFeedresText;
