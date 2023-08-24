@@ -94,7 +94,7 @@ export async function handleScheduled(event) {
               "id: " + feed[i].id + "title" + feed[i].title + "有更新"
             );
             // featch the new replies
-            let newreplycount = feed[i].reply_count - sub[index].LastRead;
+            let newreplycount = feed[i].reply_count - sub[index].ReplyCount;
             // if greater than 5, set to 5
             if (newreplycount > 5) {
               newreplycount = 5;
@@ -175,10 +175,15 @@ export async function handleScheduled(event) {
             let content_join = content_all.join("<br/>");
             console.log("content_join: " + content_join);
             if (content_join !== "") {
+              if (sub[index].unread === undefined || sub[index].unread === null) {
+                sub[index].unread = unread;
+              } else {
+                sub[index].unread += unread;
+              }
               let item = {
                 id: sub[index].id,
                 link: `https://www.nmbxd1.com/Forum/po/id/${sub[index].id}/page/${page}.html`,
-                title: `${sub[index].title} - ${newreplycount}条新回复`,
+                title: `${sub[index].title} - ${sub[index].unread}`,
                 content: content_join,
                 telegraph: sub[index].telegraph,
                 active: sub[index].active,
@@ -197,11 +202,6 @@ export async function handleScheduled(event) {
             sub[index].errorTimes = 0;
             sub[index].ReplyCount = feed[i].reply_count;
             sub[index].recent_replies = feed[i].recent_replies;
-            if (sub[index].unread === undefined || sub[index].unread === null) {
-              sub[index].unread = unread;
-            } else {
-              sub[index].unread += unread;
-            }
             // save the sub to kv
             KV.put("sub", JSON.stringify(sub));
           } catch (err) {
