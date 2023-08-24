@@ -25,6 +25,32 @@ export async function GetID(req) {
   return { success, id };
 }
 
+export async function GetIDctx(ctx) {
+  let message = ctx.update.message;
+  let success = true;
+  let id = message.text.match(/\d{8}/);
+  if (id === null) {
+    if (message.reply_to_message != undefined) {
+      message = message.reply_to_message;
+      id = message.text.match(/\d{8}/);
+      if (id === null) {
+        await ctx.reply("未在 该消息 及 回复 中找到帖子ID", {
+          reply_to_message_id: ctx.update.message.message_id
+        });
+        return { success: false, id: "未在 该消息 及 回复 中找到帖子ID" };
+      } else {
+        id = id[0];
+      }
+    } else {
+      await ctx.reply("未在该消息中找到帖子ID", {
+        reply_to_message_id: ctx.update.message.message_id
+      });
+      return { success: false, id: "未在该消息中找到帖子ID" };
+    }
+  }
+  return { success, id };
+}
+
 export async function GetIndex(id) {
   const subraw = (await KV.get("sub")) || "[]";
   let sub = JSON.parse(subraw);
@@ -130,8 +156,9 @@ export async function Unsubscribe(id) {
       msg = "取消远程订阅成功";
       sub.splice(index, 1);
       await KV.put("sub", JSON.stringify(sub));
+      await KV.delete(`telegraph-${id}`);
       console.log(`ID: ${id} unsubscribed`);
-      msg = "取消订阅成功";
+      msg = `成功取消订阅${id}-${sub[index].title}`;
     } else {
       success = false;
       msg = delFeedresText;
