@@ -1,4 +1,4 @@
-import { GetIDctx, Unsubscribe } from "./functions";
+import { GetIDctx,Subscribe, Unsubscribe, ChangeSendto } from "./functions";
 import { html } from "./html";
 import { config } from "../config.js";
 import { cfetch } from "./util.js";
@@ -46,51 +46,11 @@ export async function botSub(ctx) {
     });
     return;
   }
-  const resp = await cfetch(`https://api.nmb.best/Api/po?id=${id}`);
-  if (resp.status === 200) {
-    let feed = {};
-    const data = await resp.json();
-    if (data.success === false) {
-      await ctx.reply(data.error, {
-        reply_to_message_id: ctx.update.message.message_id,
-      });
-    } else {
-      const subraw = (await KV.get("sub")) || "[]";
-      let sub = JSON.parse(subraw);
-      feed.id = id;
-      feed.url = `https://www.nmbxd1.com/t/${id}`;
-      feed.po = data.user_hash;
-      // feed.title is data.title if it is not "无标题", otherwise feed.title is first line of data.content
-      if (data.title === "无标题" || data.title === "") {
-        feed.title = data.content.split("<br />")[0];
-      } else {
-        feed.title = data.title;
-      }
-      feed.telegraph = true;
-      feed.active = true;
-      feed.errorTimes = 0;
-      feed.ReplyCount = data.ReplyCount;
-      feed.fid = data.fid;
-      feed.sendto = ctx.update.message.chat.id;
-      if (sub.findIndex((e) => e.url === feed.url) != -1) {
-        await ctx.reply("已经订阅过此信息源", {
-          reply_to_message_id: ctx.update.message.message_id,
-        });
-      } else {
-        const now = new Date();
-        feed.lastUpdateTime = now;
-        sub.push(feed);
-        await KV.put("sub", JSON.stringify(sub));
-        await ctx.reply(`成功订阅 ${feed.title}`, {
-          reply_to_message_id: ctx.update.message.message_id,
-        });
-      }
-    }
-  } else {
-    await ctx.reply("订阅失败", {
-      reply_to_message_id: ctx.update.message.message_id,
-    });
-  }
+  console.log(`GET SUB ${id}`);
+  let { success, msg } = await Subscribe(id);
+  await ctx.reply(msg, {
+    reply_to_message_id: ctx.update.message.message_id,
+  });
 }
 
 export async function botUnSub(ctx) {
@@ -118,16 +78,17 @@ export async function botUnSubAll(ctx) {
 
 export async function botShare(ctx) {
   console.log("GET BOTSHARE");
-  const subraw = (await KV.get("sub")) || "[]";
-  let message = ctx.update.message;
-  let id = message.text.match(/\d{8}/);
-  let sub = JSON.parse(subraw);
-  if (id == null) {
-    await ctx.reply("未能在消息中找到帖子ID", {
+  let { getid, id } = await GetIDctx(ctx);
+  if (getid === false) {
+    await ctx.reply("Cannot get id", {
       reply_to_message_id: ctx.update.message.message_id,
     });
     return;
-  } else {
+  }
+  const subraw = (await KV.get("sub")) || "[]";
+  let message = ctx.update.message;
+  let sub = JSON.parse(subraw);
+ {
     id = id[0];
     const find = sub.findIndex(
       (e) => e.url === `https://www.nmbxd1.com/t/${id}`
@@ -139,7 +100,7 @@ export async function botShare(ctx) {
       let kvchange = false;
       if (sub[find].sendto === undefined || sub[find].sendto !== chatid) {
         sub[find].sendto = chatid;
-        kvchange = true;
+        kvchange = true;9``
         msg += `已将帖子${sub[find].title}的更新推送至本群\n`;
       }
       if (sub[find].unread !== 0) {
@@ -175,43 +136,11 @@ export async function botShare(ctx) {
       }
       return;
     } else {
-      const resp = await cfetch(`https://api.nmb.best/Api/po?id=${id}`);
-      if (resp.status === 200) {
-        let feed = {};
-        const data = await resp.json();
-        if (data.success === false) {
-          await ctx.reply(data.error, {
-            reply_to_message_id: ctx.update.message.message_id,
-          });
-        } else {
-          feed.id = id;
-          feed.url = `https://www.nmbxd1.com/t/${id}`;
-          feed.po = data.user_hash;
-          // feed.title is data.title if it is not "无标题", otherwise feed.title is first line of data.content
-          if (data.title === "无标题" || data.title === "") {
-            feed.title = data.content.split("<br />")[0];
-          } else {
-            feed.title = data.title;
-          }
-          feed.telegraph = true;
-          feed.active = true;
-          feed.errorTimes = 0;
-          feed.ReplyCount = data.ReplyCount;
-          feed.fid = data.fid;
-          feed.sendto = ctx.update.message.chat.id;
-          const now = new Date();
-          feed.lastUpdateTime = now;
-          sub.push(feed);
-          await KV.put("sub", JSON.stringify(sub));
-          await ctx.reply(`成功订阅${feed.title}`, {
-            reply_to_message_id: ctx.update.message.message_id,
-          });
-        }
-      } else {
-        await ctx.reply("订阅失败，网络错误，请稍后再试", {
-          reply_to_message_id: ctx.update.message.message_id,
-        });
-      }
+      // subscribe
+      let { success, msg } = await Subscribe(id);
+      await ctx.reply(msg, {
+        reply_to_message_id: ctx.update.message.message_id,
+      });
     }
   }
 }
