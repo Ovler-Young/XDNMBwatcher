@@ -1,5 +1,5 @@
-//3 subrequest to send a telegraph link
 import { config } from "../config";
+import { sendNotice } from "../notifications/telegram";
 export async function telegraph(item) {
   const writer = item.writer || "ink-rss";
   const title = item.title;
@@ -92,6 +92,11 @@ export async function edittelegraph(item) {
     });
     const editstatus = await edit.json();
     if (editstatus.ok === false) {
+      if (editstatus.error === "CONTENT_TOO_BIG") {
+        await KV.delete(`telegraph-${item.id}`);
+        let newtelegraph = await telegraph(item);
+        return `<a href="${newtelegraph}">NewTg</a> | <a href="${telegraphurl}">OldTg</a>`;
+      }
       return editstatus.error;
     } else {
       return `<a href="${telegraphurl}">Tg</a>`;
