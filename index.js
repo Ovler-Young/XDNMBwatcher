@@ -162,6 +162,7 @@ router.get(`/${secret_path}/jumpread`, async req => {
   console.log(lastreadto);
   sub[index].LastRead = sub[index].ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
+  await KV.delete(`telegraph-${id}`);
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
     let page = Math.floor((lastreadto - 1) / 9) + 1;
@@ -191,6 +192,7 @@ router.get(`/${secret_path}/jumplast`, async req => {
   sub[index].unread = 0;
   sub[index].LastRead = sub[index].ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
+  await KV.delete(`telegraph-${id}`);
   let lastreadto = sub[index].LastRead;
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
