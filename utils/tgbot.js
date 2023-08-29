@@ -100,7 +100,7 @@ export async function botShare(ctx) {
       let kvchange = false;
       if (sub[find].sendto === undefined || sub[find].sendto !== chatid) {
         sub[find].sendto = chatid;
-        kvchange = true;9``
+        kvchange = true;
         msg += `已将帖子${sub[find].title}的更新推送至本群\n`;
       }
       if (sub[find].unread !== 0) {
