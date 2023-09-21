@@ -60,5 +60,7 @@ export async function replyWhenError(feed, err) {
 export async function sendNotice(message) {
   const telegram = new Telegram(config.TG_TOKEN);
   let sendto = config.TG_SENDID;
+  console.log(message);
   await telegram.sendMessage(sendto, message, { parse_mode: "HTML" });
+  return true;
 }

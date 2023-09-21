@@ -46,7 +46,7 @@ export async function telegraph(item) {
 
 export async function edittelegraph(item) {
   // get telegraph url if exists
-  let telegraphurl = await KV.get(`telegraph-${item.id}`);
+  let telegraphurl = item.telegraphurl || await KV.get(`telegraph-${item.id}`);
   console.log(telegraphurl);
   if (telegraphurl === null) {
     console.log("telegraphurl is null");
@@ -94,6 +94,7 @@ export async function edittelegraph(item) {
     if (editstatus.ok === false) {
       if (editstatus.error === "CONTENT_TOO_BIG") {
         await KV.delete(`telegraph-${item.id}`);
+        item.content = `上一次同步：<a href="${telegraphurl}">${telegraphurl}</a>\n\n${item.content}`
         let newtelegraph = await telegraph(item);
         return `<a href="${newtelegraph}">NewTg</a> | <a href="${telegraphurl}">OldTg</a>`;
       }

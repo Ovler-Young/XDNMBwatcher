@@ -13,6 +13,7 @@ if (mode === "telegram") {
   setTgBot(router);
 }
 import { cfetch, errorresponse, successresponse } from "./utils/util";
+import { synctoTelegraph } from "./utils/sync";
 
 const refreshunread = async index => {
   const res = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
@@ -262,6 +263,14 @@ router.get(`/${secret_path}/subscribe`, async req => {
   } // End of loop for multiple pages
   await KV.put("sub", JSON.stringify(sub)); // Save the updated sub array
   return successresponse(`${count} new feeds added`);
+});
+router.get(`/${secret_path}/stg`, async req => {
+  const id = req.url.split("?id=")[1];
+  if (id === undefined) {
+    return errorresponse("Please verify your input!");
+  }
+  const telegraph = await synctoTelegraph(id);
+  return successresponse(telegraph);
 });
 router.get("/test", async (req, e) => {
   // 测试

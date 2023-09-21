@@ -1,4 +1,4 @@
-import { botBind, botSub, botUnSub,botUnSubAll,botShare,botUnread,botRetitle,botTelegraph, botList,botListAll, botHelp,botLatest,botReadAll,botPO, botRoll,botMute} from "./utils/tgbot";
+import { botBind,bot2TG, botSub, botUnSub,botUnSubAll,botShare,botUnread,botRetitle,botTelegraph, botList,botListAll, botHelp,botLatest,botReadAll,botPO, botRoll,botMute} from "./utils/tgbot";
 const { Telegraf } = require("telegraf");
 import { config } from "./config";
 const bot = new Telegraf(config.TG_TOKEN);
@@ -24,6 +24,7 @@ bot.command("latest", botLatest);
 bot.command("readall", botReadAll);
 bot.command("po", botPO);
 bot.command("mute", botMute);
+bot.command("stg", bot2TG);
 bot.on("message", async ctx => {
   if (
     ctx.update.message.text.includes("nmbxd") ||

@@ -2,6 +2,7 @@ import { GetIDctx,Subscribe, Unsubscribe, ChangeSendto } from "./functions";
 import { html } from "./html";
 import { config } from "../config.js";
 import { cfetch } from "./util.js";
+import { synctoTelegraph } from "./sync.js";
 
 export async function botBind(ctx) {
   let { getid, id } = await GetIDctx(ctx);
@@ -36,6 +37,21 @@ export async function botBind(ctx) {
       }
     }
   }
+}
+
+export async function bot2TG(ctx) {
+  let { getid, id } = await GetIDctx(ctx);
+  console.log(`GET 2TG ${id}`);
+  if (getid === false) {
+    await ctx.reply("Cannot get id", {
+      reply_to_message_id: ctx.update.message.message_id,
+    });
+    return;
+  }
+  await synctoTelegraph(id);
+  await ctx.reply("同步完成", {
+    reply_to_message_id: ctx.update.message.message_id,
+  });
 }
 
 export async function botSub(ctx) {

@@ -4,7 +4,8 @@ const {
   replyWhenError,
   sendNotice
 } = require(`./notifications/${mode}`);
-import { cfetch } from "./utils/util";
+import { cfetch, addcontent } from "./utils/util";
+
 export async function handleScheduled(event) {
   const subraw = await KV.get("sub");
   let sub = JSON.parse(subraw);
@@ -93,6 +94,7 @@ export async function handleScheduled(event) {
             console.log(
               "id: " + feed[i].id + "title" + feed[i].title + "有更新"
             );
+            let id = feed[i].id;
             // featch the new replies
             let newreplycount = feed[i].reply_count - sub[index].ReplyCount;
             // if greater than 5, set to 5
@@ -140,32 +142,7 @@ export async function handleScheduled(event) {
                   sub[index].writer.includes(data.user_hash))
               ) {
                 // if title is not empty or "无标题", we need to add it to the content
-                if (data.title !== "" && data.title !== "无标题") {
-                  content_all.push(
-                    `<a href="https://www.nmbxd1.com/t/${feed[i].id}?r=${data.id}">${data.title}</a><br/>`
-                  );
-                } else {
-                  content_all.push(
-                    `<a href="https://www.nmbxd1.com/t/${feed[i].id}?r=${data.id}">#${data.id}</a>`
-                  );
-                }
-                // <br/>
-                content_all.push("<br/>");
-                // if so, we need to get the content
-                content_all.push(
-                  data.content
-                    .replace(/<[^>]+>/g, "")
-                    .replace(
-                      /&gt;&gt;No\.(\d+)/g,
-                      `<a href="https://www.nmbxd1.com/Home/Forum/ref?id=$1">>>No.$1</a>`
-                    )
-                ); //https://www.nmbxd1.com/Home/Forum/ref?id=57858642
-                // if there is an image, we need to add it to the content
-                if (data.ext !== "") {
-                  content_all.push(
-                    `<img src="https://image.nmb.best/image/${data.img}${data.ext}">`
-                  );
-                }
+                content_all = addcontent(id, data, content_all);
                 // sub
                 // unread
                 unread += 1;
