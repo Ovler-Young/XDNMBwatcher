@@ -61,6 +61,15 @@ XDNMB watcher 是一个监视 XDNMB 论坛的工具，可以在论坛帖子有�
 
 - [x] 图片支持
 
+## ChangeLog
+
+- 2024-01-09
+  - 增加了自动删除在软件中删除的订阅
+  - 部分代码命名修改
+  - Cookie 过期通知
+  - 删除了未使用的代码
+  - 前端处理板块信息方式修改
+
 ## 注意事项
 
 ### Work in progress, 本章节文档尚未更新
@@ -242,8 +251,6 @@ XDNMB watcher 是一个监视 XDNMB 论坛的工具，可以在论坛帖子有�
 [@pureink](https://github.com/pureink)
 
 ## 现XDNMB watcher 作者
-
-19 岁，是学生。
 
 [@Ovler-Young](https://github.com/Ovler-Young)
 
