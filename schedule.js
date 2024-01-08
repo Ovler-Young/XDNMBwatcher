@@ -11,7 +11,8 @@ export async function handleScheduled(event) {
   let sub = JSON.parse(SubRaw);
   const uuid = await KV.get("uuid");
   let idToCheck = [];
-  idToCheck = sub.map(item => item.id);
+  // idToCheck = sub.map(item => item.id); only those active
+  idToCheck = sub.filter(item => item.active).map(item => item.id);
   console.log("idToCheck: " + idToCheck.length + " " + idToCheck);
   let PHPSESSID = await KV.get("PHPSESSID");
   let retry = 0;
@@ -216,23 +217,30 @@ export async function handleScheduled(event) {
         PHPSESSID=PHPSESSID
       );
       u += 1;
-      let data = await res.text();
-      if (data === `"\u8be5\u4e32\u4e0d\u5b58\u5728"` || data === `"\u8be5\u4e32\u5df2\u88ab\u5220\u9664"`) {
+      let data = await res.json();
+      console.log(`id=${idToCheck[i]} data=${data}`)
+      if (data === "该串不存在") {
         // deleted
         console.log("id: " + idToCheck[i] + "已被站方删除");
         sub[index].active = false;
         KV.put("sub", JSON.stringify(sub));
-        let message = `#id${idToCheck[i]} 已删除，名称为 ${sub[index].title}，最后更新时间为 ${sub[index].lastUpdateTime}，已停止订阅`;
+        u += 1;
+        let message = `#悲报 #id${idToCheck[i]} 已删除，名称为 ${sub[index].title}，最后更新时间为 ${sub[index].lastUpdateTime}`;
         sendNotice(message);
+        u += 1;
         console.log("sendNotice with message: " + message);
       } else { // might had manually unsubscribed. Due to change on server side api, might not accurate. So disabled.
-        // console.log("id: " + idToCheck[i] + "已被手退订");
-        // sub[index].active = false;
-        // KV.put("sub", JSON.stringify(sub));
-        // let message = `#id${idToCheck[i]} 已手动退订，名称为 ${sub[index].title}，最后更新时间为 ${sub[index].lastUpdateTime}，已停止订阅`;
-        // sendNotice(message);
-        // console.log("sendNotice with message: " + message);
+        console.log("id: " + idToCheck[i] + "已被手退订");
+        sub[index].active = false;
+        KV.put("sub", JSON.stringify(sub));
+        let message = `#删除订阅 #id${idToCheck[i]} 已手动退订，名称为 "${sub[index].title}"，最后更新时间为 ${sub[index].lastUpdateTime}`;
+        sendNotice(message);
+        u += 1;
+        console.log("sendNotice with message: " + message);
       }
+    }
+    if (u > 35) {
+      break;
     }
   }
   return true;
