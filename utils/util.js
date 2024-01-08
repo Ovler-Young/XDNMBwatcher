@@ -43,6 +43,11 @@ const cFetch = async (url, option, PHPSESSID) => {
         // sleep 3 sec
         await new Promise(r => setTimeout(r, 200));
       } else {
+        // if there is delete cookie, it means we need to update PHPSESSID.
+        // send a signal to update PHPSESSID
+        if (response.headers.get("set-cookie") !== null) {
+          errorResponse("PHPSESSID is expired!!!!");
+        }
       return response;
       }
     } catch (e) {
