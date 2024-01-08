@@ -300,6 +300,13 @@ router.get("/fixerror", async (req, e) => {
   const SubRaw = await KV.get("sub");
   let sub = JSON.parse(SubRaw);
   console.log(sub);
+  // 如果active为false，删除
+  for (let i = 0; i < sub.length; i++) {
+    if (sub[i].active === false) {
+      sub.splice(i, 1);
+      i--;
+    }
+  }
   // 重复id只保留一个，保留该项目子元素最多的那个
   let id = [];
   for (let i = 0; i < sub.length; i++) {
