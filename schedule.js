@@ -132,6 +132,10 @@ export async function handleScheduled(event) {
                 }
               }
               catch (err) {
+                console.log(err);
+                console.log("跳过");
+                // send to telegram
+                sendNotice(`在处理 #id${id} 时出现错误，错误信息为：${err}`);
               }
               if (
                 data.user_hash === sub[index].po ||
