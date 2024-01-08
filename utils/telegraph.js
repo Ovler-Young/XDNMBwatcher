@@ -52,7 +52,7 @@ export async function edittelegraph(item) {
     console.log("telegraphurl is null");
     return await telegraph(item);
   } else {
-    let path = telegraphurl.split("://")[1].split("/")[1];
+    let path = telegraphurl.split("://")[1].split("/")[1].split(`"`)[0];
     const getnode = await fetch(`https://api.telegra.ph/getPage/${path}?return_content=true`, {
       method: "GET",
       headers: {
@@ -70,7 +70,7 @@ export async function edittelegraph(item) {
     });
     const newnode = await getnode2.json();
     // node 和 newnode 结构是一样的，但要合并起来
-    const node = oldnode.concat(newnode);
+    let node = oldnode.concat(newnode);
     console.log(node);
     // edit 
     const writer = item.writer || "ink-rss";

@@ -37,16 +37,17 @@ export async function synctoTelegraph(id) {
     let page = syncinfojson[id].page;
     let telegraphurl = syncinfojson[id].telegraphurl;
     let replycount = syncinfojson[id].replycount;
+    let url = `https://www.nmbxd1.com/t/${id}`;
 
     // try if it is in the sub list
     let subraw = await KV.get("sub");
     let sub = JSON.parse(subraw);
-    let index = sub.findIndex(e => e.id === id);
+    let index = sub.findIndex(e => e.url === url);
     if (index === -1) {
         // not found
         console.log("未找到" + id + "，请先订阅");
         let sendstatus = sendNotice(`id: ${id} 未找到, 请先订阅`);
-        return sendstatus;
+        return `id: ${id} 未找到, 请先订阅`;
     }
     let title = sub[index].title;
 
@@ -87,7 +88,7 @@ export async function synctoTelegraph(id) {
     }
     let lastpagereply = 0;
     for (i = page; i <= totalpage; i++) {
-        if (r > 10) {
+        if (r > 25) {
             break;
         }
         let res = await cfetch(
@@ -96,7 +97,6 @@ export async function synctoTelegraph(id) {
         );
         r++;
         let thread = await res.json();
-        console.log("thread: " + JSON.stringify(thread));
         let Replies = thread.Replies;
         if (Replies.length === 0) {
             break;
@@ -107,9 +107,7 @@ export async function synctoTelegraph(id) {
             lastpagereply = j;
         }
     }
-    console.log("content_all: " + content_all);
     content = content_all.join("<br/>");
-    console.log("content: " + content);
     reply = (i-1) * 19 + lastpagereply;
     console.log("reply: " + reply);
 
@@ -121,17 +119,21 @@ export async function synctoTelegraph(id) {
 
     // the limit of telegraph is 64k. To avoid error, we need to split the content if it is too long
     while (true) {
-        if (content.length < 60000|| r > 30) {
+        if (content.length < 20000|| r > 40) {
             item.content = content;
             item.telegraphurl = telegraphurl;
             let telegraphurl_new = await telegraph(item);
             telegraphurl = telegraphurl_new;
-            let sendstatus = sendNotice(`id: ${id} 同步中, 请查看最新页面：${telegraphurl}`);
+            if (r > 40) {
+                let sendstatus = sendNotice(`id: ${id} 同步未完成, 请查看最新页面：${telegraphurl}`);
+                await savesyncinfo(id, i, telegraphurl, reply);
+                return `id: ${id} 同步未完成, 请查看最新页面：${telegraphurl}`;
+            }
             r += 1;
             break;
         }
         // split content at 60k and find the nearest <br/>
-        let index = content.lastIndexOf("<br/>", 60000);
+        let index = content.lastIndexOf("<br/>", 20000);
         let content1 = content.slice(0, index);
         let content2 = content.slice(index);
         content = content2;
@@ -146,12 +148,13 @@ export async function synctoTelegraph(id) {
         await edittelegraph(item); // edit the previous telegraph to add the next page link
         r += 3;
         telegraphurl = telegraphurl_new;
-        let sendstatus = sendNotice(`id: ${id} 同步中, 请查看最新页面：${telegraphurl}`);
         r += 1;
     }
     // save syncinfo
-    await savesyncinfo(id, i, telegraphurl, reply);
+    if (telegraphurl !== "CONTENT_TOO_BIG") {
+        await savesyncinfo(id, i, telegraphurl, reply);
+    }
     // send notice
     let sendstatus = sendNotice(`id: ${id} 同步完成, ${telegraphurl}, ${reply}条回复`);
-    return sendstatus;
+    return `id: ${id} 同步${sendstatus}, ${telegraphurl}, ${reply}条回复`;
 }

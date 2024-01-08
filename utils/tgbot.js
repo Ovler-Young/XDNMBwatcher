@@ -48,8 +48,8 @@ export async function bot2TG(ctx) {
     });
     return;
   }
-  await synctoTelegraph(id);
-  await ctx.reply("同步完成", {
+  let msg = await synctoTelegraph(id);
+  await ctx.reply(msg, {
     reply_to_message_id: ctx.update.message.message_id,
   });
 }
