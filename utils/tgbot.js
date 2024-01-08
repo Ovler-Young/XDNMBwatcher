@@ -1,8 +1,8 @@
 import { GetIDctx,Subscribe, Unsubscribe, ChangeSendto } from "./functions";
 import { html } from "./html";
 import { config } from "../config.js";
-import { cfetch } from "./util.js";
-import { synctoTelegraph } from "./sync.js";
+import { cFetch } from "./util.js";
+import { syncToTelegraph } from "./sync.js";
 
 export async function botBind(ctx) {
   let { getid, id } = await GetIDctx(ctx);
@@ -12,8 +12,8 @@ export async function botBind(ctx) {
     });
     return;
   }
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅");
   } else {
@@ -29,7 +29,7 @@ export async function botBind(ctx) {
       if (chat_id === null || chat_id === undefined) {
         await ctx.reply("获取错误");
       } else {
-        sub[find].sendto = chat_id;
+        sub[find].SendTo = chat_id;
         await KV.put("sub", JSON.stringify(sub));
         await ctx.reply(`成功修改id为${id}的订阅源发送到${chat_id}\n`, {
           reply_to_message_id: ctx.update.message.message_id,
@@ -48,7 +48,7 @@ export async function bot2TG(ctx) {
     });
     return;
   }
-  let msg = await synctoTelegraph(id);
+  let msg = await syncToTelegraph(id);
   await ctx.reply(msg, {
     reply_to_message_id: ctx.update.message.message_id,
   });
@@ -101,9 +101,9 @@ export async function botShare(ctx) {
     });
     return;
   }
-  const subraw = (await KV.get("sub")) || "[]";
+  const SubRaw = (await KV.get("sub")) || "[]";
   let message = ctx.update.message;
-  let sub = JSON.parse(subraw);
+  let sub = JSON.parse(SubRaw);
  {
     id = id[0];
     const find = sub.findIndex(
@@ -114,8 +114,8 @@ export async function botShare(ctx) {
       // get chat id
       const chatid = ctx.update.message.chat.id;
       let kvchange = false;
-      if (sub[find].sendto === undefined || sub[find].sendto !== chatid) {
-        sub[find].sendto = chatid;
+      if (sub[find].SendTo === undefined || sub[find].SendTo !== chatid) {
+        sub[find].SendTo = chatid;
         kvchange = true;
         msg += `已将帖子${sub[find].title}的更新推送至本群\n`;
       }
@@ -137,7 +137,7 @@ export async function botShare(ctx) {
       await ctx.reply(msg, {
         reply_to_message_id: ctx.update.message.message_id,
       });
-      if (sub[find].sendto == chatid) {
+      if (sub[find].SendTo == chatid) {
         await new Promise((resolve) => setTimeout(resolve, 2000));
         // delete this message
         await ctx.telegram.deleteMessage(
@@ -162,8 +162,8 @@ export async function botShare(ctx) {
 }
 
 export async function botUnread(ctx) {
-  let subraw = (await KV.get("sub")) || "[]";
-  const sub = JSON.parse(subraw);
+  let SubRaw = (await KV.get("sub")) || "[]";
+  const sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
       reply_to_message_id: ctx.update.message.message_id,
@@ -226,8 +226,8 @@ export async function botRetitle(ctx) {
     });
     return;
   }
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
       reply_to_message_id: ctx.update.message.message_id,
@@ -266,8 +266,8 @@ export async function botTelegraph(ctx) {
     });
     return;
   }
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
       reply_to_message_id: ctx.update.message.message_id,
@@ -294,8 +294,8 @@ export async function botTelegraph(ctx) {
 }
 
 export async function botList(ctx) {
-  let subraw = (await KV.get("sub")) || "[]";
-  const sub = JSON.parse(subraw);
+  let SubRaw = (await KV.get("sub")) || "[]";
+  const sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
       reply_to_message_id: ctx.update.message.message_id,
@@ -309,7 +309,7 @@ export async function botList(ctx) {
       msg += `默认地点订阅：\n`;
       for (let i = 0; i < sub.length; i++) {
         n += 1;
-        if (sub[i].sendto === chat_id || sub[i].sendto === undefined) {
+        if (sub[i].SendTo === chat_id || sub[i].SendTo === undefined) {
           msg += `${n}.\t<a href="${sub[i].url}">${html(
             sub[i].title
           )}</a>\n #id${sub[i].id}<code>Upd:${sub[i].lastUpdateTime
@@ -321,7 +321,7 @@ export async function botList(ctx) {
       msg += `在 ${chat_name} 中的订阅：\n`;
       for (let i = 0; i < sub.length; i++) {
         n += 1;
-        if (sub[i].sendto === chat_id) {
+        if (sub[i].SendTo === chat_id) {
           msg += `${n}.\t<a href="${sub[i].url}">${html(
             sub[i].title
           )}</a>\n #id${sub[i].id}<code>Upd:${sub[i].lastUpdateTime
@@ -349,8 +349,8 @@ export async function botList(ctx) {
 }
 
 export async function botListAll(ctx) {
-  let subraw = (await KV.get("sub")) || "[]";
-  const sub = JSON.parse(subraw);
+  let SubRaw = (await KV.get("sub")) || "[]";
+  const sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
       reply_to_message_id: ctx.update.message.message_id,
@@ -408,7 +408,7 @@ export async function botHelp(ctx) {
 export async function botLatest(ctx) {
   // 记时
   let start = new Date().getTime();
-  const resp = await cfetch(`https://api.nmb.best/Api/timeline`);
+  const resp = await cFetch(`https://api.nmb.best/Api/timeline`);
   const data = await resp.json();
   let middle = new Date().getTime();
   // the id we need is in data[*].Replies[0].id
@@ -438,8 +438,8 @@ export async function botLatest(ctx) {
 }
 
 export async function botReadAll(ctx) {
-  let subraw = (await KV.get("sub")) || "[]";
-  const sub = JSON.parse(subraw);
+  let SubRaw = (await KV.get("sub")) || "[]";
+  const sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
       reply_to_message_id: ctx.update.message.message_id,
@@ -481,8 +481,8 @@ export async function botPO(ctx) {
     });
     return;
   }
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
       reply_to_message_id: ctx.update.message.message_id,
@@ -510,7 +510,7 @@ export async function botPO(ctx) {
           reply_to_message_id: ctx.update.message.message_id,
         });
         try {
-          sub[find].issingle = false;
+          sub[find].IsSingle = false;
           if (sub[find].writer === undefined) {
             sub[find].writer = [po];
             sub[find].po = po;
@@ -555,8 +555,8 @@ export async function botMute(ctx) {
     });
     return;
   }
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
       reply_to_message_id: ctx.update.message.message_id,
@@ -571,8 +571,8 @@ export async function botMute(ctx) {
       });
     } else {
       const title = sub[find].title;
-      // Autoremove1
-      sub[find].Autoremove = 1;
+      // AutoRemove1
+      sub[find].AutoRemove = 1;
       await KV.put("sub", JSON.stringify(sub));
       await ctx.reply(`已将 ${title} 的推送设置为仅推送最后一次`, {
         reply_to_message_id: ctx.update.message.message_id,
@@ -632,7 +632,7 @@ export async function botRoll(ctx) {
   let try_count = 0;
   while (continues) {
     try_count++;
-    const resp = await cfetch(`https://api.nmb.best/Api/timeline`);
+    const resp = await cFetch(`https://api.nmb.best/Api/timeline`);
     web_request_count += 1;
     const data = await resp.json();
     // the id we need is in data[*].Replies[0].id
@@ -733,7 +733,7 @@ export async function Reply(id, msg) {
 
 export async function Check(id, msg) {
   let frontend_page = 0;
-  const resp = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
+  const resp = await cFetch(`https://api.nmb.best/Api/thread?id=${id}`);
   // find what we just posted
   if (resp.ok) {
     // if everything is fine, return the json
@@ -746,7 +746,7 @@ export async function Check(id, msg) {
     return resp;
   }
   console.log(`https://www.nmbxd1.com/t/${id}?page=${frontend_page}`);
-  const lastpage = await cfetch(
+  const lastpage = await cFetch(
     `https://api.nmb.best/Api/thread?id=${id}&page=${frontend_page}`
   );
   const data = await lastpage.json();

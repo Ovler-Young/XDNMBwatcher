@@ -4,30 +4,30 @@ const {
   replyWhenError,
   sendNotice
 } = require(`./notifications/${mode}`);
-import { cfetch, addcontent } from "./utils/util";
+import { cFetch, addContent } from "./utils/util";
 
 export async function handleScheduled(event) {
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   const uuid = await KV.get("uuid");
-  let idtocheck = [];
-  idtocheck = sub.map(item => item.id);
-  console.log("idtocheck: " + idtocheck.length + " " + idtocheck);
-  let phpssid = await KV.get("phpssid");
+  let idToCheck = [];
+  idToCheck = sub.map(item => item.id);
+  console.log("idToCheck: " + idToCheck.length + " " + idToCheck);
+  let PHPSESSID = await KV.get("PHPSESSID");
   let retry = 0;
   let u = 2; // 请求次数
-  if (phpssid === null || phpssid === undefined) {
+  if (PHPSESSID === null || PHPSESSID === undefined) {
     for (retry = 0; retry < 4; retry++) {
-      // fetch phpssid
-      const phpssidurl = "https://www.nmbxd1.com/Forum";
-      const phpssidoption = { method: "GET" };
-      phpssidoption.signal = AbortSignal.timeout(1700 * (retry + 1));
-      let phpssidresponse = await fetch(phpssidurl, phpssidoption);
-      phpssid = phpssidresponse.headers
+      // fetch PHPSESSID
+      const PHPSESSIDurl = "https://www.nmbxd1.com/Forum";
+      const PHPSESSIDoption = { method: "GET" };
+      PHPSESSIDoption.signal = AbortSignal.timeout(1700 * (retry + 1));
+      let PHPSESSIDresponse = await fetch(PHPSESSIDurl, PHPSESSIDoption);
+      PHPSESSID = PHPSESSIDresponse.headers
         .get("set-cookie")
         .split(";")[0]
         .split("=")[1];
-      await KV.put("phpssid", phpssid, { expirationTtl: 7200 });
+      await KV.put("PHPSESSID", PHPSESSID, { expirationTtl: 7200 });
       u++;
     }
   }
@@ -35,9 +35,9 @@ export async function handleScheduled(event) {
   // 访问 feed 接口，check 是否有新帖子
   let page = 1;
   while (true) {
-    const res = await cfetch(
+    const res = await cFetch(
       `https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`,
-      (phpssid = phpssid)
+      (PHPSESSID = PHPSESSID)
     );
     u++;
     let feed = await res.json();
@@ -63,10 +63,10 @@ export async function handleScheduled(event) {
         item.errorTimes = 0;
         item.ReplyCount = feed[i].reply_count;
         item.fid = feed[i].fid;
-        item.sendto = config.TG_SENDID;
+        item.SendTo = config.TG_SENDID;
         item.lastUpdateTime = feed[i].now;
         item.xd = true;
-        item.issingle = true;
+        item.IsSingle = true;
         item.ReplyCountAll = feed[i].reply_count;
         item.unread = 0;
         item.send_message_id = null;
@@ -82,8 +82,8 @@ export async function handleScheduled(event) {
         if (
           sub[index].ReplyCount === feed[i].reply_count ||
           sub[index].active === false
-        ) {
-          idtocheck.splice(idtocheck.indexOf(feed[i].id), 1);
+        ) { // no update
+          idToCheck.splice(idToCheck.indexOf(feed[i].id), 1);
           console.log("id: " + feed[i].id + "title" + feed[i].title + "未更新");
         } else {
           try {
@@ -92,18 +92,18 @@ export async function handleScheduled(event) {
               "id: " + feed[i].id + "title" + feed[i].title + "有更新"
             );
             let id = feed[i].id;
-            // featch the new replies
-            let newreplycount = feed[i].reply_count - sub[index].ReplyCount;
+            // fetch the new replies
+            let NewReplyCount = feed[i].reply_count - sub[index].ReplyCount;
             // if greater than 5, set to 5 //todo: 单独请求该api，获取全部的最新回复
-            if (newreplycount > 5) {
-              newreplycount = 5;
+            if (NewReplyCount > 5) {
+              NewReplyCount = 5;
             }
             // feed[i].recent_replies is the new replies, like [59155555,59155776,59156051,59156065,59156364]
             // we need to get the content of each reply
             let content_all = [];
             let unread = 0;
-            let lastUpdateTimeinFeed = feed[i].now;
-            for (let j = 0; j < newreplycount; j++) {
+            let lastUpdateTimeInFeed = feed[i].now;
+            for (let j = 0; j < NewReplyCount; j++) {
               // /ref
               console.log(feed[i].recent_replies);
               // and it is in reverse order
@@ -117,7 +117,7 @@ export async function handleScheduled(event) {
               console.log(reverse);
               let res = null;
               let data = null;
-              res = await cfetch(`https://api.nmb.best/Api/ref?id=${reverse[j]}`, phpssid=phpssid);
+              res = await cFetch(`https://api.nmb.best/Api/ref?id=${reverse[j]}`, PHPSESSID=PHPSESSID);
               u += 1;
               data = await res.json();
               console.log(data);
@@ -135,15 +135,15 @@ export async function handleScheduled(event) {
               }
               if (
                 data.user_hash === sub[index].po ||
-                (sub[index].issingle === false &&
+                (sub[index].IsSingle === false &&
                   sub[index].writer.includes(data.user_hash))
               ) {
                 // if title is not empty or "无标题", we need to add it to the content
-                content_all = addcontent(id, data, content_all);
+                content_all = addContent(id, data, content_all);
                 // sub
                 // unread
                 unread += 1;
-                lastUpdateTimeinFeed = data.now;
+                lastUpdateTimeInFeed = data.now;
               }
             }
             let content_join = content_all.join("<br/>");
@@ -164,12 +164,12 @@ export async function handleScheduled(event) {
                 lastUpdateTime: sub[index].lastUpdateTime,
                 writer: sub[index].po,
                 page: page,
-                sendto: sub[index].sendto || config.TG_SENDID,
+                SendTo: sub[index].SendTo || config.TG_SENDID,
                 lastSendId: sub[index].send_message_id || 0,
-                Autoremove: 1
+                AutoRemove: 1
               };
               sub[index].send_message_id = await reply(sub[index], item);
-              sub[index].lastUpdateTime = lastUpdateTimeinFeed; // feed[i].now is the time of the creation of the first reply
+              sub[index].lastUpdateTime = lastUpdateTimeInFeed; // feed[i].now is the time of the creation of the first reply
               u += sub[index].telegraph ? 3 : 1;
               console.log(`send_message_id: ${sub[index].send_message_id}`);
             }
@@ -183,7 +183,7 @@ export async function handleScheduled(event) {
             console.log(err);
             if (sub[i].errorTimes >= config.maxErrorCount) {
               console.log(
-                "error over max start notifyfor " + sub[i].errorTimes + " times"
+                "error over max start notify for " + sub[i].errorTimes + " times"
               );
               console.log(sub[i]);
               sub[i].active = false;
@@ -202,23 +202,23 @@ export async function handleScheduled(event) {
     page++;
   }
   // 确定
-  // for things still in idtocheck, that means they are not in feed, so we need to check if they are deleted
-  for (let i = 0; i < idtocheck.length; i++) {
-    let index = sub.findIndex(e => e.id === idtocheck[i]);
+  // for things still in idToCheck, that means they are not in feed, so we need to check if they are deleted
+  for (let i = 0; i < idToCheck.length; i++) {
+    let index = sub.findIndex(e => e.id === idToCheck[i]);
     if (index !== -1) {
       // check if it is deleted
-      let res = await cfetch(
-        `https://api.nmb.best/Api/thread?id=${idtocheck[i]}`,
-        phpssid=phpssid
+      let res = await cFetch(
+        `https://api.nmb.best/Api/thread?id=${idToCheck[i]}`,
+        PHPSESSID=PHPSESSID
       );
       u += 1;
       let data = await res.text();
       if (data === `"\u8be5\u4e32\u4e0d\u5b58\u5728"` || data === `"\u8be5\u4e32\u5df2\u88ab\u5220\u9664"`) {
         // deleted
-        console.log("id: " + idtocheck[i] + "已被站方删除");
+        console.log("id: " + idToCheck[i] + "已被站方删除");
         sub[index].active = false;
         KV.put("sub", JSON.stringify(sub));
-        let message = `#id${idtocheck[i]} 已删除，名称为 ${sub[index].title}，最后更新时间为 ${sub[index].lastUpdateTime}，已停止订阅`;
+        let message = `#id${idToCheck[i]} 已删除，名称为 ${sub[index].title}，最后更新时间为 ${sub[index].lastUpdateTime}，已停止订阅`;
         sendNotice(message);
         console.log("sendNotice with message: " + message);
       } else { // might had manually unsubscribed. Due to change on server side api, might not accurate. So disabled.

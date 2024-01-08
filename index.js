@@ -12,11 +12,11 @@ const router = Router();
 if (mode === "telegram") {
   setTgBot(router);
 }
-import { cfetch, errorresponse, successresponse } from "./utils/util";
-import { synctoTelegraph } from "./utils/sync";
+import { cFetch, errorResponse, successResponse } from "./utils/util";
+import { syncToTelegraph } from "./utils/sync";
 
-const refreshunread = async index => {
-  const res = await cfetch(`https://api.nmb.best/Api/thread?id=${id}`);
+const refreshUnread = async index => {
+  const res = await cFetch(`https://api.nmb.best/Api/thread?id=${id}`);
   sub[index].LastRead = (await res.json()).ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
 };
@@ -76,84 +76,84 @@ router.get(`/${secret_path}/feeds`, async () => {
 });
 router.post(`/${secret_path}/subitem`, async req => {
   let { getid, id } = await GetID(req);
-  if (getid === false) {return errorresponse(id);}
+  if (getid === false) {return errorResponse(id);}
   let { success, msg } = await Subscribe(id);
-  return success ? successresponse(msg) : errorresponse(msg);
+  return success ? successResponse(msg) : errorResponse(msg);
 });
 router.post(`/${secret_path}/deleteitem`, async req => {
   // 删除订阅
   let { getid, id } = await GetID(req);
-  if (getid === false) {return errorresponse(id);}
+  if (getid === false) {return errorResponse(id);}
   let { success, msg } = await Unsubscribe(id);
-  return success ? successresponse(msg) : errorresponse(msg);
+  return success ? successResponse(msg) : errorResponse(msg);
 });
 router.post(`/${secret_path}/active`, async req => {
   // 激活/禁用订阅
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   const body = await req.json();
   const url = body.url || "";
   const state = body.state;
   const index = sub.findIndex(e => e.url === url);
   if (index === -1 || state === undefined) {
-    return errorresponse("Please verify your input!");
+    return errorResponse("Please verify your input!");
   }
   sub[index].active = state;
   sub[index].lastUpdateTime = new Date();
   sub[index].errorTimes = 0;
   await KV.put("sub", JSON.stringify(sub));
-  return successresponse(`修改成功，当前状态为 ${state ? "on" : "off"}`);
+  return successResponse(`修改成功，当前状态为 ${state ? "on" : "off"}`);
 });
 router.post(`/${secret_path}/telegraph`, async req => {
   // 激活/禁用 Telegraph
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   const body = await req.json();
   const url = body.url || "";
   const state = body.state;
   const index = sub.findIndex(e => e.url === url);
   if (index === -1 || state === undefined) {
-    return errorresponse("Please verify your input!");
+    return errorResponse("Please verify your input!");
   }
   sub[index].telegraph = state;
   await KV.put("sub", JSON.stringify(sub));
-  return successresponse(
+  return successResponse(
     `修改成功，当前 Telegraph 状态为 ${state ? "on" : "off"}`
   );
 });
 router.post(`/${secret_path}/title`, async req => {
   // 修改订阅标题
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   const body = await req.json();
   const url = body.url || "";
   const title = body.title;
   const index = sub.findIndex(e => e.url === url);
   if (index === -1 || title === undefined) {
-    return errorresponse("Please verify your input!");
+    return errorResponse("Please verify your input!");
   }
   sub[index].title = title;
   await KV.put("sub", JSON.stringify(sub));
-  return successresponse(`修改成功，当前该订阅源标题为 ${title}`);
+  return successResponse(`修改成功，当前该订阅源标题为 ${title}`);
 });
 router.post(`/${secret_path}/unread`, async req => {
   // 修改订阅未读数
   let { getid, id } = await GetID(req);
-  if (getid === false) {return errorresponse(id);}
+  if (getid === false) {return errorResponse(id);}
   let { success, msg } = await MarkAsRead(id);
-  return success ? successresponse(msg) : errorresponse(msg);
+  return success ? successResponse(msg) : errorResponse(msg);
 });
 router.get(`/${secret_path}/jumpread`, async req => {
   // 通过search里的id跳转到指定帖子
   const id = req.url.split("?id=")[1];
   if (id === undefined) {
-    return errorresponse("Please verify your input!");
+    return errorResponse("Please verify your input!");
   }
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   const index = sub.findIndex(e => e.id === id);
   if (index === -1) {
-    return errorresponse("id not found. Did you subscribe this thread?");
+    return errorResponse("id not found. Did you subscribe this thread?");
   }
   sub[index].unread = 0;
   if (sub[index].LastRead === undefined) {
@@ -182,13 +182,13 @@ router.get(`/${secret_path}/jumpread`, async req => {
 router.get(`/${secret_path}/jumplast`, async req => {
   const id = req.url.split("?id=")[1];
   if (id === undefined) {
-    return errorresponse("Please verify your input!");
+    return errorResponse("Please verify your input!");
   }
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   const index = sub.findIndex(e => e.id === id);
   if (index === -1) {
-    return errorresponse("Please verify your input!");
+    return errorResponse("Please verify your input!");
   }
   sub[index].unread = 0;
   sub[index].LastRead = sub[index].ReplyCount;
@@ -213,14 +213,14 @@ router.get(`/${secret_path}/jumplast`, async req => {
 router.get(`/${secret_path}/subscribe`, async req => {
   const uuid = req.url.split("?uuid=")[1];
   if (uuid === undefined) {
-    return errorresponse("Please verify your input!");
+    return errorResponse("Please verify your input!");
   }
   await KV.put("uuid", uuid);
 
   let page = 1;
   let count = 0;
-  let subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  let SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
 
   while (true) {
     // Start of loop for multiple pages
@@ -246,10 +246,10 @@ router.get(`/${secret_path}/subscribe`, async req => {
       item.errorTimes = 0;
       item.ReplyCount = feed[i].reply_count;
       item.fid = feed[i].fid;
-      item.sendto = config.TG_SENDID;
+      item.SendTo = config.TG_SENDID;
       item.lastUpdateTime = feed[i].now;
       item.xd = true;
-      item.issingle = true;
+      item.IsSingle = true;
       item.unread = 0;
       item.send_message_id = null;
       item.LastRead = feed[i].reply_count;
@@ -262,15 +262,15 @@ router.get(`/${secret_path}/subscribe`, async req => {
     page++; // Increase the page number for the next iteration
   } // End of loop for multiple pages
   await KV.put("sub", JSON.stringify(sub)); // Save the updated sub array
-  return successresponse(`${count} new feeds added`);
+  return successResponse(`${count} new feeds added`);
 });
 router.get(`/${secret_path}/stg`, async req => {
   const id = req.url.split("?id=")[1];
   if (id === undefined) {
-    return errorresponse("Please verify your input!");
+    return errorResponse("Please verify your input!");
   }
-  const telegraph = await synctoTelegraph(id);
-  return successresponse(telegraph);
+  const telegraph = await syncToTelegraph(id);
+  return successResponse(telegraph);
 });
 router.get("/test", async (req, e) => {
   // 测试
@@ -278,8 +278,8 @@ router.get("/test", async (req, e) => {
 });
 router.get("/forcetest", async (req, e) => {
   // 强制测试
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   let indexs = [];
   for (let i = 0; i < sub.length; i++) {
     if (sub[i].active === true) {
@@ -293,12 +293,12 @@ router.get("/forcetest", async (req, e) => {
     sub[index].recent_replies = '[]'
   }
   await KV.put("sub", JSON.stringify(sub));
-  return successresponse("已强制测试");
+  return successResponse("已强制测试");
 });
 router.get("/fixerror", async (req, e) => {
   // 修复错误
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   console.log(sub);
   // 重复id只保留一个，保留该项目子元素最多的那个
   let id = [];
@@ -352,16 +352,16 @@ router.get("/fixerror", async (req, e) => {
 });
 router.get("/sync", async (req, e) => {
   // 同步
-  const subraw = await KV.get("sub");
+  const SubRaw = await KV.get("sub");
   const uuid = await KV.get("uuid");
   let r = 0;
   let page = 1;
   let got = 0;
   let push = 0;
   let feedid = [];
-  let sub = JSON.parse(subraw);
+  let sub = JSON.parse(SubRaw);
   while (true) {
-    const res = await cfetch(
+    const res = await cFetch(
       `https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`
     );
     r++;
@@ -387,10 +387,10 @@ router.get("/sync", async (req, e) => {
         item.errorTimes = 0;
         item.ReplyCount = feed[i].reply_count;
         item.fid = feed[i].fid;
-        item.sendto = config.TG_SENDID;
+        item.SendTo = config.TG_SENDID;
         item.lastUpdateTime = feed[i].now;
         item.xd = true;
-        item.issingle = true;
+        item.IsSingle = true;
         item.unread = 0;
         item.send_message_id = null;
         item.LastRead = feed[i].reply_count;
@@ -404,7 +404,7 @@ router.get("/sync", async (req, e) => {
       }
     }
     if (r >= 48) {
-      return errorresponse(
+      return errorResponse(
         "同步失败，是不是订阅太多了？上限是48页哦，不用的记得清~~"
       );
       break;
@@ -418,7 +418,7 @@ router.get("/sync", async (req, e) => {
   await KV.put("sub", JSON.stringify(sub));
   for (let i = 0; i < sub.length; i++) {
     if (r >= 48) {
-      return successresponse(
+      return successResponse(
         `同步成功，共获取到${got}个新串，推送${push}个新串`
       );
     }
@@ -445,13 +445,13 @@ router.get("/sync", async (req, e) => {
       r++;
     }
   }
-  return successresponse(`同步成功，共获取到${got}个新串，推送${push}个新串`);
+  return successResponse(`同步成功，共获取到${got}个新串，推送${push}个新串`);
 });
 router.get("/removelongunupdaye", async (req, e) => {
   // 删除长时间未更新的订阅
   const { sendNotice } = require(`./notifications/${mode}`);
-  const subraw = await KV.get("sub");
-  let sub = JSON.parse(subraw);
+  const SubRaw = await KV.get("sub");
+  let sub = JSON.parse(SubRaw);
   // 重复id只保留一个，保留该项目子元素最多的那个
   let id = [];
   for (let i = 0; i < sub.length; i++) {

@@ -1,11 +1,11 @@
-import { cfetch } from "./util.js";
+import { cFetch } from "./util.js";
 import { config } from "../config.js";
 
 export async function GetID(req) {
   const body = await req.json();
   if (body.url === undefined) {
     // 没回传url
-    errorresponse("Url not found");
+    errorResponse("Url not found");
   }
   let url = body.url;
   let id = url;
@@ -52,8 +52,8 @@ export async function GetIDctx(ctx) {
 }
 
 export async function GetIndex(id) {
-  const subraw = (await KV.get("sub")) || "[]";
-  let sub = JSON.parse(subraw);
+  const SubRaw = (await KV.get("sub")) || "[]";
+  let sub = JSON.parse(SubRaw);
   let index = sub.findIndex(e => e.id === id);
   let success = true;
   if (index === -1) {
@@ -64,11 +64,11 @@ export async function GetIndex(id) {
 }
 
 export async function Subscribe(id) {
-    const subraw = (await KV.get("sub")) || "[]";
-    let sub = JSON.parse(subraw);
+    const SubRaw = (await KV.get("sub")) || "[]";
+    let sub = JSON.parse(SubRaw);
     let success = true;
     let msg = "";
-    const resp = await cfetch(`https://api.nmb.best/Api/po?id=${id}`);
+    const resp = await cFetch(`https://api.nmb.best/Api/po?id=${id}`);
     if (resp.status === 200) {
       let feed = {};
       const data = await resp.json();
@@ -90,8 +90,8 @@ export async function Subscribe(id) {
       feed.errorTimes = 0;
       feed.ReplyCount = data.ReplyCount;
       feed.fid = data.fid;
-      feed.sendto = config.TG_SENDID;
-      feed.Autoremove = 1;
+      feed.SendTo = config.TG_SENDID;
+      feed.AutoRemove = 1;
       if (
         sub.findIndex(e => e.url === feed.url) != -1 // 如果已经存在了
       ) {
@@ -136,8 +136,8 @@ export async function Subscribe(id) {
 
 // 删除订阅
 export async function Unsubscribe(id) {
-  const subraw = (await KV.get("sub")) || "[]";
-  let sub = JSON.parse(subraw);
+  const SubRaw = (await KV.get("sub")) || "[]";
+  let sub = JSON.parse(SubRaw);
   let success = true;
   let msg = "";
   const index = sub.findIndex(e => e.id === id);
@@ -168,8 +168,8 @@ export async function Unsubscribe(id) {
 
 // mark as read
 export async function MarkAsRead(id) {
-  const subraw = (await KV.get("sub")) || "[]";
-  let sub = JSON.parse(subraw);
+  const SubRaw = (await KV.get("sub")) || "[]";
+  let sub = JSON.parse(SubRaw);
   let success = true;
   let msg = "";
   const index = sub.findIndex(e => e.id === id);

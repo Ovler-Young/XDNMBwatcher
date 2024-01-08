@@ -4,15 +4,15 @@ export async function telegraph(item) {
   const writer = item.writer || "ink-rss";
   const title = item.title;
   const url = item.url;
-  const getnode = await fetch(`${config.PARSE_URL}/api/html2node`, {
+  const getNode = await fetch(`${config.PARSE_URL}/api/html2node`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json; charset=utf-8"
     },
     body: JSON.stringify({ content: item.content })
   });
-  const node = await getnode.text();
-  const gettelegraph = await fetch("https://api.telegra.ph/createPage", {
+  const node = await getNode.text();
+  const getTelegraph = await fetch("https://api.telegra.ph/createPage", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -25,14 +25,14 @@ export async function telegraph(item) {
       access_token: config.TELEGRAPH_TOKEN
     })
   });
-  const telegraph = await gettelegraph.json();
+  const telegraph = await getTelegraph.json();
   if (telegraph.ok === false) {
     return telegraph.error;
   } else {
     console.log(telegraph)
     try {
-      let telegraphurl = await KV.get(`telegraph-${item.id}`);
-      if (telegraphurl === null && telegraph.result.url !== undefined) {
+      let telegraphUrl = await KV.get(`telegraph-${item.id}`);
+      if (telegraphUrl === null && telegraph.result.url !== undefined) {
         await KV.put(`telegraph-${item.id}`, telegraph.result.url);
       }
     }
@@ -44,33 +44,33 @@ export async function telegraph(item) {
   }
 }
 
-export async function edittelegraph(item) {
+export async function editTelegraph(item) {
   // get telegraph url if exists
-  let telegraphurl = item.telegraphurl || await KV.get(`telegraph-${item.id}`);
-  console.log(telegraphurl);
-  if (telegraphurl === null) {
-    console.log("telegraphurl is null");
+  let telegraphUrl = item.telegraphUrl || await KV.get(`telegraph-${item.id}`);
+  console.log(telegraphUrl);
+  if (telegraphUrl === null) {
+    console.log("telegraphUrl is null");
     return await telegraph(item);
   } else {
-    let path = telegraphurl.split("://")[1].split("/")[1].split(`"`)[0];
-    const getnode = await fetch(`https://api.telegra.ph/getPage/${path}?return_content=true`, {
+    let path = telegraphUrl.split("://")[1].split("/")[1].split(`"`)[0];
+    const getNode = await fetch(`https://api.telegra.ph/getPage/${path}?return_content=true`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
       }
     });
-    const nodesjson = await getnode.json();
-    const oldnode = nodesjson.result.content;
-    const getnode2 = await fetch(`${config.PARSE_URL}/api/html2node`, {
+    const nodesJson = await getNode.json();
+    const oldNode = nodesJson.result.content;
+    const getNode2 = await fetch(`${config.PARSE_URL}/api/html2node`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8"
       },
       body: JSON.stringify({ content: item.content })
     });
-    const newnode = await getnode2.json();
-    // node 和 newnode 结构是一样的，但要合并起来
-    let node = oldnode.concat(newnode);
+    const newNode = await getNode2.json();
+    // node 和 newNode 结构是一样的，但要合并起来
+    let node = oldNode.concat(newNode);
     console.log(node);
     // edit 
     const writer = item.writer || "ink-rss";
@@ -90,17 +90,17 @@ export async function edittelegraph(item) {
         author_url: url
       })
     });
-    const editstatus = await edit.json();
-    if (editstatus.ok === false) {
-      if (editstatus.error === "CONTENT_TOO_BIG") {
+    const editStatus = await edit.json();
+    if (editStatus.ok === false) {
+      if (editStatus.error === "CONTENT_TOO_BIG") {
         await KV.delete(`telegraph-${item.id}`);
-        item.content = `上一次同步：<a href="${telegraphurl}">${telegraphurl}</a>\n\n${item.content}`
-        let newtelegraph = await telegraph(item);
-        return `<a href="${newtelegraph}">NewTg</a> | <a href="${telegraphurl}">OldTg</a>`;
+        item.content = `上一次同步：<a href="${telegraphUrl}">${telegraphUrl}</a>\n\n${item.content}`
+        let newTelegraph = await telegraph(item);
+        return `<a href="${newTelegraph}">NewTg</a> | <a href="${telegraphUrl}">OldTg</a>`;
       }
-      return editstatus.error;
+      return editStatus.error;
     } else {
-      return `<a href="${telegraphurl}">Tg</a>`;
+      return `<a href="${telegraphUrl}">Tg</a>`;
     }
   }
 }

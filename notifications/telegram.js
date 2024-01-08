@@ -1,13 +1,13 @@
 import { config } from "../config";
 const { Telegram } = require("telegraf");
-import { edittelegraph } from "../utils/telegraph";
+import { editTelegraph } from "../utils/telegraph";
 import { html } from "../utils/html";
 export async function reply(feed, item) {
   const telegram = new Telegram(config.TG_TOKEN);
 
-  if (item.lastSendId && item.lastSendId != 0 && item.Autoremove == 1) {
+  if (item.lastSendId && item.lastSendId != 0 && item.AutoRemove == 1) {
     try {
-      await telegram.deleteMessage(item.sendto, item.lastSendId);
+      await telegram.deleteMessage(item.SendTo, item.lastSendId);
     } catch (err) {
       console.log(err);
     }
@@ -27,13 +27,13 @@ export async function reply(feed, item) {
   let telegraph_link = "";
   if (feed.telegraph) {
     if (item.content) {
-      telegraph_link = await edittelegraph(item);
+      telegraph_link = await editTelegraph(item);
       console.log(`telegraph_link: ${telegraph_link}`);
     }
   }
 
   let send = await telegram.sendMessage(
-    item.sendto,
+    item.SendTo,
     `<b>${html(feed.title)}</b>\n#${html(item.writer)} | #id${html(feed.id)}|${
       feed.telegraph ? (item.content ? telegraph_link : "") : ""
     }|${
@@ -49,9 +49,9 @@ export async function reply(feed, item) {
 }
 export async function replyWhenError(feed, err) {
   const telegram = new Telegram(config.TG_TOKEN);
-  let sendto = config.TG_SENDID;
+  let SendTo = config.TG_SENDID;
   await telegram.sendMessage(
-    sendto,
+    SendTo,
     `<b>${html(feed.title)}</b>, id ${feed.id} 发生错误\n错误消息为：${err}.`,
     { parse_mode: "HTML" }
   );
@@ -59,8 +59,8 @@ export async function replyWhenError(feed, err) {
 
 export async function sendNotice(message) {
   const telegram = new Telegram(config.TG_TOKEN);
-  let sendto = config.TG_SENDID;
+  let SendTo = config.TG_SENDID;
   console.log(message);
-  await telegram.sendMessage(sendto, message, { parse_mode: "HTML" });
+  await telegram.sendMessage(SendTo, message, { parse_mode: "HTML" });
   return true;
 }

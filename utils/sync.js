@@ -4,49 +4,49 @@ const {
   replyWhenError,
   sendNotice
 } = require(`../notifications/${mode}`);
-import { cfetch, addcontent } from "./util";
-import { telegraph, edittelegraph } from "./telegraph";
+import { cFetch, addContent } from "./util";
+import { telegraph, editTelegraph } from "./telegraph";
 
-const savesyncinfo = async (id, page, telegraphurl, replycount) => {
-    let syncinfo = await KV.get("syncinfo");
-    let syncinfojson = JSON.parse(syncinfo);
-    syncinfojson[id] = {};
-    syncinfojson[id].page = page;
-    syncinfojson[id].telegraphurl = telegraphurl;
-    syncinfojson[id].replycount = replycount;
-    await KV.put("syncinfo", JSON.stringify(syncinfojson));
+const saveSyncInfo = async (id, page, telegraphUrl, ReplyCount) => {
+    let syncInfo = await KV.get("syncInfo");
+    let syncInfoJson = JSON.parse(syncInfo);
+    syncInfoJson[id] = {};
+    syncInfoJson[id].page = page;
+    syncInfoJson[id].telegraphUrl = telegraphUrl;
+    syncInfoJson[id].ReplyCount = ReplyCount;
+    await KV.put("syncInfo", JSON.stringify(syncInfoJson));
 }
 
-export async function synctoTelegraph(id) {
-    console.log("synctoTelegraph id: " + id);
-    let phpssid = await KV.get("phpssid");
-    let syncinfo = await KV.get("syncinfo");
-    let syncinfojson = JSON.parse(syncinfo);
-    if (syncinfojson === null) {
-        syncinfojson = {};
+export async function syncToTelegraph(id) {
+    console.log("syncToTelegraph id: " + id);
+    let PHPSESSID = await KV.get("PHPSESSID");
+    let syncInfo = await KV.get("syncInfo");
+    let syncInfoJson = JSON.parse(syncInfo);
+    if (syncInfoJson === null) {
+        syncInfoJson = {};
     }
-    console.log("syncinfojson: " + JSON.stringify(syncinfojson));
-    // get syncinfo if exists
-    if (syncinfojson[id] === undefined || syncinfojson === null) {
-        syncinfojson[id] = {};
-        syncinfojson[id].page = 1;
-        syncinfojson[id].telegraphurl = "";
-        syncinfojson[id].replycount = 0;
-        await KV.put("syncinfo", JSON.stringify(syncinfojson));
+    console.log("syncInfoJson: " + JSON.stringify(syncInfoJson));
+    // get syncInfo if exists
+    if (syncInfoJson[id] === undefined || syncInfoJson === null) {
+        syncInfoJson[id] = {};
+        syncInfoJson[id].page = 1;
+        syncInfoJson[id].telegraphUrl = "";
+        syncInfoJson[id].ReplyCount = 0;
+        await KV.put("syncInfo", JSON.stringify(syncInfoJson));
     }
-    let page = syncinfojson[id].page;
-    let telegraphurl = syncinfojson[id].telegraphurl;
-    let replycount = syncinfojson[id].replycount;
+    let page = syncInfoJson[id].page;
+    let telegraphUrl = syncInfoJson[id].telegraphUrl;
+    let ReplyCount = syncInfoJson[id].ReplyCount;
     let url = `https://www.nmbxd1.com/t/${id}`;
 
     // try if it is in the sub list
-    let subraw = await KV.get("sub");
-    let sub = JSON.parse(subraw);
+    let SubRaw = await KV.get("sub");
+    let sub = JSON.parse(SubRaw);
     let index = sub.findIndex(e => e.url === url);
     if (index === -1) {
         // not found
         console.log("未找到" + id + "，请先订阅");
-        let sendstatus = sendNotice(`id: ${id} 未找到, 请先订阅`);
+        let sendStatus = sendNotice(`id: ${id} 未找到, 请先订阅`);
         return `id: ${id} 未找到, 请先订阅`;
     }
     let title = sub[index].title;
@@ -54,46 +54,46 @@ export async function synctoTelegraph(id) {
 
     let r = 0; // 请求次数
     // get page info
-    let res = await cfetch(
+    let res = await cFetch(
         `https://api.nmb.best/Api/po?id=${id}`, // 只看po即可，第一次确认总回复数
-        (phpssid = phpssid)
+        (PHPSESSID = PHPSESSID)
     );
     r++;
     let po = await res.json();
     let reply = po.ReplyCount;
-    let totalpage = Math.ceil(reply / 19);
-    console.log("totalpage: " + totalpage);
-    if (totalpage === 0) {
-        totalpage = 1;
+    let TotalPage = Math.ceil(reply / 19);
+    console.log("TotalPage: " + TotalPage);
+    if (TotalPage === 0) {
+        TotalPage = 1;
     }
-    if (replycount === reply) {
-        console.log("replycount === reply");
-        let sendstatus = sendNotice(`id: ${id} 无新回复, 无需同步`);
-        return sendstatus;
+    if (ReplyCount === reply) {
+        console.log("ReplyCount === reply");
+        let sendStatus = sendNotice(`id: ${id} 无新回复, 无需同步`);
+        return sendStatus;
     }
 
     // get page content
     let content = "";    
     let i = 0;
     let content_all = [];
-    if (replycount === 0) {
+    if (ReplyCount === 0) {
         content_all.push(
             `PO：${po.user_hash} | rep：${po.ReplyCount}`
             );
-        content_all = addcontent(id, po, content_all);
-    } else if (telegraphurl !== "") {
+        content_all = addContent(id, po, content_all);
+    } else if (telegraphUrl !== "") {
         content_all.push(
-            `上一次同步：${telegraphurl}`
+            `上一次同步：${telegraphUrl}`
             );
     }
-    let lastpagereply = 0;
-    for (i = page; i <= totalpage; i++) {
+    let lastPageReply = 0;
+    for (i = page; i <= TotalPage; i++) {
         if (r > 25) {
             break;
         }
-        let res = await cfetch(
+        let res = await cFetch(
             `https://api.nmb.best/Api/po?id=${id}&page=${i}`,
-            (phpssid = phpssid)
+            (PHPSESSID = PHPSESSID)
         );
         r++;
         let thread = await res.json();
@@ -103,12 +103,12 @@ export async function synctoTelegraph(id) {
         }
         for (let j = 0; j < Replies.length; j++) {
             let data = Replies[j];
-            content_all = addcontent(id, data, content_all);
-            lastpagereply = j;
+            content_all = addContent(id, data, content_all);
+            lastPageReply = j;
         }
     }
     content = content_all.join("<br/>");
-    reply = (i-1) * 19 + lastpagereply;
+    reply = (i-1) * 19 + lastPageReply;
     console.log("reply: " + reply);
 
     let item = {};
@@ -121,13 +121,13 @@ export async function synctoTelegraph(id) {
     while (true) {
         if (content.length < 20000|| r > 40) {
             item.content = content;
-            item.telegraphurl = telegraphurl;
-            let telegraphurl_new = await telegraph(item);
-            telegraphurl = telegraphurl_new;
+            item.telegraphUrl = telegraphUrl;
+            let telegraphUrl_new = await telegraph(item);
+            telegraphUrl = telegraphUrl_new;
             if (r > 40) {
-                let sendstatus = sendNotice(`id: ${id} 同步未完成, 请查看最新页面：${telegraphurl}`);
-                await savesyncinfo(id, i, telegraphurl, reply);
-                return `id: ${id} 同步未完成, 请查看最新页面：${telegraphurl}`;
+                let sendStatus = sendNotice(`id: ${id} 同步未完成, 请查看最新页面：${telegraphUrl}`);
+                await saveSyncInfo(id, i, telegraphUrl, reply);
+                return `id: ${id} 同步未完成, 请查看最新页面：${telegraphUrl}`;
             }
             r += 1;
             break;
@@ -140,21 +140,21 @@ export async function synctoTelegraph(id) {
 
         // send content1 to telegraph
         item.content = content1;
-        item.telegraphurl = telegraphurl;
-        let telegraphurl_new = await telegraph(item);
+        item.telegraphUrl = telegraphUrl;
+        let telegraphUrl_new = await telegraph(item);
         r += 2;
-        item.content = `下一页：${telegraphurl_new}`;
-        item.telegraphurl = telegraphurl;
-        await edittelegraph(item); // edit the previous telegraph to add the next page link
+        item.content = `下一页：${telegraphUrl_new}`;
+        item.telegraphUrl = telegraphUrl;
+        await editTelegraph(item); // edit the previous telegraph to add the next page link
         r += 3;
-        telegraphurl = telegraphurl_new;
+        telegraphUrl = telegraphUrl_new;
         r += 1;
     }
-    // save syncinfo
-    if (telegraphurl !== "CONTENT_TOO_BIG") {
-        await savesyncinfo(id, i, telegraphurl, reply);
+    // save syncInfo
+    if (telegraphUrl !== "CONTENT_TOO_BIG") {
+        await saveSyncInfo(id, i, telegraphUrl, reply);
     }
     // send notice
-    let sendstatus = sendNotice(`id: ${id} 同步完成, ${telegraphurl}, ${reply}条回复`);
-    return `id: ${id} 同步${sendstatus}, ${telegraphurl}, ${reply}条回复`;
+    let sendStatus = sendNotice(`id: ${id} 同步完成, ${telegraphUrl}, ${reply}条回复`);
+    return `id: ${id} 同步${sendStatus}, ${telegraphUrl}, ${reply}条回复`;
 }

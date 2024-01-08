@@ -1,22 +1,22 @@
 import { config } from "./../config";
 
-const cfetch = async (url, option, phpssid) => {
+const cFetch = async (url, option, PHPSESSID) => {
   let retry = 0;
-  if (phpssid === undefined) {
-    phpssid = await KV.get("phpssid");
+  if (PHPSESSID === undefined) {
+    PHPSESSID = await KV.get("PHPSESSID");
   }
-  if (phpssid === null || phpssid === undefined) {
+  if (PHPSESSID === null || PHPSESSID === undefined) {
     for (retry = 0; retry < 4; retry++) {
-      // fetch phpssid
-      const phpssidurl = "https://www.nmbxd1.com/Forum";
-      const phpssidoption = { method: "GET" };
-      phpssidoption.signal = AbortSignal.timeout(1700 * (retry + 1));
-      let phpssidresponse = await fetch(phpssidurl, phpssidoption);
-      phpssid = phpssidresponse.headers
+      // fetch PHPSESSID
+      const PHPSESSIDurl = "https://www.nmbxd1.com/Forum";
+      const PHPSESSIDoption = { method: "GET" };
+      PHPSESSIDoption.signal = AbortSignal.timeout(1700 * (retry + 1));
+      let PHPSESSIDresponse = await fetch(PHPSESSIDurl, PHPSESSIDoption);
+      PHPSESSID = PHPSESSIDresponse.headers
         .get("set-cookie")
         .split(";")[0]
         .split("=")[1];
-      await KV.put("phpssid", phpssid, { expirationTtl: 3600 });
+      await KV.put("PHPSESSID", PHPSESSID, { expirationTtl: 3600 });
     }
   }
   const timeout = 1700;
@@ -24,7 +24,7 @@ const cfetch = async (url, option, phpssid) => {
     method: "GET",
     headers: {
       "user-agent": "xdnmb",
-      cookie: `userhash=${config.COOKIES}; PHPSESSID=${phpssid};`,
+      cookie: `userhash=${config.COOKIES}; PHPSESSID=${PHPSESSID};`,
       host: "www.nmbxd1.com",
       "accept-encoding": "gzip"
     },
@@ -49,10 +49,10 @@ const cfetch = async (url, option, phpssid) => {
       console.log(e.name);
     }
   }
-  return cfetch(url, option);
+  return cFetch(url, option);
 };
 
-const errorresponse = message => {
+const errorResponse = message => {
   return new Response(
     JSON.stringify({
       status: 400,
@@ -69,7 +69,7 @@ const errorresponse = message => {
   );
 };
 
-const successresponse = message => {
+const successResponse = message => {
   return new Response(
     JSON.stringify({
       status: 0,
@@ -86,7 +86,7 @@ const successresponse = message => {
   );
 };
 
-const addcontent = (id, data, content_all) => {
+const addContent = (id, data, content_all) => {
   if (data.id === 9999999) {
     return content_all;
   }
@@ -117,4 +117,4 @@ const addcontent = (id, data, content_all) => {
   return content_all;
 };
 
-export { cfetch, errorresponse, successresponse, addcontent };
+export { cFetch, errorResponse, successResponse, addContent };
