@@ -332,7 +332,9 @@ export default function Test() {
                     </Button>
                   </Tooltip>}
                   </Td>
-                  <Td maxWidth="14em" overflowX="scroll">
+                  <Td maxWidth="21em" overflowX="scroll" style={
+                    { "scrollbarWidth": "none" }
+                  }>
                     <Popover
                      placement="top-start"
                      bg="black"
@@ -433,7 +435,7 @@ export default function Test() {
                     >{feed.id}
                     </Button>
                   </Td>
-                  <Td fontSize="sm">
+                  <Td fontSize="md">
                     {feed.lastUpdateTime.substring(5, 7)}/{feed.lastUpdateTime.substring(8, 10)}|{feed.lastUpdateTime.substring(13, 15)}:{feed.lastUpdateTime.substring(16, 18)}
                   </Td>
                   <Td>
