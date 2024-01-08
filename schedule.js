@@ -47,8 +47,7 @@ export async function handleScheduled(event) {
     }
     for (let i = 0; i < feed.length; i++) {
       let index = sub.findIndex(e => e.id === feed[i].id);
-      if (index === -1) {
-        // not found
+      if (index === -1) { // not found, add to sub
         console.log(
           "未找到" + feed[i].id + "，标题为‘" + feed[i].title ||
             feed[i].content.split("<br />")[0].substring(0, 20) +
@@ -97,7 +96,7 @@ export async function handleScheduled(event) {
             let id = feed[i].id;
             // featch the new replies
             let newreplycount = feed[i].reply_count - sub[index].ReplyCount;
-            // if greater than 5, set to 5
+            // if greater than 5, set to 5 //todo: 单独请求该api，获取全部的最新回复
             if (newreplycount > 5) {
               newreplycount = 5;
             }
