@@ -202,5 +202,34 @@ export async function handleScheduled(event) {
     page++;
   }
   // 确定
-  return idtocheck;
+  // for things still in idtocheck, that means they are not in feed, so we need to check if they are deleted
+  for (let i = 0; i < idtocheck.length; i++) {
+    let index = sub.findIndex(e => e.id === idtocheck[i]);
+    if (index !== -1) {
+      // check if it is deleted
+      let res = await cfetch(
+        `https://api.nmb.best/Api/thread?id=${idtocheck[i]}`,
+        phpssid=phpssid
+      );
+      u += 1;
+      let data = await res.text();
+      if (data === `"\u8be5\u4e32\u4e0d\u5b58\u5728"` || data === `"\u8be5\u4e32\u5df2\u88ab\u5220\u9664"`) {
+        // deleted
+        console.log("id: " + idtocheck[i] + "已被站方删除");
+        sub[index].active = false;
+        KV.put("sub", JSON.stringify(sub));
+        let message = `#id${idtocheck[i]} 已删除，名称为 ${sub[index].title}，最后更新时间为 ${sub[index].lastUpdateTime}，已停止订阅`;
+        sendNotice(message);
+        console.log("sendNotice with message: " + message);
+      } else { // manually unsubscribed
+        console.log("id: " + idtocheck[i] + "已被手退订");
+        sub[index].active = false;
+        KV.put("sub", JSON.stringify(sub));
+        let message = `#id${idtocheck[i]} 已手动退订，名称为 ${sub[index].title}，最后更新时间为 ${sub[index].lastUpdateTime}，已停止订阅`;
+        sendNotice(message);
+        console.log("sendNotice with message: " + message);
+      }
+    }
+  }
+  return true;
 }
