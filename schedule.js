@@ -221,13 +221,13 @@ export async function handleScheduled(event) {
         let message = `#id${idtocheck[i]} 已删除，名称为 ${sub[index].title}，最后更新时间为 ${sub[index].lastUpdateTime}，已停止订阅`;
         sendNotice(message);
         console.log("sendNotice with message: " + message);
-      } else { // manually unsubscribed
-        console.log("id: " + idtocheck[i] + "已被手退订");
-        sub[index].active = false;
-        KV.put("sub", JSON.stringify(sub));
-        let message = `#id${idtocheck[i]} 已手动退订，名称为 ${sub[index].title}，最后更新时间为 ${sub[index].lastUpdateTime}，已停止订阅`;
-        sendNotice(message);
-        console.log("sendNotice with message: " + message);
+      } else { // might had manually unsubscribed. Due to change on server side api, might not accurate. So disabled.
+        // console.log("id: " + idToCheck[i] + "已被手退订");
+        // sub[index].active = false;
+        // KV.put("sub", JSON.stringify(sub));
+        // let message = `#id${idToCheck[i]} 已手动退订，名称为 ${sub[index].title}，最后更新时间为 ${sub[index].lastUpdateTime}，已停止订阅`;
+        // sendNotice(message);
+        // console.log("sendNotice with message: " + message);
       }
     }
   }
