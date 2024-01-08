@@ -31,7 +31,6 @@ export async function handleScheduled(event) {
       u++;
     }
   }
-  let allid = idtocheck;
 
   // 访问 feed 接口，check 是否有新帖子
   let page = 1;
@@ -79,14 +78,13 @@ export async function handleScheduled(event) {
         sendNotice(message);
         console.log("sendNotice with message: " + message);
         KV.put("sub", JSON.stringify(sub));
-      } else {
-        allid.splice(allid.indexOf(feed[i].id), 1);
+      } else { // found, check if there is update
         if (
           sub[index].ReplyCount === feed[i].reply_count ||
           sub[index].active === false
         ) {
           idtocheck.splice(idtocheck.indexOf(feed[i].id), 1);
-          // console.log("id: " + feed[i].id + "title" + feed[i].title + "未更新");
+          console.log("id: " + feed[i].id + "title" + feed[i].title + "未更新");
         } else {
           try {
             // 有更新
@@ -203,7 +201,6 @@ export async function handleScheduled(event) {
     }
     page++;
   }
-  console.log("allid: " + allid.length + " " + allid);
   // 确定
   return idtocheck;
 }
