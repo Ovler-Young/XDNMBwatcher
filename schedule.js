@@ -81,6 +81,7 @@ export async function handleScheduled(event) {
         KV.put("sub", JSON.stringify(sub));
       } else if (sub[index].active === false) {
         sub[index].active = true;
+        sub[index].errorTimes = 0;
         KV.put("sub", JSON.stringify(sub));
         console.log(
           "找到" + feed[i].id + "，标题为‘" + feed[i].title ||
