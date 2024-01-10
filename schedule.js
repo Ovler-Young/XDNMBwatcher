@@ -229,14 +229,25 @@ export async function handleScheduled(event) {
         sendNotice(message);
         u += 1;
         console.log("sendNotice with message: " + message);
-      } else { // might had manually unsubscribed. Due to change on server side api, might not accurate. So disabled.
-        console.log("id: " + idToCheck[i] + "已被手退订");
-        sub[index].active = false;
+      } else { // 可能由于网络原因，导致请求失败，但是实际上串还在也没有被删除。
+        console.log("id: " + idToCheck[i] + "可能已被手退订");
+        // 先加error 次数
+        sub[index].errorTimes += 1;
         KV.put("sub", JSON.stringify(sub));
-        let message = `#删除订阅 #id${idToCheck[i]} 已手动退订，名称为 "${sub[index].title}"，最后更新时间为 ${sub[index].lastUpdateTime}`;
-        sendNotice(message);
-        u += 1;
-        console.log("sendNotice with message: " + message);
+        // 如果超过最大错误次数，就退订
+        if (sub[index].errorTimes >= config.maxErrorCount - 1) { // -1 以避免是别的原因导致的错误又退订了
+          console.log(
+            "error over max start notify for " + sub[index].errorTimes + " times"
+          );
+          console.log(sub[index]);
+          sub[index].active = false;
+          KV.put("sub", JSON.stringify(sub));
+          let message = `#删除订阅 #id${idToCheck[i]} 已手动退订，名称为 "${sub[index].title}"，最后更新时间为 ${sub[index].lastUpdateTime}`;
+          await sendNotice(message);
+          u += 1;
+          console.log("sendNotice with message: " + message);
+          break;
+        }
       }
     }
     if (u > 35) {
