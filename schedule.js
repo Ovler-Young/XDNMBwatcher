@@ -79,6 +79,19 @@ export async function handleScheduled(event) {
         sendNotice(message);
         console.log("sendNotice with message: " + message);
         KV.put("sub", JSON.stringify(sub));
+      } else if (sub[index].active === false) {
+        sub[index].active = true;
+        KV.put("sub", JSON.stringify(sub));
+        console.log(
+          "找到" + feed[i].id + "，标题为‘" + feed[i].title ||
+            feed[i].content.split("<br />")[0].substring(0, 20) +
+              "’，已重新订阅"
+        );
+        let message = `#重新订阅 #id${feed[i].id} <b> ${feed[i].title} </b>\n${
+          feed[i].content.split("<br />")[0]
+        }\n<a href="https://www.nmbxd1.com/t/${feed[i].id}">点击查看</a>`;
+        sendNotice(message);
+        console.log("sendNotice with message: " + message);
       } else { // found, check if there is update
         if (
           sub[index].ReplyCount === feed[i].reply_count ||
