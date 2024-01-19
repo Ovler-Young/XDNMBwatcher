@@ -130,11 +130,9 @@ export async function handleScheduled(event) {
                 .map(item => parseInt(item));
               let reverse = rep.reverse();
               console.log(reverse);
-              let res = null;
-              let data = null;
-              res = await cFetch(`https://api.nmb.best/Api/ref?id=${reverse[j]}`, PHPSESSID=PHPSESSID);
+              let res = await cFetch(`https://api.nmb.best/Api/ref?id=${reverse[j]}`, PHPSESSID=PHPSESSID);
               u += 1;
-              data = await res.json();
+              let data = await res.json();
               console.log(data);
               // check if this is sent by po
               // if (data.id in sub[index].recent_replies) { sub[index].recent_replies are string
