@@ -139,12 +139,12 @@ export async function handleScheduled(event) {
               // check if this is sent by po
               // if (data.id in sub[index].recent_replies) { sub[index].recent_replies are string
               try {
-                if (sub[index].recent_replies.includes(data.id)) {
+              if (sub[index].recent_replies !== undefined && sub[index].recent_replies !== null && sub[index].recent_replies.includes(data.id)) {
                 // 跳过
                 console.log("跳过");
                 // skip to next
                 continue;
-                }
+              }
               }
               catch (err) {
                 console.log(err);
