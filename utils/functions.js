@@ -92,6 +92,11 @@ export async function Subscribe(id) {
       feed.fid = data.fid;
       feed.SendTo = config.TG_SENDID;
       feed.AutoRemove = 1;
+      feed.unread = 0;
+      feed.LastRead = data.ReplyCount;
+      item.xd = true;
+      item.IsSingle = true;
+      item.ReplyCountAll = feed[i].reply_count;
       if (
         sub.findIndex(e => e.url === feed.url) != -1 // 如果已经存在了
       ) {

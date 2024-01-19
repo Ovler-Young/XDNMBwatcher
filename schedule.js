@@ -5,6 +5,7 @@ const {
   sendNotice
 } = require(`./notifications/${mode}`);
 import { cFetch, addContent } from "./utils/util";
+import { Subscribe, Unsubscribe, MarkAsRead } from "./utils/functions";
 
 export async function handleScheduled(event) {
   const SubRaw = await KV.get("sub");
@@ -53,32 +54,21 @@ export async function handleScheduled(event) {
             feed[i].content.split("<br />")[0].substring(0, 20) +
               "’，添加到订阅列表"
         );
-        let item = {};
-        item.id = feed[i].id;
-        item.url = `https://www.nmbxd1.com/t/${feed[i].id}`;
-        item.po = feed[i].user_hash;
-        item.title =
-          feed[i].title || feed[i].content.split("<br />")[0].substring(0, 20);
-        item.telegraph = true;
-        item.active = true;
-        item.errorTimes = 0;
-        item.ReplyCount = feed[i].reply_count;
-        item.fid = feed[i].fid;
-        item.SendTo = config.TG_SENDID;
-        item.lastUpdateTime = feed[i].now;
-        item.xd = true;
-        item.IsSingle = true;
-        item.ReplyCountAll = feed[i].reply_count;
-        item.unread = 0;
-        item.send_message_id = null;
-        item.LastRead = feed[i].reply_count;
-        sub.push(item);
-        let message = `#添加订阅 #id${item.id} <b> ${item.title} </b>\n${
-          feed[i].content.split("<br />")[0]
-        }\n<a href="https://www.nmbxd1.com/t/${feed[i].id}">点击查看</a>`;
-        sendNotice(message);
-        console.log("sendNotice with message: " + message);
-        KV.put("sub", JSON.stringify(sub));
+        let { success, msg } = await Subscribe(feed[i].id);
+        if (success) {
+          sendNotice(msg);
+          sub = JSON.parse(await KV.get("sub"));
+          // find new index
+          index = sub.findIndex(e => e.id === feed[i].id);
+          sub[index].errorTimes = 0;
+          sub[index].ReplyCount = feed[i].reply_count;
+          sub[index].recent_replies = feed[i].recent_replies;
+          // save the sub to kv
+          KV.put("sub", JSON.stringify(sub));
+        } else {
+          sendNotice(msg);
+        }
+        console.log("sendNotice with message: " + msg);
       } else if (sub[index].active === false) {
         sub[index].active = true;
         sub[index].errorTimes = 0;
