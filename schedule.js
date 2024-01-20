@@ -223,7 +223,7 @@ export async function handleScheduled(event) {
       );
       u += 1;
       let data = await res.json();
-      console.log(`id=${idToCheck[i]} data=${data.toString()}`);
+      console.log(`id=${idToCheck[i]} data=${JSON.stringify(data)}`);
       if (data === "该串不存在") {
         // deleted
         console.log("id: " + idToCheck[i] + "已被站方删除");
