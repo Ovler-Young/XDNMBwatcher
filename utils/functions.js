@@ -168,7 +168,6 @@ export async function Unsubscribe(id) {
       msg = `成功取消订阅${id}-${sub[index].title}`;
       sub.splice(index, 1);
       await KV.put("sub", JSON.stringify(sub));
-      await KV.delete(`telegraph-${id}`);
       console.log(`ID: ${id} unsubscribed`);
     } else {
       success = false;
@@ -191,8 +190,8 @@ export async function MarkAsRead(id) {
   } else {
     sub[index].unread = 0;
     sub[index].LastRead = sub[index].ReplyCount;
+    sub[index].telegraphUrl = null;
     await KV.put("sub", JSON.stringify(sub));
-    await KV.delete(`telegraph-${id}`);
     msg = "修改成功，已清空该订阅源未读并删除缓存";
   }
   return {success, msg}

@@ -162,8 +162,8 @@ router.get(`/${secret_path}/jumpread`, async req => {
   let lastreadto = sub[index].LastRead;
   console.log(lastreadto);
   sub[index].LastRead = sub[index].ReplyCount;
+  sub[index].telegraphUrl = null;
   await KV.put("sub", JSON.stringify(sub));
-  await KV.delete(`telegraph-${id}`);
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
     let page = Math.floor((lastreadto - 1) / 9) + 1;
@@ -192,8 +192,8 @@ router.get(`/${secret_path}/jumplast`, async req => {
   }
   sub[index].unread = 0;
   sub[index].LastRead = sub[index].ReplyCount;
+  sub[index].telegraphUrl = null;
   await KV.put("sub", JSON.stringify(sub));
-  await KV.delete(`telegraph-${id}`);
   let lastreadto = sub[index].LastRead;
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
@@ -339,6 +339,15 @@ router.get("/fixerror", async (req, e) => {
     // deal with url
     if (sub[i].url === undefined) {
       sub[i].url = `https://www.nmbxd1.com/t/${sub[i].id}`;
+    }
+  }
+  console.log(sub);
+  // 尝试获取 await KV.get(`telegraph-${item.id}`); 再将值放入telegraphUrl
+  for (let i = 0; i < sub.length; i++) {
+    let telegraphUrl = await KV.get(`telegraph-${sub[i].id}`);
+    if (telegraphUrl !== null) {
+      sub[i].telegraphUrl = telegraphUrl;
+      await KV.delete(`telegraph-${sub[i].id}`);
     }
   }
   console.log(sub);

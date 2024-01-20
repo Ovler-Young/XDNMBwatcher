@@ -31,10 +31,11 @@ export async function telegraph(item) {
   } else {
     console.log(telegraph)
     try {
-      let telegraphUrl = await KV.get(`telegraph-${item.id}`);
-      if (telegraphUrl === null && telegraph.result.url !== undefined) {
-        await KV.put(`telegraph-${item.id}`, telegraph.result.url);
-      }
+      // get index in sub
+      let sub = JSON.parse(await KV.get("sub"));
+      let index = sub.findIndex(e => e.id === item.id);
+      sub[index].telegraphUrl = telegraph.result.url;
+      await KV.put("sub", JSON.stringify(sub));
     }
     catch (err) {
       console.log(err);
@@ -46,7 +47,7 @@ export async function telegraph(item) {
 
 export async function editTelegraph(item) {
   // get telegraph url if exists
-  let telegraphUrl = item.telegraphUrl || await KV.get(`telegraph-${item.id}`);
+  let telegraphUrl = item.telegraphUrl
   console.log(telegraphUrl);
   if (telegraphUrl === null) {
     console.log("telegraphUrl is null");
@@ -93,7 +94,7 @@ export async function editTelegraph(item) {
     const editStatus = await edit.json();
     if (editStatus.ok === false) {
       if (editStatus.error === "CONTENT_TOO_BIG") {
-        await KV.delete(`telegraph-${item.id}`);
+        await setTelegraphUrl(item, null);
         item.content = `上一次同步：<a href="${telegraphUrl}">${telegraphUrl}</a>\n\n${item.content}`
         let newTelegraph = await telegraph(item);
         return `<a href="${newTelegraph}">NewTg</a> | <a href="${telegraphUrl}">OldTg</a>`;
@@ -103,4 +104,11 @@ export async function editTelegraph(item) {
       return `<a href="${telegraphUrl}">Tg</a>`;
     }
   }
+}
+
+export async function setTelegraphUrl(item, url) {
+  let sub = JSON.parse(await KV.get("sub"));
+  let index = sub.findIndex(e => e.id === item.id);
+  sub[index].telegraphUrl = url;
+  await KV.put("sub", JSON.stringify(sub));
 }

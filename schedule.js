@@ -173,7 +173,8 @@ export async function handleScheduled(event) {
                 page: page,
                 SendTo: sub[index].SendTo || config.TG_SENDID,
                 lastSendId: sub[index].send_message_id || 0,
-                AutoRemove: 1
+                AutoRemove: 1,
+                telegraphUrl: sub[index].telegraphUrl,
               };
               sub[index].send_message_id = await reply(sub[index], item);
               sub[index].lastUpdateTime = lastUpdateTimeInFeed; // feed[i].now is the time of the creation of the first reply
