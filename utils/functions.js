@@ -97,7 +97,7 @@ export async function Subscribe(id) {
         feed.LastRead = data.ReplyCount;
         feed.xd = true;
         feed.IsSingle = true;
-        feed.ReplyCountAll = feed[i].reply_count;
+        feed.ReplyCountAll = data.ReplyCount;
         if (
           sub.findIndex(e => e.url === feed.url) != -1 // 如果已经存在了
         ) {
@@ -110,8 +110,8 @@ export async function Subscribe(id) {
           await KV.put("sub", JSON.stringify(sub));
           console.log(`ID: ${id} subscribed`);
           msg = `#添加订阅 #id${item.id} <b> ${item.title} </b>\n${
-            feed[i].content.split("<br />")[0]
-          }\n<a href="https://www.nmbxd1.com/t/${feed[i].id}">点击查看</a>`;
+            feed.content.split("<br />")[0]
+          }\n<a href="https://www.nmbxd1.com/t/${feed.id}">点击查看</a>`;
           // https://api.nmb.best/Api/addFeed?uuid=xxx&tid=xxx
           const uuid = await KV.get("uuid");
           const addFeedres = await fetch(
