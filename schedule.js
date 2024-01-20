@@ -138,7 +138,7 @@ export async function handleScheduled(event) {
                 console.log(err);
                 console.log("跳过");
                 // send to telegram
-                sendNotice(`在处理 #id${id} 时出现错误，错误信息为：${err}`);
+                sendNotice(`在处理 #id${id} 时出现错误，错误信息为：${err.message} \n 技术细节为：${err.stack}`);
               }
               if (
                 data.user_hash === sub[index].po ||
@@ -188,6 +188,8 @@ export async function handleScheduled(event) {
           } catch (err) {
             sub[index].errorTimes += 1;
             console.log(err);
+            let message = `在处理 #id${feed[i].id} 时出现错误，错误信息为：${err.message} \n 技术细节为：${err.stack}`;
+            sendNotice(message);
             if (sub[i].errorTimes >= config.maxErrorCount) {
               console.log(
                 "error over max start notify for " + sub[i].errorTimes + " times"

@@ -38,7 +38,7 @@ export async function telegraph(item) {
     }
     catch (err) {
       console.log(err);
-      return `<a href="${telegraph.result.url}">Tg</a> | Error ${err.message}`;
+      return `<a href="${telegraph.result.url}">Tg</a> | Error ${err.message} \n ${err.stack}`;
     }
     return `<a href="${telegraph.result.url}">Tg</a>`;
   }
