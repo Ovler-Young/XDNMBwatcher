@@ -109,7 +109,7 @@ export async function Subscribe(id) {
           sub.push(feed);
           await KV.put("sub", JSON.stringify(sub));
           console.log(`ID: ${id} subscribed`);
-          msg = `#添加订阅 #id${item.id} <b> ${item.title} </b>\n${
+          msg = `#添加订阅 #id${feed.id} <b> ${feed.title} </b>\n${
             feed.content.split("<br />")[0]
           }\n<a href="https://www.nmbxd1.com/t/${feed.id}">点击查看</a>`;
           // https://api.nmb.best/Api/addFeed?uuid=xxx&tid=xxx
