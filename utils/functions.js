@@ -138,9 +138,9 @@ export async function Subscribe(id) {
         success = false;
         msg = "订阅失败，网络错误，请稍后再试";
       }
-    } catch (e) {
+    } catch (err) {
       success = false;
-      msg = e;
+      msg = err.message;
     }
     // return both success and msg
     return {success, msg}
