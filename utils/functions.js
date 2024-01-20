@@ -95,9 +95,9 @@ export async function Subscribe(id) {
         feed.AutoRemove = 1;
         feed.unread = 0;
         feed.LastRead = data.ReplyCount;
-        item.xd = true;
-        item.IsSingle = true;
-        item.ReplyCountAll = feed[i].reply_count;
+        feed.xd = true;
+        feed.IsSingle = true;
+        feed.ReplyCountAll = feed[i].reply_count;
         if (
           sub.findIndex(e => e.url === feed.url) != -1 // 如果已经存在了
         ) {
