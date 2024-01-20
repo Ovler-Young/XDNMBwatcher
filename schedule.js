@@ -100,8 +100,8 @@ export async function handleScheduled(event) {
             // fetch the new replies
             let NewReplyCount = feed[i].reply_count - sub[index].ReplyCount;
             // if greater than 5, set to 5 //todo: 单独请求该api，获取全部的最新回复
-            from = Math.floor((sub[index].ReplyCount - 1) / 19) + 1;
-            to = Math.floor((feed[i].reply_count - 1) / 19) + 1;
+            let from = Math.floor((sub[index].ReplyCount - 1) / 19) + 1;
+            let to = Math.floor((feed[i].reply_count - 1) / 19) + 1;
             // get all replies
             let replies = [];
             for (let j = from; j <= to; j++) {
