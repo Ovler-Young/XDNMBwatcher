@@ -84,11 +84,11 @@ export async function handleScheduled(event) {
         sendNotice(message);
         console.log("sendNotice with message: " + message);
       } else { // found, check if there is update
+        idToCheck.splice(idToCheck.indexOf(feed[i].id), 1);
         if (
           sub[index].ReplyCount === feed[i].reply_count ||
           sub[index].active === false
         ) { // no update
-          idToCheck.splice(idToCheck.indexOf(feed[i].id), 1);
           console.log("id: " + feed[i].id + "title" + feed[i].title + "未更新");
         } else {
           try {
