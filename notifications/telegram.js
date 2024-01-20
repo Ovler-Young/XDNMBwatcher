@@ -36,8 +36,6 @@ export async function reply(feed, item) {
     item.SendTo,
     `<b>${html(feed.title)}</b>\n#${html(item.writer)} | #id${html(feed.id)}|${
       feed.telegraph ? (item.content ? telegraph_link : "") : ""
-    }|${
-      item.link ? `<a href="${item.link}">Po</a>` : ""
     }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumpread?id=${feed.id}`}">Unread: ${
       feed.unread
     }</a>${

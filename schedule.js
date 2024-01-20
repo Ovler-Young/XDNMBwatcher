@@ -96,12 +96,9 @@ export async function handleScheduled(event) {
               "id: " + feed[i].id + "title" + feed[i].title + "有更新"
             );
             let id = feed[i].id;
-            // fetch the new replies
             let NewReplyCount = feed[i].reply_count - sub[index].ReplyCount;
-            // if greater than 5, set to 5 //todo: 单独请求该api，获取全部的最新回复
             let from = Math.floor((sub[index].ReplyCount - 1) / 19) + 1;
             let to = Math.floor((feed[i].reply_count - 1) / 19) + 1;
-            // get all replies
             let replies = [];
             for (let j = from; j <= to; j++) {
               let res = await cFetch(`https://api.nmb.best/Api/thread?id=${id}&page=${j}`, PHPSESSID = PHPSESSID);
@@ -129,21 +126,15 @@ export async function handleScheduled(event) {
             let content_join = content_all.join("<br/>");
             console.log("content_join: " + content_join);
             if (content_join !== "") {
-              if (sub[index].unread === undefined || sub[index].unread === null) {
-                sub[index].unread = unread;
-              } else {
-                sub[index].unread += unread;
-              }
+              sub = addUnreadCount(sub, index, unread);
               let item = {
                 id: sub[index].id,
-                link: `https://www.nmbxd1.com/Forum/po/id/${sub[index].id}/page/${page}.html`,
                 title: `${sub[index].title} - ${sub[index].unread}`,
                 content: content_join,
                 telegraph: sub[index].telegraph,
                 active: sub[index].active,
                 lastUpdateTime: sub[index].lastUpdateTime,
                 writer: sub[index].po,
-                page: page,
                 SendTo: sub[index].SendTo || config.TG_SENDID,
                 lastSendId: sub[index].send_message_id || 0,
                 AutoRemove: 1,
@@ -233,4 +224,13 @@ export async function handleScheduled(event) {
     }
   }
   return true;
+}
+
+function addUnreadCount(sub, index, unread) {
+  if (sub[index].unread === undefined || sub[index].unread === null) {
+    sub[index].unread = unread;
+  } else {
+    sub[index].unread += unread;
+  }
+  return sub;
 }
