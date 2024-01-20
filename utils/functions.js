@@ -140,7 +140,7 @@ export async function Subscribe(id) {
       }
     } catch (err) {
       success = false;
-      msg = err.message;
+      msg = err.message + " " + err.stack;
     }
     // return both success and msg
     return {success, msg}
