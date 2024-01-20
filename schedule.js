@@ -121,6 +121,9 @@ export async function handleScheduled(event) {
                 content_all = addContent(id, data, content_all);
                 unread += 1;
                 lastUpdateTimeInFeed = data.now;
+              } else if (data.content.length > 300 ) {
+                let message = `怀疑是po的回复 #id${id} #reply${data.id} #po${data.user_hash} \n #content${data.content} \n\n 如的确是，请回复 /po ${id} ${data.user_hash} `;
+                sendNotice(message);
               }
             }
             let content_join = content_all.join("<br/>");
