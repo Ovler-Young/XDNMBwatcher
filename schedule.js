@@ -89,7 +89,7 @@ export async function handleScheduled(event) {
           sub[index].ReplyCount === feed[i].reply_count ||
           sub[index].active === false
         ) { // no update
-          console.log("id: " + feed[i].id + "title" + feed[i].title + "未更新");
+          // console.log("id: " + feed[i].id + "title" + feed[i].title + "未更新");
         } else {
           try {
             // 有更新
@@ -100,55 +100,29 @@ export async function handleScheduled(event) {
             // fetch the new replies
             let NewReplyCount = feed[i].reply_count - sub[index].ReplyCount;
             // if greater than 5, set to 5 //todo: 单独请求该api，获取全部的最新回复
-            if (NewReplyCount > 5) {
-              NewReplyCount = 5;
+            from = Math.floor((sub[index].ReplyCount - 1) / 19) + 1;
+            to = Math.floor((feed[i].reply_count - 1) / 19) + 1;
+            // get all replies
+            let replies = [];
+            for (let j = from; j <= to; j++) {
+              let res = await cFetch(`https://api.nmb.best/Api/thread?id=${id}&page=${j}`, PHPSESSID=PHPSESSID);
+              u += 1;
+              let data = await res.json();
+              replies = replies.concat(data.Replies);
             }
-            // feed[i].recent_replies is the new replies, like [59155555,59155776,59156051,59156065,59156364]
-            // we need to get the content of each reply
+            // sort replies by id and only keep the biggest NewReplyCount replies
+            replies = replies.sort((a, b) => a.id - b.id).slice(-NewReplyCount);
+            console.log(replies);
             let content_all = [];
             let unread = 0;
             let lastUpdateTimeInFeed = feed[i].now;
             for (let j = 0; j < NewReplyCount; j++) {
-              // /ref
-              console.log(feed[i].recent_replies);
-              // and it is in reverse order
-              let rep = feed[i].recent_replies
-                .toString()
-                .split("[")[1]
-                .split("]")[0]
-                .split(",")
-                .map(item => parseInt(item));
-              let reverse = rep.reverse();
-              console.log(reverse);
-              let res = await cFetch(`https://api.nmb.best/Api/ref?id=${reverse[j]}`, PHPSESSID=PHPSESSID);
-              u += 1;
-              let data = await res.json();
-              console.log(data);
-              // check if this is sent by po
-              // if (data.id in sub[index].recent_replies) { sub[index].recent_replies are string
-              try {
-              if (sub[index].recent_replies !== undefined && sub[index].recent_replies !== null && sub[index].recent_replies.includes(data.id)) {
-                // 跳过
-                console.log("跳过");
-                // skip to next
-                continue;
-              }
-              }
-              catch (err) {
-                console.log(err);
-                console.log("跳过");
-                // send to telegram
-                sendNotice(`在处理 #id${id} 时出现错误，错误信息为：${err.message} \n 技术细节为：${err.stack}`);
-              }
+              let data = replies[j];
               if (
                 data.user_hash === sub[index].po ||
-                (sub[index].IsSingle === false &&
-                  sub[index].writer.includes(data.user_hash))
+                (sub[index].IsSingle === false && sub[index].writer.includes(data.user_hash))
               ) {
-                // if title is not empty or "无标题", we need to add it to the content
                 content_all = addContent(id, data, content_all);
-                // sub
-                // unread
                 unread += 1;
                 lastUpdateTimeInFeed = data.now;
               }
@@ -161,7 +135,7 @@ export async function handleScheduled(event) {
               } else {
                 sub[index].unread += unread;
               }
-              let item = {
+                            let item = {
                 id: sub[index].id,
                 link: `https://www.nmbxd1.com/Forum/po/id/${sub[index].id}/page/${page}.html`,
                 title: `${sub[index].title} - ${sub[index].unread}`,
