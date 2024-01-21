@@ -97,7 +97,7 @@ export async function editTelegraph(item) {
         await setTelegraphUrl(item, null);
         item.content = `上一次同步：<a href="${telegraphUrl}">${telegraphUrl}</a>\n\n${item.content}`
         let newTelegraph = await telegraph(item);
-        return `<a href="${newTelegraph}">NewTg</a> | <a href="${telegraphUrl}">OldTg</a>`;
+        return `${newTelegraph}| <a href="${telegraphUrl}</a>\n\n`;
       }
       return editStatus.error;
     } else {
