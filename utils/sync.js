@@ -1,11 +1,8 @@
-import { mode } from "../config";
-const {
-  reply,
-  replyWhenError,
-  sendNotice
-} = require(`../notifications/${mode}`);
+import { config,mode } from "../config";
+const {  sendNotice } = require(`../notifications/${mode}`);
 import { cFetch, addContent } from "./util";
 import { telegraph, editTelegraph } from "./telegraph";
+import { Subscribe, Unsubscribe, MarkAsRead } from "./functions";
 
 const saveSyncInfo = async (id, page, telegraphUrl, ReplyCount) => {
     let syncInfo = await KV.get("syncInfo");
@@ -17,144 +14,178 @@ const saveSyncInfo = async (id, page, telegraphUrl, ReplyCount) => {
     await KV.put("syncInfo", JSON.stringify(syncInfoJson));
 }
 
-export async function syncToTelegraph(id) {
+export async function syncToTelegraph(id, force = false) {
     console.log("syncToTelegraph id: " + id);
-    let PHPSESSID = await KV.get("PHPSESSID");
-    let syncInfo = await KV.get("syncInfo");
-    let syncInfoJson = JSON.parse(syncInfo);
-    if (syncInfoJson === null) {
-        syncInfoJson = {};
-    }
-    console.log("syncInfoJson: " + JSON.stringify(syncInfoJson));
-    // get syncInfo if exists
-    if (syncInfoJson[id] === undefined || syncInfoJson === null) {
-        syncInfoJson[id] = {};
-        syncInfoJson[id].page = 1;
-        syncInfoJson[id].telegraphUrl = "";
-        syncInfoJson[id].ReplyCount = 0;
-        await KV.put("syncInfo", JSON.stringify(syncInfoJson));
-    }
-    let page = syncInfoJson[id].page;
-    let telegraphUrl = syncInfoJson[id].telegraphUrl;
-    let ReplyCount = syncInfoJson[id].ReplyCount;
-    let url = `https://www.nmbxd1.com/t/${id}`;
+    // req times
+    let r = 0;
+    let firstMessage = true;
 
+    let PHPSESSID = await KV.get("PHPSESSID");
+    console.log("PHPSESSID: " + PHPSESSID);
     // try if it is in the sub list
-    let SubRaw = await KV.get("sub");
-    let sub = JSON.parse(SubRaw);
-    let index = sub.findIndex(e => e.url === url);
+    let sub = JSON.parse(await KV.get("sub"));
+    let index = sub.findIndex(e => e.id === id);
+    console.log(`index: ${index}, item: ${JSON.stringify(sub[index])}`);
     if (index === -1) {
         // not found
-        console.log("未找到" + id + "，请先订阅");
-        let sendStatus = sendNotice(`id: ${id} 未找到, 请先订阅`);
-        return `id: ${id} 未找到, 请先订阅`;
+        console.log("未找到" + id + "，正在订阅");
+        let sendStatus = sendNotice(`id: ${id} 未找到, 正在订阅`);
+        console.log(`sendStatus: ${sendStatus}`);
+        let success, msg = await Subscribe(id);
+        sendNotice(msg);
+        if (success) {
+            sub = JSON.parse(await KV.get("sub"));
+            // find new index
+            index = sub.findIndex(e => e.id === id);
+            KV.put("sub", JSON.stringify(sub));
+        }
+        r += 2;
     }
-    let title = sub[index].title;
-
-
-    let r = 0; // 请求次数
-    // get page info
+    r += 1;
+    
     let res = await cFetch(
         `https://api.nmb.best/Api/po?id=${id}`, // 只看po即可，第一次确认总回复数
         (PHPSESSID = PHPSESSID)
     );
     r++;
-    let po = await res.json();
-    let reply = po.ReplyCount;
-    let TotalPage = Math.ceil(reply / 19);
-    console.log("TotalPage: " + TotalPage);
-    if (TotalPage === 0) {
-        TotalPage = 1;
-    }
-    if (ReplyCount === reply) {
-        console.log("ReplyCount === reply");
-        let sendStatus = sendNotice(`id: ${id} 无新回复, 无需同步`);
-        return sendStatus;
+    let po = await res.json();      
+    let PoReplyCount = po.ReplyCount;
+    console.log("ReplyCount: " + PoReplyCount);
+
+    if (force === true) {
+        sub[index].SyncedReplyCount = 0;
+        sub[index].SyncTelegraphUrl = "";
     }
 
-    // get page content
-    let content = "";    
-    let i = 0;
-    let content_all = [];
-    if (ReplyCount === 0) {
-        content_all.push(
-            `PO：${po.user_hash} | rep：${po.ReplyCount}`
-            );
-        content_all = addContent(id, po, content_all);
-    } else if (telegraphUrl !== "") {
-        content_all.push(
-            `上一次同步：${telegraphUrl}`
-            );
+    if (sub[index].SyncedReplyCount === undefined) {
+        sub[index].SyncedReplyCount = 0;
     }
-    let lastPageReply = 0;
-    for (i = page; i <= TotalPage; i++) {
-        if (r > 25) {
-            break;
-        }
-        let res = await cFetch(
-            `https://api.nmb.best/Api/po?id=${id}&page=${i}`,
-            (PHPSESSID = PHPSESSID)
-        );
+    let SyncedReplyCount = sub[index].SyncedReplyCount;
+    if (sub[index].SyncTelegraphUrl === undefined) {
+        sub[index].SyncTelegraphUrl = "";
+    }
+    console.log(JSON.stringify(sub));
+    let SyncTelegraphUrl = sub[index].SyncTelegraphUrl || "";
+    console.log("SyncTelegraphUrl: " + SyncTelegraphUrl);
+    KV.put("sub", JSON.stringify(sub));
+
+    let FromPage = Math.ceil(SyncedReplyCount / 19) + 1;
+    let ToPage = Math.ceil(PoReplyCount / 19);
+    console.log(`FromPage: ${FromPage}, ToPage: ${ToPage}`);
+    let replies = [];
+    let TotalLength = 0;
+    let SyncedReplyCount_new = SyncedReplyCount;
+    for (let i = FromPage; i <= ToPage; i++) {
+        // console.log(`i: ${i}`);
+        let res = await cFetch(`https://api.nmb.best/Api/po?id=${id}&page=${i}`, PHPSESSID = PHPSESSID);
+        // console.log(`res_size: ${res.length}`)
         r++;
         let thread = await res.json();
-        let Replies = thread.Replies;
-        if (Replies.length === 0) {
+        // 文本长度限制
+        // console.log(`type: ${typeof thread.Replies}, length: ${thread.Replies.length}`)
+        thread.Replies = thread.Replies.filter(e => e.id !== 9999999).sort((a, b) => a.id - b.id);
+        if (i === FromPage) {
+            thread.Replies = thread.Replies.slice(SyncedReplyCount % 19);
+        }
+        for (let j = 0; j < thread.Replies.length; j++) {
+            TotalLength += byteLength(thread.Replies[j].content);
+            if ((TotalLength < 32000) && (r < 40)) {
+                replies.push(thread.Replies[j]);
+                SyncedReplyCount_new += 1;
+            } else {
+                console.log(`SyncedReplyCount_new: ${SyncedReplyCount_new}`)
+                sub[index].SyncedReplyCount = SyncedReplyCount_new;
+                console.log(`TotalLength: ${TotalLength - byteLength(thread.Replies[j].content)} at page ${i} reply ${j} and saved to kv. \n SyncedReplyCount_new: ${SyncedReplyCount_new}`)
+                sub = await sendPassage(replies, id, i, j, SyncTelegraphUrl, sub, index, firstMessage);
+                console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
+                console.log(JSON.stringify(sub));
+                KV.put("sub", JSON.stringify(sub));
+                if (firstMessage === true) {
+                    let message = `<b>${sub[index].title}</b>\n #${sub[index].user_hash} | #${sub[index].id} | 自<a href="${sub[index].url}">NMB</a> 同步至<a href="${SyncTelegraphUrl}">Telegraph</a>\n\n同步至Page：${i} 的第${j}条回复\n\n`;
+                    let sendStatus = sendNotice(message);
+                    console.log(`sendStatus: ${sendStatus}`);
+                    firstMessage = false;
+                }
+                SyncTelegraphUrl = sub[index].SyncTelegraphUrl;
+                replies = [];
+                TotalLength = 0;
+                r += 8;
+                console.log(`SyncTelegraphUrl: ${SyncTelegraphUrl}\nSyncedReplyCount_new: ${SyncedReplyCount_new}\nTotalLength: ${TotalLength}\nr: ${r}`);
+            }
+            if (r > 40) {
+                break;
+            }
+        }
+        console.log(`TotalLength: ${TotalLength} at page ${i}`)
+        if (r > 40) {
             break;
         }
-        for (let j = 0; j < Replies.length; j++) {
-            let data = Replies[j];
-            content_all = addContent(id, data, content_all);
-            lastPageReply = j;
-        }
     }
-    content = content_all.join("<br/>");
-    reply = (i-1) * 19 + lastPageReply;
-    console.log("reply: " + reply);
+    console.log(`replies_size: ${TotalLength}`)
+    console.log(SyncedReplyCount_new)
+    sub[index].SyncedReplyCount = SyncedReplyCount_new;
+    sub[index].SyncTelegraphUrl = SyncTelegraphUrl;
+    console.log(`TotalLength: ${TotalLength - byteLength(thread.Replies[j].content)} at page ${i} reply ${j} and saved to kv. \n SyncedReplyCount_new: ${SyncedReplyCount_new}`)
+    sub = await sendPassage(replies, id, i, j, SyncTelegraphUrl, sub, index);
+    console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
+    console.log(JSON.stringify(sub));
+    KV.put("sub", JSON.stringify(sub));
+    SyncTelegraphUrl = sub[index].SyncTelegraphUrl;
+    replies = [];
+    TotalLength = 0;
+    r += 3;
+    let message = `id: ${id} 同步完成, ${SyncTelegraphUrl}, ${SyncedReplyCount_new}条回复`;
+    let sendStatus = sendNotice(message);
+    if (r > 40) {
+        let next_sync = cFetch(`${config.BASE_URL}/${config.SECRET_PATH}/stg?id=${id}&force=false`, PHPSESSID = PHPSESSID);
+        console.log(`next_sync: ${next_sync}`);
+    }
+    return sendStatus;
+}
 
+async function sendPassage(replies, id, page, reply, telegraphUrl, sub, index, firstMessage) {
+    let content = "";
+    let content_all = [];
+    if (telegraphUrl !== "") {
+        content_all.push(
+            `| 同步至Page：${page} 的第${reply}条回复\n\n`
+            );
+    }
+    for (let i = 0; i < replies.length; i++) {
+        let data = replies[i];
+        let rep_id = data.id;
+        content_all = addContent(rep_id, data, content_all);
+    }
+    console.log(`content_all:`);
+    console.log(content_all);
+    content = content_all.join("<br/>").replace(/<[^>]+>/g, "");
     let item = {};
     item.id = id;
-    item.writer = po.user_hash;
-    item.title = title;
+    item.writer = replies[0].user_hash;
+    item.title = sub[index].title;
     item.url = `https://www.nmbxd1.com/t/${id}`;
-
-    // the limit of telegraph is 64k. To avoid error, we need to split the content if it is too long
-    while (true) {
-        if (content.length < 20000|| r > 40) {
-            item.content = content;
-            item.telegraphUrl = telegraphUrl;
-            let telegraphUrl_new = await telegraph(item);
-            telegraphUrl = telegraphUrl_new;
-            if (r > 40) {
-                let sendStatus = sendNotice(`id: ${id} 同步未完成, 请查看最新页面：${telegraphUrl}`);
-                await saveSyncInfo(id, i, telegraphUrl, reply);
-                return `id: ${id} 同步未完成, 请查看最新页面：${telegraphUrl}`;
-            }
-            r += 1;
-            break;
-        }
-        // split content at 60k and find the nearest <br/>
-        let index = content.lastIndexOf("<br/>", 20000);
-        let content1 = content.slice(0, index);
-        let content2 = content.slice(index);
-        content = content2;
-
-        // send content1 to telegraph
-        item.content = content1;
-        item.telegraphUrl = telegraphUrl;
-        let telegraphUrl_new = await telegraph(item);
-        r += 2;
-        item.content = `下一页：${telegraphUrl_new}`;
-        item.telegraphUrl = telegraphUrl;
-        await editTelegraph(item); // edit the previous telegraph to add the next page link
-        r += 3;
-        telegraphUrl = telegraphUrl_new;
-        r += 1;
-    }
-    // save syncInfo
-    if (telegraphUrl !== "CONTENT_TOO_BIG") {
-        await saveSyncInfo(id, i, telegraphUrl, reply);
-    }
-    // send notice
-    let sendStatus = sendNotice(`id: ${id} 同步完成, ${telegraphUrl}, ${reply}条回复`);
-    return `id: ${id} 同步${sendStatus}, ${telegraphUrl}, ${reply}条回复`;
+    item.telegraphUrl = telegraphUrl || "";
+    item.content = content;
+    console.log("item: ")
+    console.log(item);
+    let telegram_html = await editTelegraph(item);
+    console.log("telegram_html: ")
+    console.log(telegram_html);
+    sub[index].SyncTelegraphUrl = telegram_html.split(`"`)[1].split(`"`)[0];
+    sub[index].SyncedReplyCount = (page-1) * 19 + replies.length;
+    console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
+    console.log(JSON.stringify(sub));
+    return sub;
 }
+
+function byteLength(str) {
+    // returns the byte length of an utf8 string
+    var s = str.length;
+    for (var i=str.length-1; i>=0; i--) {
+      var code = str.charCodeAt(i);
+      if (code > 0x7f && code <= 0x7ff) s++;
+      else if (code > 0x7ff && code <= 0xffff) s+=2;
+      if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
+    }
+    return s;
+  }
