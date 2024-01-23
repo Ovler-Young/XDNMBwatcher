@@ -169,7 +169,7 @@ export async function handleScheduled(event) {
               break;
             } else {
               await KV.put("sub", JSON.stringify(sub));
-              await replyWhenError(sub[i], err);
+              // await replyWhenError(sub[i], err);
               break;
             }
           }
