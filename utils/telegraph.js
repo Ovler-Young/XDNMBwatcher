@@ -49,7 +49,7 @@ export async function editTelegraph(item) {
   // get telegraph url if exists
   let telegraphUrl = item.telegraphUrl
   console.log(telegraphUrl);
-  if (telegraphUrl === null || telegraphUrl === undefined) {
+  if (telegraphUrl === null || telegraphUrl === undefined || telegraphUrl === "") {
     console.log("telegraphUrl is null");
     return await telegraph(item);
   } else {
@@ -94,10 +94,19 @@ export async function editTelegraph(item) {
     const editStatus = await edit.json();
     if (editStatus.ok === false) {
       if (editStatus.error === "CONTENT_TOO_BIG") {
+        let editOld = item
         await setTelegraphUrl(item, null);
-        item.content = `上一次同步：<a href="${telegraphUrl}">${telegraphUrl}</a>\n\n${item.content}`
+        console.log("CONTENT_TOO_BIG. set telegraphUrl to null");
+        //let sendStatus = sendNotice(`#${item.id} ${item.title} 的内容太大，旧url为${telegraphUrl}`);
+        //console.log(`sendNotice with message: #${item.id} ${item.title} 的内容太大，旧url为${telegraphUrl}, status: ${sendStatus}`);
+        console.log(`telegraphUrl: ${telegraphUrl}`);
+        let TextToAdd = `上一次同步：<a href="${telegraphUrl}">${telegraphUrl}</a>`
+        item.content = TextToAdd + item.content;
         let newTelegraph = await telegraph(item);
-        return `${newTelegraph}| <a href="${telegraphUrl}</a>\n\n`;
+        telegraphUrl = newTelegraph.split(`"`)[1].split(`"`)[0];
+        editOld.content = `\n\n本次未结束同步。下一页：<a href="${telegraphUrl}">${telegraphUrl}</a>`;
+        await editTelegraph(editOld);
+        return `${newTelegraph}`;
       }
       return editStatus.error;
     } else {
