@@ -7,13 +7,14 @@ import { handleScheduled } from "./schedule";
 import { config, mode } from "./config";
 import { setTgBot } from "./bot";
 import { GetID, Subscribe, Unsubscribe, MarkAsRead } from "./utils/functions";
+const {sendNotice} = require(`./notifications/${mode}`);
 const secret_path = config.SECRET_PATH;
 const router = Router();
 if (mode === "telegram") {
   setTgBot(router);
 }
 import { cFetch, errorResponse, successResponse } from "./utils/util";
-import { syncToTelegraph } from "./utils/sync";
+import { syncToTelegraph} from "./utils/sync";
 
 const refreshUnread = async index => {
   const res = await cFetch(`https://api.nmb.best/Api/thread?id=${id}`);
@@ -265,9 +266,14 @@ router.get(`/${secret_path}/subscribe`, async req => {
   return successResponse(`${count} new feeds added`);
 });
 router.get(`/${secret_path}/stg`, async req => {
-  const id = req.url.split("?id=")[1];
+  const id = req.url.split("?id=")[1].split("&")[0];
   if (id === undefined) {
     return errorResponse("Please verify your input!");
+  }
+  const force = req.url.split("&force=")[1].split("&")[0];
+  if (force == "true") {
+    const telegraph = await syncToTelegraph(id, true);
+    return successResponse(telegraph);
   }
   const telegraph = await syncToTelegraph(id);
   return successResponse(telegraph);
