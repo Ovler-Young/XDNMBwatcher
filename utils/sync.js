@@ -160,8 +160,9 @@ export async function syncToTelegraph(id, force = false) {
   let message = `id: ${id} 同步完成, ${SyncTelegraphUrl}, ${SyncedReplyCount_new}条回复`;
   let sendStatus = sendNotice(message);
   if (r > 40) {
-    let next_sync = cFetch(
-      `${config.BASE_URL}/${config.SECRET_PATH}/stg?id=${id}&force=false`,
+    let newSyncUrl = `${config.BASE_URL}${config.SECRET_PATH}/stg?id=${id}&force=false`
+    let next_sync = await cFetch(
+      newSyncUrl,
       (PHPSESSID = PHPSESSID)
     );
     console.log(`next_sync: ${next_sync}`);

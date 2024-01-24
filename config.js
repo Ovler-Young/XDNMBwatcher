@@ -7,5 +7,6 @@ export const config = {
   PARSE_URL,
   SECRET_PATH,
   COOKIES,
+  BASE_URL,
   ...require(`./config/${mode}`).default
 };
