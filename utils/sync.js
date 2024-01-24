@@ -64,11 +64,13 @@ export async function syncToTelegraph(id, force = false) {
   let ToPage = Math.ceil(PoReplyCount / 19) + 1;
   console.log(`FromPage: ${FromPage}, ToPage: ${ToPage}`);
   let replies = [];
+  let reply_ids = [];
   let TotalLength = 0;
   let SyncedReplyCount_new = SyncedReplyCount;
   if (SyncedReplyCount === 0) {
     // need to add content of first page.
     replies.push(po);
+    reply_ids.push(po.id);
     TotalLength += byteLength(po.content);
   }
   for (let i = FromPage; i <= ToPage; i++) {
@@ -82,9 +84,11 @@ export async function syncToTelegraph(id, force = false) {
     let thread = await res.json();
     // 文本长度限制
     // console.log(`type: ${typeof thread.Replies}, length: ${thread.Replies.length}`)
+    console.log(`thread.Replies.length: ${thread.Replies.length} with ids: ${thread.Replies.map(e => e.id)}`);
     thread.Replies = thread.Replies.filter(e => e.id !== 9999999).sort(
       (a, b) => a.id - b.id
     );
+    console.log(`thread.Replies.length: ${thread.Replies.length} with ids: ${thread.Replies.map(e => e.id)}`);
     if (i === FromPage) {
       thread.Replies = thread.Replies.slice(SyncedReplyCount % 19);
     }
@@ -93,6 +97,7 @@ export async function syncToTelegraph(id, force = false) {
       if (TotalLength < 32000 && r < 40) {
         replies.push(thread.Replies[j]);
         SyncedReplyCount_new += 1;
+        reply_ids.push(thread.Replies[j].id);
       } else {
         console.log(`SyncedReplyCount_new: ${SyncedReplyCount_new}`);
         sub[index].SyncedReplyCount = SyncedReplyCount_new;
@@ -100,7 +105,7 @@ export async function syncToTelegraph(id, force = false) {
           `TotalLength: ${TotalLength -
             byteLength(
               thread.Replies[j].content
-            )} at page ${i} reply ${j} and saved to kv. \n SyncedReplyCount_new: ${SyncedReplyCount_new}`
+            )} at page ${i} reply ${j} and saved to kv. \nSyncedReplyCount_new: ${SyncedReplyCount_new}. \nIncluded reply_ids: ${reply_ids}`
         );
         sub = await sendPassage(
           replies,
@@ -122,6 +127,7 @@ export async function syncToTelegraph(id, force = false) {
           firstMessage = false;
         }
         replies = [];
+        reply_ids = [];
         TotalLength = 0;
         r += 8;
         console.log(
