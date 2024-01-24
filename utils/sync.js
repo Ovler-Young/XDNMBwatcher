@@ -4,16 +4,6 @@ import { cFetch, addContent } from "./util";
 import { telegraph, editTelegraph } from "./telegraph";
 import { Subscribe, Unsubscribe, MarkAsRead } from "./functions";
 
-const saveSyncInfo = async (id, page, telegraphUrl, ReplyCount) => {
-    let syncInfo = await KV.get("syncInfo");
-    let syncInfoJson = JSON.parse(syncInfo);
-    syncInfoJson[id] = {};
-    syncInfoJson[id].page = page;
-    syncInfoJson[id].telegraphUrl = telegraphUrl;
-    syncInfoJson[id].ReplyCount = ReplyCount;
-    await KV.put("syncInfo", JSON.stringify(syncInfoJson));
-}
-
 export async function syncToTelegraph(id, force = false) {
     console.log("syncToTelegraph id: " + id);
     // req times
