@@ -121,7 +121,7 @@ export async function syncToTelegraph(id, force = false) {
         KV.put("sub", JSON.stringify(sub));
         SyncTelegraphUrl = sub[index].SyncTelegraphUrl;
         if (firstMessage === true) {
-          let message = `<b>${sub[index].title} Page：${i} Rep ${j}</b>\n #${sub[index].po} | #${sub[index].id} | 自<a href="${sub[index].url}">NMB</a> 同步至 ${SyncTelegraphUrl}`;
+          let message = `<b>${sub[index].title}</b> | Page：${i} Rep ${j}\n#${sub[index].po} | #${sub[index].id} | 自 <a href="${sub[index].url}">NMB</a> 同步至 <a href="${SyncTelegraphUrl}">Telegraph</a>`;
           let sendStatus = sendNotice(message);
           console.log(`sendStatus: ${sendStatus}`);
           firstMessage = false;
