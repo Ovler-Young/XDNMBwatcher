@@ -66,6 +66,11 @@ export async function syncToTelegraph(id, force = false) {
   let replies = [];
   let TotalLength = 0;
   let SyncedReplyCount_new = SyncedReplyCount;
+  if (SyncedReplyCount === 0) {
+    // need to add content of first page.
+    replies.push(po);
+    TotalLength += byteLength(po.content);
+  }
   for (let i = FromPage; i <= ToPage; i++) {
     // console.log(`i: ${i}`);
     let res = await cFetch(
