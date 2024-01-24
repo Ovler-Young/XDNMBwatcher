@@ -61,7 +61,7 @@ export async function syncToTelegraph(id, force = false) {
   KV.put("sub", JSON.stringify(sub));
 
   let FromPage = Math.ceil(SyncedReplyCount / 19) + 1;
-  let ToPage = Math.ceil(PoReplyCount / 19);
+  let ToPage = Math.ceil(PoReplyCount / 19) + 1;
   console.log(`FromPage: ${FromPage}, ToPage: ${ToPage}`);
   let replies = [];
   let TotalLength = 0;
@@ -109,13 +109,13 @@ export async function syncToTelegraph(id, force = false) {
         console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
         console.log(JSON.stringify(sub));
         KV.put("sub", JSON.stringify(sub));
+        SyncTelegraphUrl = sub[index].SyncTelegraphUrl;
         if (firstMessage === true) {
-          let message = `<b>${sub[index].title}</b>\n #${sub[index].user_hash} | #${sub[index].id} | 自<a href="${sub[index].url}">NMB</a> 同步至<a href="${SyncTelegraphUrl}">Telegraph</a>\n\n同步至Page：${i} 的第${j}条回复\n\n`;
+          let message = `<b>${sub[index].title} Page：${i} Rep ${j}</b>\n #${sub[index].po} | #${sub[index].id} | 自<a href="${sub[index].url}">NMB</a> 同步至 ${SyncTelegraphUrl}`;
           let sendStatus = sendNotice(message);
           console.log(`sendStatus: ${sendStatus}`);
           firstMessage = false;
         }
-        SyncTelegraphUrl = sub[index].SyncTelegraphUrl;
         replies = [];
         TotalLength = 0;
         r += 8;

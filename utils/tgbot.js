@@ -46,7 +46,7 @@ export async function bot2TG(ctx) {
     });
     return;
   }
-  let msg = await syncToTelegraph(id);
+  let msg = await syncToTelegraph(id, true);
   await ctx.reply(msg, {
     reply_to_message_id: ctx.update.message.message_id
   });
