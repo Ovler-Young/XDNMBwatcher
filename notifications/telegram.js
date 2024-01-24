@@ -31,16 +31,18 @@ export async function reply(feed, item) {
       console.log(`telegraph_link: ${telegraph_link}`);
     }
   }
-  let message = `<b>${html(feed.title)}</b>\n#${html(item.writer)} | #id${html(feed.id)}|${
+  let message = `<b>${html(feed.title)}</b>\n#${html(item.writer)} | #id${html(
+    feed.id
+  )}|${
     feed.telegraph ? (item.content ? telegraph_link : "") : ""
   }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumpread?id=${feed.id}`}">Unread: ${
     feed.unread
   }</a>${
     feed.lastUpdateTime ? `|${feed.lastUpdateTime.substring(14, 21)}` : ""
   }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${feed.id}`}">Latest</a>\n${content_safe}`;
-  let send = await telegram.sendMessage(
-    item.SendTo,message,{ parse_mode: "HTML" }
-  );
+  let send = await telegram.sendMessage(item.SendTo, message, {
+    parse_mode: "HTML"
+  });
   return send.message_id;
 }
 export async function replyWhenError(feed, err) {

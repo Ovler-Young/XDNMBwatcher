@@ -7,14 +7,14 @@ import { handleScheduled } from "./schedule";
 import { config, mode } from "./config";
 import { setTgBot } from "./bot";
 import { GetID, Subscribe, Unsubscribe, MarkAsRead } from "./utils/functions";
-const {sendNotice} = require(`./notifications/${mode}`);
+const { sendNotice } = require(`./notifications/${mode}`);
 const secret_path = config.SECRET_PATH;
 const router = Router();
 if (mode === "telegram") {
   setTgBot(router);
 }
 import { cFetch, errorResponse, successResponse } from "./utils/util";
-import { syncToTelegraph} from "./utils/sync";
+import { syncToTelegraph } from "./utils/sync";
 
 const refreshUnread = async index => {
   const res = await cFetch(`https://api.nmb.best/Api/thread?id=${id}`);
@@ -77,14 +77,18 @@ router.get(`/${secret_path}/feeds`, async () => {
 });
 router.post(`/${secret_path}/subitem`, async req => {
   let { getid, id } = await GetID(req);
-  if (getid === false) {return errorResponse(id);}
+  if (getid === false) {
+    return errorResponse(id);
+  }
   let { success, msg } = await Subscribe(id);
   return success ? successResponse(msg) : errorResponse(msg);
 });
 router.post(`/${secret_path}/deleteitem`, async req => {
   // 删除订阅
   let { getid, id } = await GetID(req);
-  if (getid === false) {return errorResponse(id);}
+  if (getid === false) {
+    return errorResponse(id);
+  }
   let { success, msg } = await Unsubscribe(id);
   return success ? successResponse(msg) : errorResponse(msg);
 });
@@ -140,7 +144,9 @@ router.post(`/${secret_path}/title`, async req => {
 router.post(`/${secret_path}/unread`, async req => {
   // 修改订阅未读数
   let { getid, id } = await GetID(req);
-  if (getid === false) {return errorResponse(id);}
+  if (getid === false) {
+    return errorResponse(id);
+  }
   let { success, msg } = await MarkAsRead(id);
   return success ? successResponse(msg) : errorResponse(msg);
 });
@@ -296,7 +302,7 @@ router.get("/forcetest", async (req, e) => {
   for (let i = 0; i < 5; i++) {
     index = indexs[indexs.length - 1 - i];
     sub[index].ReplyCount -= 5;
-    sub[index].recent_replies = '[]'
+    sub[index].recent_replies = "[]";
   }
   await KV.put("sub", JSON.stringify(sub));
   return successResponse("已强制测试");

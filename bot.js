@@ -1,4 +1,22 @@
-import { botBind,bot2TG, botSub, botUnSub,botUnSubAll,botShare,botUnread,botRetitle,botTelegraph, botList,botListAll, botHelp,botLatest,botReadAll,botPO, botRoll,botMute} from "./utils/tgbot";
+import {
+  botBind,
+  bot2TG,
+  botSub,
+  botUnSub,
+  botUnSubAll,
+  botShare,
+  botUnread,
+  botRetitle,
+  botTelegraph,
+  botList,
+  botListAll,
+  botHelp,
+  botLatest,
+  botReadAll,
+  botPO,
+  botRoll,
+  botMute
+} from "./utils/tgbot";
 const { Telegraf } = require("telegraf");
 import { config } from "./config";
 const bot = new Telegraf(config.TG_TOKEN);

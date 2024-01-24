@@ -1,4 +1,4 @@
-import { GetIDctx,Subscribe, Unsubscribe, ChangeSendto } from "./functions";
+import { GetIDctx, Subscribe, Unsubscribe, ChangeSendto } from "./functions";
 import { html } from "./html";
 import { config } from "../config.js";
 import { cFetch } from "./util.js";
@@ -8,7 +8,7 @@ export async function botBind(ctx) {
   let { getid, id } = await GetIDctx(ctx);
   if (getid === false) {
     await ctx.reply("Cannot get id", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
     return;
   }
@@ -18,12 +18,10 @@ export async function botBind(ctx) {
     await ctx.reply("还没有进行过订阅");
   } else {
     let chat_id = ctx.update.message.chat.id;
-    const find = sub.findIndex(
-      (e) => e.url === `https://www.nmbxd1.com/t/${id}`
-    );
+    const find = sub.findIndex(e => e.url === `https://www.nmbxd1.com/t/${id}`);
     if (find === -1) {
       await ctx.reply("没有找到相关到订阅源", {
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
     } else {
       if (chat_id === null || chat_id === undefined) {
@@ -32,7 +30,7 @@ export async function botBind(ctx) {
         sub[find].SendTo = chat_id;
         await KV.put("sub", JSON.stringify(sub));
         await ctx.reply(`成功修改id为${id}的订阅源发送到${chat_id}\n`, {
-          reply_to_message_id: ctx.update.message.message_id,
+          reply_to_message_id: ctx.update.message.message_id
         });
       }
     }
@@ -44,13 +42,13 @@ export async function bot2TG(ctx) {
   console.log(`GET 2TG ${id}`);
   if (getid === false) {
     await ctx.reply("Cannot get id", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
     return;
   }
   let msg = await syncToTelegraph(id);
   await ctx.reply(msg, {
-    reply_to_message_id: ctx.update.message.message_id,
+    reply_to_message_id: ctx.update.message.message_id
   });
 }
 
@@ -58,14 +56,14 @@ export async function botSub(ctx) {
   let { getid, id } = await GetIDctx(ctx);
   if (getid === false) {
     await ctx.reply("Cannot get id", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
     return;
   }
   console.log(`GET SUB ${id}`);
   let { success, msg } = await Subscribe(id);
   await ctx.reply(msg, {
-    reply_to_message_id: ctx.update.message.message_id,
+    reply_to_message_id: ctx.update.message.message_id
   });
 }
 
@@ -73,14 +71,14 @@ export async function botUnSub(ctx) {
   let { getid, id } = await GetIDctx(ctx);
   if (getid === false) {
     await ctx.reply("Cannot get id", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
     return;
   }
   console.log(`GET UNSUB ${id}`);
   let { success, msg } = await Unsubscribe(id);
   await ctx.reply(msg, {
-    reply_to_message_id: ctx.update.message.message_id,
+    reply_to_message_id: ctx.update.message.message_id
   });
   return;
 }
@@ -88,7 +86,7 @@ export async function botUnSub(ctx) {
 export async function botUnSubAll(ctx) {
   //await KV.put('sub', '[]')
   await ctx.reply("该功能已被禁用，如需取消订阅请联系管理员", {
-    reply_to_message_id: ctx.update.message.message_id,
+    reply_to_message_id: ctx.update.message.message_id
   });
 }
 
@@ -97,18 +95,16 @@ export async function botShare(ctx) {
   let { getid, id } = await GetIDctx(ctx);
   if (getid === false) {
     await ctx.reply("Cannot get id", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
     return;
   }
   const SubRaw = (await KV.get("sub")) || "[]";
   let message = ctx.update.message;
   let sub = JSON.parse(SubRaw);
- {
+  {
     id = id[0];
-    const find = sub.findIndex(
-      (e) => e.url === `https://www.nmbxd1.com/t/${id}`
-    );
+    const find = sub.findIndex(e => e.url === `https://www.nmbxd1.com/t/${id}`);
     let msg = "";
     if (find != -1) {
       // get chat id
@@ -135,10 +131,10 @@ export async function botShare(ctx) {
         msg = "处理完成";
       }
       await ctx.reply(msg, {
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
       if (sub[find].SendTo == chatid) {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
         // delete this message
         await ctx.telegram.deleteMessage(
           ctx.update.message.chat.id,
@@ -155,7 +151,7 @@ export async function botShare(ctx) {
       // subscribe
       let { success, msg } = await Subscribe(id);
       await ctx.reply(msg, {
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
     }
   }
@@ -166,7 +162,7 @@ export async function botUnread(ctx) {
   const sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
   } else {
     let msg = "";
@@ -196,7 +192,7 @@ export async function botUnread(ctx) {
     }
     if (msg === "") {
       await ctx.reply("没有未读消息", {
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
     } else {
       while (msg.split("\n").length > 31) {
@@ -206,12 +202,12 @@ export async function botUnread(ctx) {
         msg = msg1.join("\n");
         await ctx.reply(msg2.join("\n"), {
           reply_to_message_id: ctx.update.message.message_id,
-          parse_mode: "HTML",
+          parse_mode: "HTML"
         });
       }
       await ctx.reply(msg, {
         parse_mode: "HTML",
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
     }
     //await ctx.reply(msg, { parse_mode: "HTML" });
@@ -222,7 +218,7 @@ export async function botRetitle(ctx) {
   let { getid, id } = await GetIDctx(ctx);
   if (getid === false) {
     await ctx.reply("Cannot get id", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
     return;
   }
@@ -230,28 +226,26 @@ export async function botRetitle(ctx) {
   let sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
   } else {
-    const find = sub.findIndex(
-      (e) => e.url === `https://www.nmbxd1.com/t/${id}`
-    );
+    const find = sub.findIndex(e => e.url === `https://www.nmbxd1.com/t/${id}`);
     if (find === -1) {
       await ctx.reply("没有找到相关到订阅源", {
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
     } else {
       // title is the last word
       let title = ctx.update.message.text.split(" ").pop();
       if (title === undefined || title === id) {
         await ctx.reply("获取错误", {
-          reply_to_message_id: ctx.update.message.message_id,
+          reply_to_message_id: ctx.update.message.message_id
         });
       } else {
         sub[find].title = title;
         await KV.put("sub", JSON.stringify(sub));
         await ctx.reply(`成功修改id为${id}的订阅源标题为 ${title}\n`, {
-          reply_to_message_id: ctx.update.message.message_id,
+          reply_to_message_id: ctx.update.message.message_id
         });
       }
     }
@@ -262,7 +256,7 @@ export async function botTelegraph(ctx) {
   let { getid, id } = await GetIDctx(ctx);
   if (getid === false) {
     await ctx.reply("Cannot get id", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
     return;
   }
@@ -270,15 +264,13 @@ export async function botTelegraph(ctx) {
   let sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
   } else {
-    const find = sub.findIndex(
-      (e) => e.url === `https://www.nmbxd1.com/t/${id}`
-    );
+    const find = sub.findIndex(e => e.url === `https://www.nmbxd1.com/t/${id}`);
     if (find === -1) {
       await ctx.reply("没有找到相关到订阅源", {
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
     } else {
       sub[find].telegraph = !sub[find].telegraph;
@@ -298,7 +290,7 @@ export async function botList(ctx) {
   const sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
   } else {
     let msg = "";
@@ -338,12 +330,12 @@ export async function botList(ctx) {
       msg = msg1.join("\n");
       await ctx.reply(msg2.join("\n"), {
         reply_to_message_id: ctx.update.message.message_id,
-        parse_mode: "HTML",
+        parse_mode: "HTML"
       });
     }
     await ctx.reply(msg, {
       parse_mode: "HTML",
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
   }
 }
@@ -353,7 +345,7 @@ export async function botListAll(ctx) {
   const sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
   } else {
     let msg = "";
@@ -373,12 +365,12 @@ export async function botListAll(ctx) {
       msg = msg1.join("\n");
       await ctx.reply(msg2.join("\n"), {
         reply_to_message_id: ctx.update.message.message_id,
-        parse_mode: "HTML",
+        parse_mode: "HTML"
       });
     }
     await ctx.reply(msg, {
       parse_mode: "HTML",
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
   }
 }
@@ -401,7 +393,7 @@ export async function botHelp(ctx) {
   msg += `直接转发响应链接到对话自动绑定订阅源\n`;
   await ctx.reply(msg, {
     parse_mode: "HTML",
-    reply_to_message_id: ctx.update.message.message_id,
+    reply_to_message_id: ctx.update.message.message_id
   });
 }
 
@@ -433,7 +425,7 @@ export async function botLatest(ctx) {
   console.log("Call to doSomething took " + time + " milliseconds.");
   ctx.reply(msg, {
     parse_mode: "HTML",
-    reply_to_message_id: ctx.update.message.message_id,
+    reply_to_message_id: ctx.update.message.message_id
   });
 }
 
@@ -442,7 +434,7 @@ export async function botReadAll(ctx) {
   const sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
   } else {
     let msg = "";
@@ -463,12 +455,12 @@ export async function botReadAll(ctx) {
       msg = msg1.join("\n");
       await ctx.reply(msg2.join("\n"), {
         reply_to_message_id: ctx.update.message.message_id,
-        parse_mode: "HTML",
+        parse_mode: "HTML"
       });
     }
     await ctx.reply(msg, {
       parse_mode: "HTML",
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
   }
 }
@@ -477,7 +469,7 @@ export async function botPO(ctx) {
   let { getid, id } = await GetIDctx(ctx);
   if (getid === false) {
     await ctx.reply("Cannot get id", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
     return;
   }
@@ -485,29 +477,27 @@ export async function botPO(ctx) {
   let sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
   } else {
-    const find = sub.findIndex(
-      (e) => e.url === `https://www.nmbxd1.com/t/${id}`
-    );
+    const find = sub.findIndex(e => e.url === `https://www.nmbxd1.com/t/${id}`);
     if (find === -1) {
       await ctx.reply("没有找到相关到订阅源", {
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
     } else {
       // po is the last word
       await ctx.reply("正在获取po", {
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
       let po = ctx.update.message.text.split(" ").pop();
       if (po === undefined || po === id) {
         await ctx.reply("获取错误", {
-          reply_to_message_id: ctx.update.message.message_id,
+          reply_to_message_id: ctx.update.message.message_id
         });
       } else {
         await ctx.reply("获取成功，为 " + po, {
-          reply_to_message_id: ctx.update.message.message_id,
+          reply_to_message_id: ctx.update.message.message_id
         });
         try {
           sub[find].IsSingle = false;
@@ -516,30 +506,30 @@ export async function botPO(ctx) {
             sub[find].po = po;
             await KV.put("sub", JSON.stringify(sub));
             await ctx.reply(`成功添加 ${po} 至 ${id}\n`, {
-              reply_to_message_id: ctx.update.message.message_id,
+              reply_to_message_id: ctx.update.message.message_id
             });
           } else if (typeof sub[find].writer === "string") {
             sub[find].writer = [sub[find].writer];
             sub[find].po = po;
             await KV.put("sub", JSON.stringify(sub));
             await ctx.reply(`成功添加 ${po} 至 ${id}\n`, {
-              reply_to_message_id: ctx.update.message.message_id,
+              reply_to_message_id: ctx.update.message.message_id
             });
           } else if (po in sub[find].writer) {
             await ctx.reply("已经是po", {
-              reply_to_message_id: ctx.update.message.message_id,
+              reply_to_message_id: ctx.update.message.message_id
             });
           } else {
             sub[find].writer.push(po);
             sub[find].po = po;
             await KV.put("sub", JSON.stringify(sub));
             await ctx.reply(`成功添加 ${po} 至 ${id}\n`, {
-              reply_to_message_id: ctx.update.message.message_id,
+              reply_to_message_id: ctx.update.message.message_id
             });
           }
         } catch (e) {
           await ctx.reply("添加失败" + e, {
-            reply_to_message_id: ctx.update.message.message_id,
+            reply_to_message_id: ctx.update.message.message_id
           });
         }
       }
@@ -551,7 +541,7 @@ export async function botMute(ctx) {
   let { getid, id } = await GetIDctx(ctx);
   if (getid === false) {
     await ctx.reply("Cannot get id", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
     return;
   }
@@ -559,15 +549,13 @@ export async function botMute(ctx) {
   let sub = JSON.parse(SubRaw);
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
-      reply_to_message_id: ctx.update.message.message_id,
+      reply_to_message_id: ctx.update.message.message_id
     });
   } else {
-    const find = sub.findIndex(
-      (e) => e.url === `https://www.nmbxd1.com/t/${id}`
-    );
+    const find = sub.findIndex(e => e.url === `https://www.nmbxd1.com/t/${id}`);
     if (find === -1) {
       await ctx.reply("没有找到相关到订阅", {
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
     } else {
       const title = sub[find].title;
@@ -575,7 +563,7 @@ export async function botMute(ctx) {
       sub[find].AutoRemove = 1;
       await KV.put("sub", JSON.stringify(sub));
       await ctx.reply(`已将 ${title} 的推送设置为仅推送最后一次`, {
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
     }
   }
@@ -654,7 +642,7 @@ export async function botRoll(ctx) {
       continues = false;
       ctx.reply(msg, {
         parse_mode: "HTML",
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
       let start = new Date().getTime();
       let Reply_status = await Reply(id, "r");
@@ -666,14 +654,14 @@ export async function botRoll(ctx) {
         console.log(`my_id2342456756: ${my_id}`);
         ctx.reply(`回复成功！耗时 ${time}ms\n帖子ID：${id}\n串ID：${my_id}\n`, {
           parse_mode: "HTML",
-          reply_to_message_id: ctx.update.message.message_id,
+          reply_to_message_id: ctx.update.message.message_id
         });
       } else {
         ctx.reply(
           `发送失败！\n帖子ID：${id}\n直达链接：https://www.nmbxd1.com/t/${id}`,
           {
             parse_mode: "HTML",
-            reply_to_message_id: ctx.update.message.message_id,
+            reply_to_message_id: ctx.update.message.message_id
           }
         );
       }
@@ -684,11 +672,11 @@ export async function botRoll(ctx) {
       msg += `已尝试 ${try_num} 次，最新串ID：${max_id}\n`;
       ctx.reply(msg, {
         parse_mode: "HTML",
-        reply_to_message_id: ctx.update.message.message_id,
+        reply_to_message_id: ctx.update.message.message_id
       });
       break;
     }
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise(res => setTimeout(res, 1000));
   }
 }
 
@@ -701,9 +689,9 @@ export async function Reply(id, msg) {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         cookie: `userhash=${config.COOKIES}`,
-        "User-Agent": "adnmbposter",
+        "User-Agent": "adnmbposter"
       },
-      body: `fid=0&resto=${id}&content=${message}`,
+      body: `fid=0&resto=${id}&content=${message}`
     }
   );
   // check if the response is ok

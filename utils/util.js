@@ -39,7 +39,7 @@ const cFetch = async (url, option, PHPSESSID) => {
       defaultOption.signal = AbortSignal.timeout(timeout * (retry + 1));
       let response = await fetch(url, Object.assign({}, defaultOption, option));
       // if 429 wait 10 seconds
-      if ( response.status === 429 ) {
+      if (response.status === 429) {
         // sleep 3 sec
         await new Promise(r => setTimeout(r, 200));
       } else {
@@ -48,7 +48,7 @@ const cFetch = async (url, option, PHPSESSID) => {
         if (response.headers.get("set-cookie") !== null) {
           errorResponse("PHPSESSID is expired!!!!");
         }
-      return response;
+        return response;
       }
     } catch (e) {
       console.log(e.name);
