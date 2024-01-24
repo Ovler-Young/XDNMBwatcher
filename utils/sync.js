@@ -96,7 +96,7 @@ export async function syncToTelegraph(id, force = false) {
                 console.log(`SyncedReplyCount_new: ${SyncedReplyCount_new}`)
                 sub[index].SyncedReplyCount = SyncedReplyCount_new;
                 console.log(`TotalLength: ${TotalLength - byteLength(thread.Replies[j].content)} at page ${i} reply ${j} and saved to kv. \n SyncedReplyCount_new: ${SyncedReplyCount_new}`)
-                sub = await sendPassage(replies, id, i, j, SyncTelegraphUrl, sub, index, firstMessage);
+                sub = await sendPassage(replies, id, i, j, SyncTelegraphUrl, sub, index);
                 console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
                 console.log(JSON.stringify(sub));
                 KV.put("sub", JSON.stringify(sub));
@@ -143,7 +143,7 @@ export async function syncToTelegraph(id, force = false) {
     return sendStatus;
 }
 
-async function sendPassage(replies, id, page, reply, telegraphUrl, sub, index, firstMessage) {
+async function sendPassage(replies, id, page, reply, telegraphUrl, sub, index) {
     let content = "";
     let content_all = [];
     if (telegraphUrl !== "") {
