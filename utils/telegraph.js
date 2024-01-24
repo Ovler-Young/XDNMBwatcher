@@ -47,7 +47,6 @@ export async function telegraph(item) {
 export async function editTelegraph(item) {
   // get telegraph url if exists
   let telegraphUrl = item.telegraphUrl;
-  console.log(telegraphUrl);
   if (
     telegraphUrl === null ||
     telegraphUrl === undefined ||

@@ -55,7 +55,6 @@ export async function syncToTelegraph(id, force = false) {
   if (sub[index].SyncTelegraphUrl === undefined) {
     sub[index].SyncTelegraphUrl = "";
   }
-  console.log(JSON.stringify(sub));
   let SyncTelegraphUrl = sub[index].SyncTelegraphUrl || "";
   console.log("SyncTelegraphUrl: " + SyncTelegraphUrl);
   KV.put("sub", JSON.stringify(sub));
@@ -99,7 +98,6 @@ export async function syncToTelegraph(id, force = false) {
         SyncedReplyCount_new += 1;
         reply_ids.push(thread.Replies[j].id);
       } else {
-        console.log(`SyncedReplyCount_new: ${SyncedReplyCount_new}`);
         sub[index].SyncedReplyCount = SyncedReplyCount_new;
         console.log(
           `TotalLength: ${TotalLength -
@@ -117,7 +115,6 @@ export async function syncToTelegraph(id, force = false) {
           index
         );
         console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
-        console.log(JSON.stringify(sub));
         KV.put("sub", JSON.stringify(sub));
         SyncTelegraphUrl = sub[index].SyncTelegraphUrl;
         if (firstMessage === true) {
@@ -155,7 +152,6 @@ export async function syncToTelegraph(id, force = false) {
   );
   sub = await sendPassage(replies, id, i, j, SyncTelegraphUrl, sub, index);
   console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
-  console.log(JSON.stringify(sub));
   KV.put("sub", JSON.stringify(sub));
   SyncTelegraphUrl = sub[index].SyncTelegraphUrl;
   replies = [];
@@ -185,7 +181,6 @@ async function sendPassage(replies, id, page, reply, telegraphUrl, sub, index) {
     content_all = addContent(rep_id, data, content_all);
   }
   console.log(`content_all:`);
-  console.log(content_all);
   content = content_all.join("<br/>").replace(/<[^>]+>/g, "");
   let item = {};
   item.id = id;
@@ -202,7 +197,6 @@ async function sendPassage(replies, id, page, reply, telegraphUrl, sub, index) {
   sub[index].SyncTelegraphUrl = telegram_html.split(`"`)[1].split(`"`)[0];
   sub[index].SyncedReplyCount = (page - 1) * 19 + replies.length;
   console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
-  console.log(JSON.stringify(sub));
   return sub;
 }
 
