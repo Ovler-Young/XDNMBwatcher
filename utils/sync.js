@@ -19,11 +19,12 @@ export async function syncToTelegraph(id, force = false) {
   if (index === -1) {
     // not found
     console.log("未找到" + id + "，正在订阅");
-    let sendStatus = sendNotice(`id: ${id} 未找到, 正在订阅`);
+    let sendStatus = await sendNotice(`id: ${id} 未找到, 正在订阅`);
     console.log(`sendStatus: ${sendStatus}`);
     let success,
       msg = await Subscribe(id);
-    sendNotice(msg);
+    sendStatus = await sendNotice(msg);
+    console.log(`sendStatus: ${sendStatus}`);
     if (success) {
       sub = JSON.parse(await KV.get("sub"));
       // find new index
@@ -119,7 +120,7 @@ export async function syncToTelegraph(id, force = false) {
         SyncTelegraphUrl = sub[index].SyncTelegraphUrl;
         if (firstMessage === true) {
           let message = `<b>${sub[index].title}</b> | Page：${i} Rep ${j}\n#${sub[index].po} | #${sub[index].id} | 自 <a href="${sub[index].url}">NMB</a> 同步至 <a href="${SyncTelegraphUrl}">Telegraph</a>`;
-          let sendStatus = sendNotice(message);
+          let sendStatus = await sendNotice(message);
           console.log(`sendStatus: ${sendStatus}`);
           firstMessage = false;
         }
@@ -174,6 +175,8 @@ export async function syncToTelegraph(id, force = false) {
     let sendStatus = sendNotice(message);
     console.log(`sendStatus: ${sendStatus}`);
   }
+  let sendStatus = await sendNotice(message);
+  console.log(`sendStatus: ${sendStatus}`);
   return message;
 }
 
