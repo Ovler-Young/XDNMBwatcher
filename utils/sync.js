@@ -135,39 +135,46 @@ export async function syncToTelegraph(id, force = false) {
         break;
       }
     }
-    console.log(`TotalLength: ${TotalLength} at page ${i}`);
     if (r > 40) {
       break;
     }
   }
-  console.log(`replies_size: ${TotalLength}`);
-  console.log(SyncedReplyCount_new);
-  sub[index].SyncedReplyCount = SyncedReplyCount_new;
-  sub[index].SyncTelegraphUrl = SyncTelegraphUrl;
-  console.log(
-    `TotalLength: ${TotalLength -
-      byteLength(
-        thread.Replies[j].content
-      )} at page ${i} reply ${j} and saved to kv. \n SyncedReplyCount_new: ${SyncedReplyCount_new}`
-  );
-  sub = await sendPassage(replies, id, i, j, SyncTelegraphUrl, sub, index);
-  console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
-  KV.put("sub", JSON.stringify(sub));
-  SyncTelegraphUrl = sub[index].SyncTelegraphUrl;
-  replies = [];
-  TotalLength = 0;
-  r += 3;
-  let message = `id: ${id} 同步完成, ${SyncTelegraphUrl}, ${SyncedReplyCount_new}条回复`;
-  let sendStatus = sendNotice(message);
+  if (TotalLength > 0) {
+    console.log(`replies_size: ${TotalLength}`);
+    console.log(SyncedReplyCount_new);
+    sub[index].SyncedReplyCount = SyncedReplyCount_new;
+    sub[index].SyncTelegraphUrl = SyncTelegraphUrl;
+    console.log(
+      `TotalLength: ${TotalLength -
+        byteLength(
+          thread.Replies[j].content
+        )} at page ${i} reply ${j} and saved to kv. \n SyncedReplyCount_new: ${SyncedReplyCount_new}`
+    );
+    sub = await sendPassage(replies, id, i, j, SyncTelegraphUrl, sub, index);
+    console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
+    KV.put("sub", JSON.stringify(sub));
+    SyncTelegraphUrl = sub[index].SyncTelegraphUrl;
+    replies = [];
+    TotalLength = 0;
+    r += 3;
+    let message = `id: ${id} 同步完成, ${SyncTelegraphUrl}, ${SyncedReplyCount_new}条回复`;
+    let sendStatus = sendNotice(message);
+  }
+  let message = ""
   if (r > 40) {
     let newSyncUrl = `${config.BASE_URL}${config.SECRET_PATH}/stg?id=${id}&force=false`
     let next_sync = await cFetch(
       newSyncUrl,
       (PHPSESSID = PHPSESSID)
     );
-    console.log(`next_sync: ${next_sync}`);
+    console.log(`next_sync: ${next_sync.status}`);
+    message = `id: ${id} 同步未完成, ${SyncTelegraphUrl}, ${SyncedReplyCount_new}条回复`;
+  } else {
+    message = `id: ${id} 同步完成, ${SyncTelegraphUrl}, ${SyncedReplyCount_new}条回复`;
+    let sendStatus = sendNotice(message);
+    console.log(`sendStatus: ${sendStatus}`);
   }
-  return sendStatus;
+  return message;
 }
 
 async function sendPassage(replies, id, page, reply, telegraphUrl, sub, index) {
