@@ -13,17 +13,6 @@ export async function reply(feed, item) {
     }
   }
 
-  let content_all = item.content.replace(/<[^>]+>/g, "");
-  let lines = content_all.split("\n").slice(0, 20);
-  console.log(lines);
-  let content_safe_all = [];
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].indexOf("尾") != -1 || /\d/.test(lines[i])) {
-      content_safe_all.push(lines[i]);
-    }
-  }
-  let content_safe = content_safe_all.join("\n");
-  console.log(`选出: ${content_safe}`);
   let telegraph_link = "";
   if (feed.telegraph) {
     if (item.content) {
@@ -39,7 +28,7 @@ export async function reply(feed, item) {
     feed.unread
   }</a>${
     feed.lastUpdateTime ? `|${feed.lastUpdateTime.substring(14, 21)}` : ""
-  }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${feed.id}`}">Latest</a>\n${content_safe}`;
+  }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${feed.id}`}">Latest</a>`;
   let send = await telegram.sendMessage(item.SendTo, message, {
     parse_mode: "HTML"
   });
