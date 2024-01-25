@@ -63,6 +63,14 @@ XDNMB watcher 是一个监视 XDNMB 论坛的工具，可以在论坛帖子有�
 
 ## ChangeLog
 
+- 2024-01-24
+  - 更新 `telegraf` 至v4
+  - 修复了bug
+  - 增加了使用说明
+  - 修复 PHPSSID 重复获取写入的问题
+  - 关闭 webpack 的压缩功能，减少编译时间，方便debug
+  - 修复sync中的部分bug
+
 - 2024-01-23
   - telegraph 的过长文本修复
   - webpack 优化
