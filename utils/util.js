@@ -17,6 +17,9 @@ const cFetch = async (url, option, PHPSESSID) => {
         .split(";")[0]
         .split("=")[1];
       await KV.put("PHPSESSID", PHPSESSID, { expirationTtl: 3600 });
+      if (PHPSESSID !== null) {
+        break;
+      }
     }
   }
   const timeout = 1700;
