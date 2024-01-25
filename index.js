@@ -477,7 +477,7 @@ router.get("/sync", async (req, e) => {
   }
   return successResponse(`同步成功，共获取到${got}个新串，推送${push}个新串`);
 });
-router.get("/removelongunupdaye", async (req, e) => {
+router.get("/removelongunupdate", async (req, e) => {
   // 删除长时间未更新的订阅
   const { sendNotice } = require(`./notifications/${mode}`);
   const SubRaw = await KV.get("sub");
