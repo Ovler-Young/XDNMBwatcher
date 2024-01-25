@@ -26,5 +26,8 @@ module.exports = {
         use: { loader: "raw-loader" }
       }
     ]
-  }
+  },
+  optimization: {
+    minimize: false
+},
 };
