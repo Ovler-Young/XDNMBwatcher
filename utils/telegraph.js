@@ -80,7 +80,6 @@ export async function editTelegraph(item) {
     const newNode = await getNode2.json();
     // node 和 newNode 结构是一样的，但要合并起来
     let node = oldNode.concat(newNode);
-    console.log(node);
     // edit
     const writer = item.writer || "ink-rss";
     const title = item.title;

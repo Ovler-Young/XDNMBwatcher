@@ -82,13 +82,6 @@ export async function syncToTelegraph(id, force = false) {
     // console.log(`res_size: ${res.length}`)
     r++;
     let thread = await res.json();
-    // 文本长度限制
-    // console.log(`type: ${typeof thread.Replies}, length: ${thread.Replies.length}`)
-    console.log(`thread.Replies.length: ${thread.Replies.length} with ids: ${thread.Replies.map(e => e.id)}`);
-    thread.Replies = thread.Replies.filter(e => e.id !== 9999999).sort(
-      (a, b) => a.id - b.id
-    );
-    console.log(`thread.Replies.length: ${thread.Replies.length} with ids: ${thread.Replies.map(e => e.id)}`);
     if (i === FromPage) {
       thread.Replies = thread.Replies.slice(SyncedReplyCount % 19);
     }
@@ -158,22 +151,13 @@ export async function syncToTelegraph(id, force = false) {
     replies = [];
     TotalLength = 0;
     r += 3;
-    let message = `id: ${id} 同步完成, ${SyncTelegraphUrl}, ${SyncedReplyCount_new}条回复`;
-    let sendStatus = sendNotice(message);
   }
   let message = ""
-  if (r > 40) {
+  if (SyncedReplyCount_new < PoReplyCount) {
     let newSyncUrl = `${config.BASE_URL}${config.SECRET_PATH}/stg?id=${id}&force=false`
-    let next_sync = await cFetch(
-      newSyncUrl,
-      (PHPSESSID = PHPSESSID)
-    );
-    console.log(`next_sync: ${next_sync.status}`);
-    message = `id: ${id} 同步未完成, ${SyncTelegraphUrl}, ${SyncedReplyCount_new}条回复`;
+    message = `<b>${sub[index].title}</b> #${id} ${SyncedReplyCount_new}/${PoReplyCount}\n #${sub[index].po} |同步未完成，点击 <a href="${newSyncUrl}">继续同步</a> 或, 自 <a href="${sub[index].url}">NMB</a> 同步至 <a href="${SyncTelegraphUrl}">Telegraph</a>`;
   } else {
-    message = `id: ${id} 同步完成, ${SyncTelegraphUrl}, ${SyncedReplyCount_new}条回复`;
-    let sendStatus = sendNotice(message);
-    console.log(`sendStatus: ${sendStatus}`);
+    message = `<b>${sub[index].title}</b> #${id} Page：${i} Rep ${j}\n #${sub[index].po} |同步完成, 自 <a href="${sub[index].url}">NMB</a> 同步至 <a href="${SyncTelegraphUrl}">Telegraph</a>`;
   }
   let sendStatus = await sendNotice(message);
   console.log(`sendStatus: ${sendStatus}`);
@@ -181,6 +165,7 @@ export async function syncToTelegraph(id, force = false) {
 }
 
 async function sendPassage(replies, id, page, reply, telegraphUrl, sub, index) {
+  try {
   let content = "";
   let content_all = [];
   if (telegraphUrl !== "") {
@@ -191,8 +176,7 @@ async function sendPassage(replies, id, page, reply, telegraphUrl, sub, index) {
     let rep_id = data.id;
     content_all = addContent(rep_id, data, content_all);
   }
-  console.log(`content_all:`);
-  content = content_all.join("<br/>").replace(/<[^>]+>/g, "");
+  content = content_all.join("<br/>");
   let item = {};
   item.id = id;
   item.writer = replies[0].user_hash;
@@ -208,6 +192,9 @@ async function sendPassage(replies, id, page, reply, telegraphUrl, sub, index) {
   sub[index].SyncTelegraphUrl = telegram_html.split(`"`)[1].split(`"`)[0];
   sub[index].SyncedReplyCount = (page - 1) * 19 + replies.length;
   console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
+} catch (err) {
+  console.log(err);
+}
   return sub;
 }
 

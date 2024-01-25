@@ -52,6 +52,7 @@ const cFetch = async (url, option, PHPSESSID) => {
       }
     } catch (e) {
       console.log(e.name);
+      return cFetch(url, option)
     }
   }
   return cFetch(url, option);
