@@ -15,6 +15,8 @@ if (mode === "telegram") {
 }
 import { cFetch, errorResponse, successResponse } from "./utils/util";
 import { syncToTelegraph } from "./utils/sync";
+// require('abortcontroller-polyfill/dist/polyfill-patch-fetch');
+require('url').URL = URL;
 
 const refreshUnread = async index => {
   const res = await cFetch(`https://api.nmb.best/Api/thread?id=${id}`);
