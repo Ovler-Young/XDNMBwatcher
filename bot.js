@@ -42,7 +42,7 @@ bot.command("latest", botLatest);
 bot.command("readall", botReadAll);
 bot.command("po", botPO);
 bot.command("mute", botMute);
-bot.command("stg", bot2TG);
+bot.command("sync", bot2TG);
 bot.on("message", async ctx => {
   if (
     ctx.update.message.text.includes("nmbxd") ||

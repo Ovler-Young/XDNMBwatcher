@@ -377,17 +377,25 @@ export async function botListAll(ctx) {
 
 export async function botHelp(ctx) {
   let msg = "";
+  msg += `<code>/ping</code> - pong\n`;
   msg += `<code>/list</code> - 列出当前会话订阅\n`;
   msg += `<code>/all</code> - 列出所有当前会话\n`;
   msg += `<code>/sub </code> - 订阅\n`;
   msg += `<code>/unsub </code> - 取消订阅\n`;
-  msg += `<code>/retitle </code> - [id] [title] 修改标题\n`;
+  msg += `<code>/retitle </code> - [id] [title] 修改标题, 最后一空格后的内容为标题\n`;
   msg += `<code>/bind </code> - 绑定订阅源到当前群组\n`;
   msg += `<code>/unbind </code> - 解绑订阅源\n`;
   msg += `<code>/active </code> - 激活订阅源\n`;
   msg += `<code>/tg </code> - 开启订阅源的telegraph\n`;
   msg += `<code>/read </code> - [id] 标记为已读\n`;
   msg += `<code>/mute </code> - [id] 只保留最后一条消息\n`;
+  msg += `<code>/unread </code> - 列出未读消息\n`;
+  msg += `<code>/share </code> - [id] 分享帖子\n`;
+  msg += `<code>/roll </code> - [id] [num] 或 <code>/r </code>  抽取尾数为num的串\n`;
+  msg += `<code>/po </code> - [id] [po] 为id修改po\n`;
+  msg += `<code>/latest </code> - 获取最新串id\n`;
+  msg += `<code>/readall </code> - 将所有未读标记为已读\n`;
+  msg += `<code>/sync </code> - 将当前会话订阅同步到telegraph\n`;
   msg += `<code>/help</code> - 再次显示帮助\n`;
   msg += `直接分享响应链接到对话自动添加订阅源\n`;
   msg += `直接转发响应链接到对话自动绑定订阅源\n`;
