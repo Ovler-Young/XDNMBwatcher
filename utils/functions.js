@@ -87,7 +87,7 @@ export async function Subscribe(id) {
           title = feed[i].content.split("<br />")[0].substring(0, 20);
         } catch (e) {
           title = feed[i].content;
-        }
+        }}
         feed.title = title;
       } else {
         feed.title = data.title;
