@@ -84,7 +84,7 @@ export async function handleScheduled(event) {
           title = feed[i].content.split("<br />")[0].substring(0, 20);
         } catch (e) {
           title = feed[i].content;
-        }
+        }}
         console.log(
           "找到" + feed[i].id + "，标题为‘" + title
         );
