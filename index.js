@@ -15,6 +15,7 @@ if (mode === "telegram") {
 }
 import { cFetch, errorResponse, successResponse } from "./utils/util";
 import { syncToTelegraph } from "./utils/sync";
+import { title } from "process";
 // require('abortcontroller-polyfill/dist/polyfill-patch-fetch');
 require('url').URL = URL;
 
@@ -404,30 +405,18 @@ router.get("/sync", async (req, e) => {
       // find the index of the feed in sub
       let index = sub.findIndex(e => e.id === feed[i].id);
       if (index === -1) {
-        // not found
-        console.log("未找到" + feed[i].id);
-        let item = {};
-        item.id = feed[i].id;
-        item.url = `https://www.nmbxd1.com/t/${feed[i].id}`;
-        item.po = feed[i].user_hash;
-        item.title =
-          feed[i].title || feed[i].content.split("<br />")[0].substring(0, 20);
-        item.telegraph = true;
-        item.active = true;
-        item.errorTimes = 0;
-        item.ReplyCount = feed[i].reply_count;
-        item.fid = feed[i].fid;
-        item.SendTo = config.TG_SENDID;
-        item.lastUpdateTime = feed[i].now;
-        item.xd = true;
-        item.IsSingle = true;
-        item.unread = 0;
-        item.send_message_id = null;
-        item.LastRead = feed[i].reply_count;
-        sub.push(item);
-        got++;
+        success, msg = await Subscribe(feed[i].id);
+        if (success) {
+          push++;
+        }
       } else if (sub[index].title == "") {
-        sub[index].title = feed[i].content.split("<br />")[0].substring(0, 20);
+        let title = "";
+        try {
+          title = feed[i].content.split("<br />")[0].substring(0, 20);
+        } catch (e) {
+          title = feed[i].content;
+        }
+        sub[index].title = title;
         got++;
       } else if (sub[index].recent_replies === undefined) {
         sub[index].recent_replies = feed[i].recent_replies;

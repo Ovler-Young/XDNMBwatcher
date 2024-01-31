@@ -50,10 +50,15 @@ export async function handleScheduled(event) {
       let index = sub.findIndex(e => e.id === feed[i].id);
       if (index === -1) {
         // not found, add to sub
+        let title = "";
+        try {
+          title = feed[i].content.split("<br />")[0].substring(0, 20);
+        } catch (e) {
+          title = feed[i].content;
+        }
+        sub[index].title = title;
         console.log(
-          "未找到" + feed[i].id + "，标题为‘" + feed[i].title ||
-            feed[i].content.split("<br />")[0].substring(0, 20) +
-              "’，添加到订阅列表"
+          "未找到" + id + "，标题为‘" + title
         );
         let { success, msg } = await Subscribe(feed[i].id);
         if (success) {
@@ -74,14 +79,16 @@ export async function handleScheduled(event) {
         sub[index].active = true;
         sub[index].errorTimes = 0;
         KV.put("sub", JSON.stringify(sub));
+        let title = feed[i].title ;
+        if (title === "无标题" || title === "" || title === undefined ) { try{
+          title = feed[i].content.split("<br />")[0].substring(0, 20);
+        } catch (e) {
+          title = feed[i].content;
+        }
         console.log(
-          "找到" + feed[i].id + "，标题为‘" + feed[i].title ||
-            feed[i].content.split("<br />")[0].substring(0, 20) +
-              "’，已重新订阅"
+          "找到" + feed[i].id + "，标题为‘" + title
         );
-        let message = `#重新订阅 #id${feed[i].id} <b> ${feed[i].title} </b>\n${
-          feed[i].content.split("<br />")[0]
-        }\n<a href="https://www.nmbxd1.com/t/${feed[i].id}">点击查看</a>`;
+        let message = `#重新订阅 #id${feed[i].id} <b> ${feed[i].title} </b>\n${title}\n<a href="https://www.nmbxd1.com/t/${feed[i].id}">点击查看</a>`;
         sendNotice(message);
         console.log("sendNotice with message: " + message);
       } else {
