@@ -84,7 +84,7 @@ export async function editTelegraph(item) {
     const writer = item.writer || "ink-rss";
     const title = item.title;
     const url = item.url;
-    const edit = await fetch(`https://api.telegra.ph/editPage/${path}?return_content=true`, {
+    const edit = await fetch(`https://api.telegra.ph/editPage/${path}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
