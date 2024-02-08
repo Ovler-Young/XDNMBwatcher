@@ -56,9 +56,8 @@ export async function handleScheduled(event) {
         } catch (e) {
           title = feed[i].content;
         }
-        sub[index].title = title;
         console.log(
-          "未找到" + id + "，标题为‘" + title
+          "未找到" + feed[i].id + "，标题为:" + title
         );
         let { success, msg } = await Subscribe(feed[i].id);
         if (success) {
