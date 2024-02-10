@@ -83,11 +83,14 @@ export async function Subscribe(id) {
       // feed.title is data.title if it is not "无标题", otherwise feed.title is first line of data.content
       if (data.title === "无标题" || data.title === "") {
         let title = "";
-        if (title === "无标题" || title === "" || title === undefined ) { try{
-          title = data.content.split("<br />")[0].substring(0, 20);
-        } catch (e) {
-          title = data.content;
-        }}
+        if (title === "无标题" || title === "" || title === undefined ) {
+          if (data.content.includes("<br />")) {
+            title = data.content.split("<br />")[0].substring(0, 20);
+          }
+          else {
+            title = data.content.substring(0, 20);
+          }
+        }
         feed.title = title;
       } else {
         feed.title = data.title;
@@ -115,7 +118,7 @@ export async function Subscribe(id) {
         sub.push(feed);
         await KV.put("sub", JSON.stringify(sub));
         console.log(`ID: ${id} subscribed`);
-        msg = `#添加订阅 #id${feed.id} <b> ${feed.title} </b>\n${title}\n<a href="https://www.nmbxd1.com/t/${feed.id}">点击查看</a>`;
+        msg = `#添加订阅 #id${feed.id} <b> ${feed.title} </b>\n<a href="https://www.nmbxd1.com/t/${feed.id}">点击查看</a>`;
         // https://api.nmb.best/Api/addFeed?uuid=xxx&tid=xxx
         const uuid = await KV.get("uuid");
         const addFeedres = await fetch(
