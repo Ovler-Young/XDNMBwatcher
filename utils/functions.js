@@ -84,9 +84,9 @@ export async function Subscribe(id) {
       if (data.title === "无标题" || data.title === "") {
         let title = "";
         if (title === "无标题" || title === "" || title === undefined ) { try{
-          title = feed[i].content.split("<br />")[0].substring(0, 20);
+          title = data.content.split("<br />")[0].substring(0, 20);
         } catch (e) {
-          title = feed[i].content;
+          title = data.content;
         }}
         feed.title = title;
       } else {
