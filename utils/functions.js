@@ -133,7 +133,7 @@ export async function Subscribe(id) {
         }
         // "\u8ba2\u9605\u5927\u6210\u529f\u2192_\u2192" (订阅大成功→_→) -> 订阅大成功→_→
         else if (addFeedresText === "订阅大成功→_→") {
-          msg = "订阅成功";
+          msg = `#新订阅 #id${feed.id} <b> ${feed.title} </b>\n<a href="https://www.nmbxd1.com/t/${feed.id}">点击查看</a>`;
         } else {
           // error
           // return the error message
