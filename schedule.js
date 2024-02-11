@@ -119,9 +119,6 @@ export async function handleScheduled(event) {
               u += 1;
               let data = await res.json();
               replies = replies.concat(data.Replies);
-              if (j - from > 5) {
-                break;
-              }
             }
             // sort replies by id and only keep the biggest NewReplyCount replies
             replies = replies.sort((a, b) => a.id - b.id).slice(-NewReplyCount);
