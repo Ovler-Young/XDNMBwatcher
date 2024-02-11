@@ -119,12 +119,17 @@ export async function handleScheduled(event) {
               u += 1;
               let data = await res.json();
               replies = replies.concat(data.Replies);
+              if (j - from > 5) {
+                break;
+              }
             }
             // sort replies by id and only keep the biggest NewReplyCount replies
             replies = replies.sort((a, b) => a.id - b.id).slice(-NewReplyCount);
             console.log(replies);
             let content_all = [];
             let unread = 0;
+            let content_all_length = 0;
+            let added = 0;
             let lastUpdateTimeInFeed = feed[i].now;
             for (let j = 0; j < NewReplyCount; j++) {
               let data = replies[j];
@@ -133,8 +138,13 @@ export async function handleScheduled(event) {
                 (sub[index].IsSingle === false &&
                   sub[index].writer.includes(data.user_hash))
               ) {
+                content_all_length += byteLength(data.content);
+                if (content_all_length > 30 * 1024) {
+                  break;
+                }
                 content_all = addContent(id, data, content_all);
                 unread += 1;
+                added += 1;
                 lastUpdateTimeInFeed = data.now;
               } else if ( byteLength(data.content) > 300) {
                 let message = `怀疑是po的回复 #id${id} #reply${data.id} #po${data.user_hash} \n #content${data.content} \n\n 如的确是，请回复 <code>/po ${id} ${data.user_hash} </code> 以添加订阅`;
@@ -164,7 +174,7 @@ export async function handleScheduled(event) {
               console.log(`send_message_id: ${sub[index].send_message_id}`);
             }
             sub[index].errorTimes = 0;
-            sub[index].ReplyCount = feed[i].reply_count;
+            sub[index].ReplyCount = sub[index].ReplyCount + added;
             sub[index].recent_replies = feed[i].recent_replies;
             // save the sub to kv
             KV.put("sub", JSON.stringify(sub));
