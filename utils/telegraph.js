@@ -113,15 +113,19 @@ export async function editTelegraph(item) {
       }
     } else if (newNodeSize < 31 * 1024) {
       // get the Node of text "上一次同步 <a href=telegraphUrl>telegraphUrl</a> "
-      let TextToAdd = `上一次同步：<a href="${telegraphUrl}">${telegraphUrl}</a>`;
-      const TextToAddNode = await fetch(`${config.PARSE_URL}/api/html2node`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8"
-        },
-        body: JSON.stringify({ content: TextToAdd })
-      });
-      const TextToAddNodeJson = await TextToAddNode.json();
+      const TextToAddNode = [
+        "上一次同步：",
+        {
+            "tag": "a",
+            "attrs": {
+                "href": `${telegraphUrl}`
+            },
+            "children": [
+                `${telegraphUrl}`
+            ]
+        }
+      ]
+      const TextToAddNodeJson = TextToAddNode.json();
       console.log(`TextToAddNodeJson: ${TextToAddNodeJson}`);
       // add the TextToAddNodeJson to the beginning of the newNode
       let node = TextToAddNodeJson.concat(newNode);
