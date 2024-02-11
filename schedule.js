@@ -6,6 +6,7 @@ const {
 } = require(`./notifications/${mode}`);
 import { cFetch, addContent } from "./utils/util";
 import { Subscribe, Unsubscribe, MarkAsRead } from "./utils/functions";
+import { byteLength } from "./utils/sync";
 
 export async function handleScheduled(event) {
   const SubRaw = await KV.get("sub");
@@ -135,8 +136,8 @@ export async function handleScheduled(event) {
                 content_all = addContent(id, data, content_all);
                 unread += 1;
                 lastUpdateTimeInFeed = data.now;
-              } else if (data.content.length > 300) {
-                let message = `怀疑是po的回复 #id${id} #reply${data.id} #po${data.user_hash} \n #content${data.content} \n\n 如的确是，请回复 /po ${id} ${data.user_hash} `;
+              } else if ( byteLength(data.content) > 300) {
+                let message = `怀疑是po的回复 #id${id} #reply${data.id} #po${data.user_hash} \n #content${data.content} \n\n 如的确是，请回复 <code>/po ${id} ${data.user_hash} </code> 以添加订阅`;
                 sendNotice(message);
               }
             }
