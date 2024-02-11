@@ -1,5 +1,6 @@
 import { config } from "../config";
 import { sendNotice } from "../notifications/telegram";
+import { byteLength } from "./sync.js";
 export async function telegraph(item) {
   const writer = item.writer || "ink-rss";
   const title = item.title;
@@ -70,6 +71,8 @@ export async function editTelegraph(item) {
     );
     const nodesJson = await getNode.json();
     const oldNode = nodesJson.result.content;
+    let nodeSize = byteLength(JSON.stringify(oldNode));
+    console.log(`oldNode size: ${nodeSize} = ${nodeSize / 1024}KB`);
     const getNode2 = await fetch(`${config.PARSE_URL}/api/html2node`, {
       method: "POST",
       headers: {
@@ -77,47 +80,110 @@ export async function editTelegraph(item) {
       },
       body: JSON.stringify({ content: item.content })
     });
-    const newNode = await getNode2.json();
-    // node 和 newNode 结构是一样的，但要合并起来
-    let node = oldNode.concat(newNode);
+    let newNode = await getNode2.json();
+    let newNodeSize = byteLength(JSON.stringify(newNode));
+    console.log(`newNode size: ${newNodeSize} = ${newNodeSize / 1024}KB`);
+    console.log(`total size: ${nodeSize + newNodeSize} = ${(nodeSize + newNodeSize) / 1024}KB`);
     // edit
     const writer = item.writer || "ink-rss";
     const title = item.title;
     const url = item.url;
-    const edit = await fetch(`https://api.telegra.ph/editPage/${path}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        access_token: config.TELEGRAPH_TOKEN,
-        path: path,
-        title: title,
-        content: node,
-        author_name: writer,
-        author_url: url
-      })
-    });
-    const editStatus = await edit.json();
-    if (editStatus.ok === false) {
-      if (editStatus.error === "CONTENT_TOO_BIG") {
-        let editOld = item;
-        await setTelegraphUrl(item, null);
-        console.log("CONTENT_TOO_BIG. set telegraphUrl to null");
-        //let sendStatus = sendNotice(`#${item.id} ${item.title} 的内容太大，旧url为${telegraphUrl}`);
-        //console.log(`sendNotice with message: #${item.id} ${item.title} 的内容太大，旧url为${telegraphUrl}, status: ${sendStatus}`);
-        console.log(`telegraphUrl: ${telegraphUrl}`);
-        let TextToAdd = `上一次同步：<a href="${telegraphUrl}">${telegraphUrl}</a>`;
-        item.content = TextToAdd + item.content;
-        let newTelegraph = await telegraph(item);
-        telegraphUrl = newTelegraph.split(`"`)[1].split(`"`)[0];
-        editOld.content = `\n\n本次未结束同步。下一页：<a href="${telegraphUrl}">${telegraphUrl}</a>`;
-        await editTelegraph(editOld);
-        return `${newTelegraph}`;
+    if (nodeSize + newNodeSize < 31 * 1024) {
+      // node 和 newNode 结构是一样的，但要合并起来
+      let node = oldNode.concat(newNode);
+      const edit = await fetch(`https://api.telegra.ph/editPage/${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          access_token: config.TELEGRAPH_TOKEN,
+          path: path,
+          title: title,
+          content: node,
+          author_name: writer,
+          author_url: url
+        })
+      });
+      const editStatus = await edit.json();
+      if (editStatus.ok === false) {
+        return editStatus.error;
+      } else {
+        return `<a href="${telegraphUrl}">Tg</a>`;
       }
-      return editStatus.error;
+    } else if (newNodeSize < 31 * 1024) {
+      // get the Node of text "上一次同步 <a href=telegraphUrl>telegraphUrl</a> "
+      let TextToAdd = `上一次同步：<a href="${telegraphUrl}">${telegraphUrl}</a>`;
+      const TextToAddNode = await fetch(`${config.PARSE_URL}/api/html2node`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        body: JSON.stringify({ content: TextToAdd })
+      });
+      const TextToAddNodeJson = await TextToAddNode.json();
+      console.log(`TextToAddNodeJson: ${TextToAddNodeJson}`);
+      // add the TextToAddNodeJson to the beginning of the newNode
+      let node = TextToAddNodeJson.concat(newNode);
+      let success, url = await sendTelegraph(node, title, writer);
+      if (success) {
+        try {
+          // get index in sub
+          let sub = JSON.parse(await KV.get("sub"));
+          let index = sub.findIndex(e => e.id === item.id);
+          sub[index].telegraphUrl = telegraph.result.url;
+          await KV.put("sub", JSON.stringify(sub));
+        } catch (err) {
+          console.log(err);
+          return `<a href="${telegraph.result.url}">Tg</a> | Error ${err.message} \n ${err.stack}`;
+        }
+        return `<a href="${telegraph.result.url}">Tg</a>`;
+      } else {
+        return url;
+      }
     } else {
-      return `<a href="${telegraphUrl}">Tg</a>`;
+      // split the newNode into two parts or more
+      let nodes = [];
+      let node = [];
+      let nodeSize = 0;
+      let i = 0;
+      for (let n of newNode) {
+        node.push(n);
+        nodeSize += byteLength(JSON.stringify(n));
+        if (nodeSize > 30 * 1024) {
+          // remove the last element
+          node.pop();
+          nodeSize -= byteLength(JSON.stringify(n));
+          nodes.push(node);
+          console.log(`node ${i} size: ${nodeSize} = ${nodeSize / 1024}KB`);
+          node = [n];
+          nodeSize = byteLength(JSON.stringify(n));
+          i++;
+        }
+      }
+      nodes.push(node);
+      console.log(`node ${i} size: ${nodeSize} = ${nodeSize / 1024}KB`);
+      // send a new telegraph
+      let message2send = `上一次同步：<a href="${telegraphUrl}">${telegraphUrl}</a>`;
+      for (let n of nodes) {
+        let success, url = await sendTelegraph(n, title, writer);
+        if (success) {
+          try {
+            // get index in sub
+            let sub = JSON.parse(await KV.get("sub"));
+            let index = sub.findIndex(e => e.id === item.id);
+            sub[index].telegraphUrl = telegraph.result.url;
+            await KV.put("sub", JSON.stringify(sub));
+          } catch (err) {
+            console.log(err);
+            return `<a href="${telegraph.result.url}">Tg</a> | Error ${err.message} \n ${err.stack}`;
+          }
+          return `<a href="${telegraph.result.url}">Tg</a>`;
+        } else {
+          return url;
+        }
+      }
+      return `<a href="${telegraph.result.url}">Tg</a>`;
     }
   }
 }
@@ -127,4 +193,25 @@ export async function setTelegraphUrl(item, url) {
   let index = sub.findIndex(e => e.id === item.id);
   sub[index].telegraphUrl = url;
   await KV.put("sub", JSON.stringify(sub));
+}
+
+export async function sendTelegraph(node, title, writer) {
+  const getTelegraph = await fetch("https://api.telegra.ph/createPage", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      author_name: writer,
+      content: node,
+      title: title,
+      access_token: config.TELEGRAPH_TOKEN
+    })
+  });
+  const telegraph = await getTelegraph.json();
+  if (telegraph.ok === false) {
+    return { success: false, url: telegraph.error };
+  } else {
+    return { success: true, url: telegraph.result.url };
+  }
 }

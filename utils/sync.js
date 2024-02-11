@@ -198,7 +198,7 @@ async function sendPassage(replies, id, page, reply, telegraphUrl, sub, index) {
   return sub;
 }
 
-function byteLength(str) {
+export function byteLength(str) {
   // returns the byte length of an utf8 string
   var s = str.length;
   for (var i = str.length - 1; i >= 0; i--) {
