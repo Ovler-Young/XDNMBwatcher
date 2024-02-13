@@ -16,7 +16,7 @@ const cFetch = async (url, option, PHPSESSID) => {
         .get("set-cookie")
         .split(";")[0]
         .split("=")[1];
-      await KV.put("PHPSESSID", PHPSESSID, { expirationTtl: 3600 });
+      await KV.put("PHPSESSID", PHPSESSID, { expirationTtl: 360000 });
       if (PHPSESSID !== null) {
         break;
       }
