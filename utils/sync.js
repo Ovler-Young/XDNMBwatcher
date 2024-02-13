@@ -29,7 +29,7 @@ export async function syncToTelegraph(id, force = false) {
       sub = JSON.parse(await KV.get("sub"));
       // find new index
       index = sub.findIndex(e => e.id === id);
-      KV.put("sub", JSON.stringify(sub));
+      await KV.put("sub", JSON.stringify(sub));
     }
     r += 2;
   }
@@ -58,7 +58,7 @@ export async function syncToTelegraph(id, force = false) {
   }
   let SyncTelegraphUrl = sub[index].SyncTelegraphUrl || "";
   console.log("SyncTelegraphUrl: " + SyncTelegraphUrl);
-  KV.put("sub", JSON.stringify(sub));
+  await KV.put("sub", JSON.stringify(sub));
 
   let FromPage = Math.ceil(SyncedReplyCount / 19) + 1;
   let ToPage = Math.ceil(PoReplyCount / 19) + 1;
@@ -109,7 +109,7 @@ export async function syncToTelegraph(id, force = false) {
           index
         );
         console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
-        KV.put("sub", JSON.stringify(sub));
+        await KV.put("sub", JSON.stringify(sub));
         SyncTelegraphUrl = sub[index].SyncTelegraphUrl;
         if (firstMessage === true) {
           let message = `<b>${sub[index].title}</b> | Page：${i} Rep ${j}\n#${sub[index].po} | #${sub[index].id} | 自 <a href="${sub[index].url}">NMB</a> 同步至 <a href="${SyncTelegraphUrl}">Telegraph</a>`;
@@ -146,7 +146,7 @@ export async function syncToTelegraph(id, force = false) {
     );
     sub = await sendPassage(replies, id, i, j, SyncTelegraphUrl, sub, index);
     console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
-    KV.put("sub", JSON.stringify(sub));
+    await KV.put("sub", JSON.stringify(sub));
     SyncTelegraphUrl = sub[index].SyncTelegraphUrl;
     replies = [];
     TotalLength = 0;

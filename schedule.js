@@ -70,7 +70,7 @@ export async function handleScheduled(event) {
           sub[index].ReplyCount = feed[i].reply_count;
           sub[index].recent_replies = feed[i].recent_replies;
           // save the sub to kv
-          KV.put("sub", JSON.stringify(sub));
+          await KV.put("sub", JSON.stringify(sub));
         } else {
           sendNotice(msg);
         }
@@ -78,7 +78,7 @@ export async function handleScheduled(event) {
       } else if (sub[index].active === false) {
         sub[index].active = true;
         sub[index].errorTimes = 0;
-        KV.put("sub", JSON.stringify(sub));
+        await KV.put("sub", JSON.stringify(sub));
         let title = feed[i].title ;
         if (title === "无标题" || title === "" || title === undefined ) { try{
           title = feed[i].content.split("<br />")[0].substring(0, 20);
@@ -145,7 +145,7 @@ export async function handleScheduled(event) {
                 lastUpdateTimeInFeed = data.now;
               } else if ( byteLength(data.content) > 300) {
                 // filter thee "催更" "F5" "gkdgkd"
-                if (not (data.content.includes("催更") || data.content.includes("F5") || data.content.includes("gkdgkd"))) {
+                if (not (data.content.includes("催更") || data.content.includes("F5") || data.content.includes("gkdgkd") || data.content.includes("把po给我挖出来"))) {
                   let message = `怀疑是po的回复 #id${id} #reply${data.id} ${data.ext ? `<a href="https://image.nmb.best/image/${data.img}${data.ext}1">img</a>` : ""
                     } #po${data.user_hash} \n #content${data.content.replace(/<[^>]+>/g, "")
                       .replace(
@@ -182,7 +182,7 @@ export async function handleScheduled(event) {
             sub[index].ReplyCount = sub[index].ReplyCount + added;
             sub[index].recent_replies = feed[i].recent_replies;
             // save the sub to kv
-            KV.put("sub", JSON.stringify(sub));
+            await KV.put("sub", JSON.stringify(sub));
           } catch (err) {
             sub[index].errorTimes += 1;
             console.log(err);
@@ -196,7 +196,7 @@ export async function handleScheduled(event) {
               );
               console.log(sub[i]);
               sub[i].active = false;
-              KV.put("sub", JSON.stringify(sub));
+              await KV.put("sub", JSON.stringify(sub));
               await replyWhenError(sub[i], err);
               break;
             } else {
@@ -227,7 +227,7 @@ export async function handleScheduled(event) {
         // deleted
         console.log("id: " + idToCheck[i] + "已被站方删除");
         sub[index].active = false;
-        KV.put("sub", JSON.stringify(sub));
+        await KV.put("sub", JSON.stringify(sub));
         u += 1;
         let message = `#悲报 #id${idToCheck[i]} 已删除，名称为 ${sub[index].title}，最后更新时间为 ${sub[index].lastUpdateTime}`;
         sendNotice(message);
@@ -238,7 +238,7 @@ export async function handleScheduled(event) {
         console.log("id: " + idToCheck[i] + "可能已被手退订");
         // 先加error 次数
         sub[index].errorTimes += 1;
-        KV.put("sub", JSON.stringify(sub));
+        await KV.put("sub", JSON.stringify(sub));
         // 如果超过最大错误次数，就退订
         if (sub[index].errorTimes >= config.maxErrorCount - 1) {
           // -1 以避免是别的原因导致的错误又退订了
@@ -249,7 +249,7 @@ export async function handleScheduled(event) {
           );
           console.log(sub[index]);
           sub[index].active = false;
-          KV.put("sub", JSON.stringify(sub));
+          await KV.put("sub", JSON.stringify(sub));
           let message = `#删除订阅 #id${idToCheck[i]} 已手动退订，名称为 "${sub[index].title}"，最后更新时间为 ${sub[index].lastUpdateTime}`;
           await sendNotice(message);
           u += 1;

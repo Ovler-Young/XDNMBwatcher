@@ -452,7 +452,7 @@ router.get("/sync", async (req, e) => {
         // remove the feed from sub
         sub.splice(i, 1);
         i--;
-        KV.put("sub", JSON.stringify(sub));
+        await KV.put("sub", JSON.stringify(sub));
         r++;
       } else if (addFeedresText === "订阅大成功→_→") {
         push++;
