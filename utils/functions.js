@@ -197,7 +197,6 @@ export async function MarkAsRead(id) {
   } else {
     sub[index].unread = 0;
     sub[index].LastRead = sub[index].ReplyCount;
-    sub[index].telegraphUrl = null;
     await KV.put("sub", JSON.stringify(sub));
     msg = "修改成功，已清空该订阅源未读并删除缓存";
   }
