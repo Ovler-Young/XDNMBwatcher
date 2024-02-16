@@ -189,6 +189,10 @@ export async function handleScheduled(event) {
             // save the sub to kv
             await KV.put("sub", JSON.stringify(sub));
           } catch (err) {
+            if (err.message === "KV put() limit exceeded for the day.") {
+              console.log("KV put() limit exceeded for the day.");
+              break;
+            }
             sub[index].errorTimes += 1;
             console.log(err);
             let message = `在处理 #id${feed[i].id} 时出现错误，错误信息为：${err.message} \n技术细节为：${err.stack}`;
