@@ -98,7 +98,11 @@ export async function handleScheduled(event) {
           console.log(`#id${feed[i].id} 的回复数为undefined`);
           sub[index].ReplyCount = feed[i].reply_count;
           sub[index].recent_replies = feed[i].recent_replies;
-          await KV.put("sub", JSON.stringify(sub));
+          try {
+            await KV.put("sub", JSON.stringify(sub));
+          } catch (err) {
+            console.log(err);
+          }
         } else if (
           sub[index].ReplyCount === feed[i].reply_count ||
           sub[index].active === false
