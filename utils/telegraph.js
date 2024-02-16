@@ -39,7 +39,7 @@ export async function telegraph(item) {
       await KV.put("sub", JSON.stringify(sub));
     } catch (err) {
       console.log(err);
-      return `<a href="${telegraph.result.url}">Tg</a> | Error ${err.message} \n ${err.stack}`;
+      return `<a href="${telegraph.result.url}">Tg</a> | Error ${err.message} \n${err.stack}`;
     }
     return `<a href="${telegraph.result.url}">Tg</a>`;
   }
@@ -139,7 +139,7 @@ export async function editTelegraph(item) {
           await KV.put("sub", JSON.stringify(sub));
         } catch (err) {
           console.log(err);
-          return `<a href="${telegraph.result.url}">Tg</a> | Error ${err.message} \n ${err.stack}`;
+          return `<a href="${telegraph.result.url}">Tg</a> | Error ${err.message} \n${err.stack}`;
         }
         return `<a href="${telegraph.result.url}">Tg</a>`;
       } else {
@@ -180,7 +180,7 @@ export async function editTelegraph(item) {
             await KV.put("sub", JSON.stringify(sub));
           } catch (err) {
             console.log(err);
-            return `<a href="${telegraph.result.url}">Tg</a> | Error ${err.message} \n ${err.stack}`;
+            return `<a href="${telegraph.result.url}">Tg</a> | Error ${err.message} \n${err.stack}`;
           }
           return `<a href="${telegraph.result.url}">Tg</a>`;
         } else {

@@ -142,7 +142,7 @@ export async function syncToTelegraph(id, force = false) {
       `TotalLength: ${TotalLength -
         byteLength(
           thread.Replies[j].content
-        )} at page ${i} reply ${j} and saved to kv. \n SyncedReplyCount_new: ${SyncedReplyCount_new}`
+        )} at page ${i} reply ${j} and saved to kv. \nSyncedReplyCount_new: ${SyncedReplyCount_new}`
     );
     sub = await sendPassage(replies, id, i, j, SyncTelegraphUrl, sub, index);
     console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
@@ -155,9 +155,9 @@ export async function syncToTelegraph(id, force = false) {
   let message = ""
   if (SyncedReplyCount_new < PoReplyCount) {
     let newSyncUrl = `${config.BASE_URL}${config.SECRET_PATH}/stg?id=${id}&force=false`
-    message = `<b>${sub[index].title}</b> #${id} ${SyncedReplyCount_new}/${PoReplyCount}\n #${sub[index].po} |同步未完成，点击 <a href="${newSyncUrl}">继续同步</a> 或, 自 <a href="${sub[index].url}">NMB</a> 同步至 <a href="${SyncTelegraphUrl}">Telegraph</a>`;
+    message = `<b>${sub[index].title}</b> #${id} ${SyncedReplyCount_new}/${PoReplyCount}\n#${sub[index].po} |同步未完成，点击 <a href="${newSyncUrl}">继续同步</a> 或, 自 <a href="${sub[index].url}">NMB</a> 同步至 <a href="${SyncTelegraphUrl}">Telegraph</a>`;
   } else {
-    message = `<b>${sub[index].title}</b> #${id} Page：${i} Rep ${j}\n #${sub[index].po} |同步完成, 自 <a href="${sub[index].url}">NMB</a> 同步至 <a href="${SyncTelegraphUrl}">Telegraph</a>`;
+    message = `<b>${sub[index].title}</b> #${id} Page：${i} Rep ${j}\n#${sub[index].po} |同步完成, 自 <a href="${sub[index].url}">NMB</a> 同步至 <a href="${SyncTelegraphUrl}">Telegraph</a>`;
   }
   let sendStatus = await sendNotice(message);
   console.log(`sendStatus: ${sendStatus}`);

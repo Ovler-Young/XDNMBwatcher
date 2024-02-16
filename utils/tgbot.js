@@ -179,7 +179,7 @@ export async function botUnread(ctx) {
         sub[i].unread = 1;
         kvchange = true;
       } else if (sub[i].unread > 0) {
-        msg += `${i}.\t<a href="${sub[i].url}">${html(sub[i].title)}</a>\n #id${
+        msg += `${i}.\t<a href="${sub[i].url}">${html(sub[i].title)}</a>\n#id${
           sub[i].id
         }<code>Upd:${sub[i].lastUpdateTime
           .toLocaleString()
@@ -304,7 +304,7 @@ export async function botList(ctx) {
         if (sub[i].SendTo === chat_id || sub[i].SendTo === undefined) {
           msg += `${n}.\t<a href="${sub[i].url}">${html(
             sub[i].title
-          )}</a>\n #id${sub[i].id}<code>Upd:${sub[i].lastUpdateTime
+          )}</a>\n#id${sub[i].id}<code>Upd:${sub[i].lastUpdateTime
             .toLocaleString()
             .substr(5, 13)}</code><code> Unread: </code>${sub[i].unread}\n`;
         }
@@ -316,7 +316,7 @@ export async function botList(ctx) {
         if (sub[i].SendTo === chat_id) {
           msg += `${n}.\t<a href="${sub[i].url}">${html(
             sub[i].title
-          )}</a>\n #id${sub[i].id}<code>Upd:${sub[i].lastUpdateTime
+          )}</a>\n#id${sub[i].id}<code>Upd:${sub[i].lastUpdateTime
             .toLocaleString()
             .substr(5, 13)}</code><code> Unread: </code>${sub[i].unread}\n`;
         }
@@ -354,7 +354,7 @@ export async function botListAll(ctx) {
       n += 1;
       msg += `${n}.\t<a href="${sub[i].url}">${html(
         sub[i].title
-      )}</a>\n <code>#id${sub[i].id}</code> <code> Upd:${sub[i].lastUpdateTime
+      )}</a>\n<code>#id${sub[i].id}</code> <code> Upd:${sub[i].lastUpdateTime
         .toLocaleString()
         .substr(5, 13)}</code><code> Unread: </code>${sub[i].unread}\n`;
     }
@@ -429,7 +429,7 @@ export async function botLatest(ctx) {
   let net = middle - start;
   let proc = end - middle;
   let msg = `获取最新串耗时：${time}ms，网络请求耗时：${net}ms，处理耗时：${proc}ms`;
-  msg += `\n 最新串id：${max_id}`;
+  msg += `\n最新串id：${max_id}`;
   console.log("Call to doSomething took " + time + " milliseconds.");
   ctx.reply(msg, {
     parse_mode: "HTML",
