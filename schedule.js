@@ -30,7 +30,7 @@ export async function handleScheduled(event) {
         .get("set-cookie")
         .split(";")[0]
         .split("=")[1];
-      await KV.put("PHPSESSID", PHPSESSID, { expirationTtl: 7200 });
+      await KV.put("PHPSESSID", PHPSESSID, { expirationTtl: 360000 });
       u++;
     }
   }
