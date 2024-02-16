@@ -100,11 +100,11 @@ export async function handleScheduled(event) {
         ) {
           // no update
           // console.log("id: " + feed[i].id + "title" + feed[i].title + "未更新");
-        } else {
+        } else if (sub[index].ReplyCount < feed[i].reply_count) {
           try {
             // 有更新
             console.log(
-              "id: " + feed[i].id + "title" + feed[i].title + "有更新"
+              "id: " + feed[i].id + "title" + feed[i].title + "有更新，之前回复数为" + sub[index].ReplyCount + "现在回复数为" + feed[i].reply_count + "增加了" + (feed[i].reply_count - sub[index].ReplyCount) + "条回复"
             );
             let id = feed[i].id;
             let NewReplyCount = feed[i].reply_count - sub[index].ReplyCount;
@@ -188,7 +188,7 @@ export async function handleScheduled(event) {
           } catch (err) {
             sub[index].errorTimes += 1;
             console.log(err);
-            let message = `在处理 #id${feed[i].id} 时出现错误，错误信息为：${err.message} \n 技术细节为：${err.stack}`;
+            let message = `在处理 #id${feed[i].id} 时出现错误，错误信息为：${err.message} \n技术细节为：${err.stack}`;
             sendNotice(message);
             if (sub[i].errorTimes >= config.maxErrorCount) {
               console.log(
@@ -207,6 +207,11 @@ export async function handleScheduled(event) {
               break;
             }
           }
+        } else if (sub[index].ReplyCount > feed[i].reply_count) {
+          console.log(`#id${feed[i].id} 的回复数减少了，之前回复数为 ${sub[index].ReplyCount} 现在回复数为 ${feed[i].reply_count}`);
+          sub[index].ReplyCount = feed[i].reply_count;
+          sub[index].recent_replies = feed[i].recent_replies;
+          await KV.put("sub", JSON.stringify(sub));
         }
       }
     }
