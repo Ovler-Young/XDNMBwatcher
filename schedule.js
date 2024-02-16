@@ -181,8 +181,11 @@ export async function handleScheduled(event) {
               console.log(`send_message_id: ${sub[index].send_message_id}`);
             }
             sub[index].errorTimes = 0;
-            sub[index].ReplyCount = sub[index].ReplyCount + added;
+            sub[index].ReplyCount = feed[i].ReplyCount;
+            console.log("added: " + added);
             sub[index].recent_replies = feed[i].recent_replies;
+            console.log("sub[index].ReplyCount: " + sub[index].ReplyCount);
+            console.log(sub[index]);
             // save the sub to kv
             await KV.put("sub", JSON.stringify(sub));
           } catch (err) {
