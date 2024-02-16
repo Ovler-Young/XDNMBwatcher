@@ -94,12 +94,17 @@ export async function handleScheduled(event) {
       } else {
         // found, check if there is update
         idToCheck.splice(idToCheck.indexOf(feed[i].id), 1);
-        if (
+        if (sub[index].ReplyCount === undefined) {
+          console.log(`#id${feed[i].id} 的回复数为undefined`);
+          sub[index].ReplyCount = feed[i].reply_count;
+          sub[index].recent_replies = feed[i].recent_replies;
+          await KV.put("sub", JSON.stringify(sub));
+        } else if (
           sub[index].ReplyCount === feed[i].reply_count ||
           sub[index].active === false
         ) {
           // no update
-          // console.log("id: " + feed[i].id + "title" + feed[i].title + "未更新");
+          console.log("id: " + feed[i].id + "title" + feed[i].title + "未更新" + sub[index].ReplyCount + " " + feed[i].reply_count);
         } else if (sub[index].ReplyCount < feed[i].reply_count) {
           try {
             // 有更新
