@@ -172,7 +172,6 @@ router.get(`/${secret_path}/jumpread`, async req => {
   let lastreadto = sub[index].LastRead;
   console.log(lastreadto);
   sub[index].LastRead = sub[index].ReplyCount;
-  sub[index].telegraphUrl = null;
   await KV.put("sub", JSON.stringify(sub));
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
@@ -202,7 +201,6 @@ router.get(`/${secret_path}/jumplast`, async req => {
   }
   sub[index].unread = 0;
   sub[index].LastRead = sub[index].ReplyCount;
-  sub[index].telegraphUrl = null;
   await KV.put("sub", JSON.stringify(sub));
   let lastreadto = sub[index].LastRead;
   // if ua is mobile, jump to app
