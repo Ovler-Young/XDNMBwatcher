@@ -14,22 +14,20 @@ export async function reply(feed, item) {
   }
 
   let telegraph_link = "";
-  if (feed.telegraph) {
-    if (item.content) {
-      let telegram_url = await editTelegraph(item);
-      feed.telegraphUrl = telegram_url;
-      console.log(`telegram_url: ${telegram_url}`);
-      // 如果return的不含https, 则说明出错了,直接插入到content中
-      let telegram_html = `<a href="${telegram_url}">tg</a>`;
-      // 如果不止一个链接，telegram_url是一个数组
-      if (Array.isArray(telegram_url)) {
-        telegram_html = telegram_url.map((e, index) => `<a href="${e}">tg${index + 1}</a>`).join(" | ");
-      }
-      if (telegram_url.indexOf("https") === -1) {
-        telegram_html = `<b>同步失败</b> | ${telegram_url}`;
-      }
-      telegraph_link = `|${telegram_html}`;
+  if (feed.telegraph && item.content) {
+    let telegram_url = await editTelegraph(item);
+    feed.telegraphUrl = telegram_url;
+    console.log(`telegram_url: ${telegram_url}`);
+    // 如果return的不含https, 则说明出错了,直接插入到content中
+    let telegram_html = `<a href="${telegram_url}">tg</a>`;
+    // 如果不止一个链接，telegram_url是一个数组
+    if (Array.isArray(telegram_url)) {
+      telegram_html = telegram_url.map((e, index) => `<a href="${e}">tg${index + 1}</a>`).join(" | ");
     }
+    if (telegram_url.indexOf("https") === -1) {
+      telegram_html = `<b>同步失败</b> | ${telegram_url}`;
+    }
+    telegraph_link = `|${telegram_html}`;
   }
   let message = `<b>${html(feed.title)}</b>\n#${html(item.writer)} | #id${html(
     feed.id
