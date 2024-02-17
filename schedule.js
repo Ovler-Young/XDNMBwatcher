@@ -161,7 +161,7 @@ export async function handleScheduled(event) {
                   // do nothing
                 } else {
                   let message = `怀疑是po的回复 #id${id} #reply${data.id} ${data.ext ? `<a href="https://image.nmb.best/image/${data.img}${data.ext}1">img</a>` : ""
-                    } #po${data.user_hash} \ncontent${data.content.replace(/<[^>]+>/g, "")
+                    } #po${data.user_hash} \n${data.content.replace(/<[^>]+>/g, "")
                       .replace(
                         /&gt;&gt;No\.(\d+)/g,
                         `<a href="https://www.nmbxd1.com/Home/Forum/ref?id=$1">>>No.$1</a>`
