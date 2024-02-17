@@ -31,17 +31,7 @@ export async function telegraph(item) {
     return telegraph.error;
   } else {
     console.log(telegraph);
-    try {
-      // get index in sub
-      let sub = JSON.parse(await KV.get("sub"));
-      let index = sub.findIndex(e => e.id === item.id);
-      sub[index].telegraphUrl = telegraph.result.url;
-      await KV.put("sub", JSON.stringify(sub));
-    } catch (err) {
-      console.log(err);
-      return `<a href="${telegraph.result.url}">Tg</a> | Error ${err.message} \n${err.stack}`;
-    }
-    return `<a href="${telegraph.result.url}">Tg</a>`;
+    return telegraph.result.url;
   }
 }
 
@@ -109,7 +99,7 @@ export async function editTelegraph(item) {
       if (editStatus.ok === false) {
         return editStatus.error;
       } else {
-        return `<a href="${telegraphUrl}">Tg</a>`;
+        return telegraphUrl
       }
     } else if (newNodeSize < 31 * 1024) {
       // get the Node of text "上一次同步 <a href=telegraphUrl>telegraphUrl</a> "
@@ -127,22 +117,8 @@ export async function editTelegraph(item) {
       ]
       console.log(`TextToAddNode: ${TextToAddNode}`);
       let node = TextToAddNode.concat(newNode);
-      let success, url = await sendTelegraph(node, title, writer);
-      if (success) {
-        try {
-          // get index in sub
-          let sub = JSON.parse(await KV.get("sub"));
-          let index = sub.findIndex(e => e.id === item.id);
-          sub[index].telegraphUrl = telegraph.result.url;
-          await KV.put("sub", JSON.stringify(sub));
-        } catch (err) {
-          console.log(err);
-          return `<a href="${telegraph.result.url}">Tg</a> | Error ${err.message} \n${err.stack}`;
-        }
-        return `<a href="${telegraph.result.url}">Tg</a>`;
-      } else {
-        return url;
-      }
+      let url = await sendTelegraph(node, title, writer);
+      return url;
     } else {
       // split the newNode into two parts or more
       let nodes = [];
@@ -168,24 +144,10 @@ export async function editTelegraph(item) {
       // send a new telegraph
       let message2send = `上一次同步：<a href="${telegraphUrl}">${telegraphUrl}</a>`;
       for (let n of nodes) {
-        let success, url = await sendTelegraph(n, title, writer);
-        if (success) {
-          try {
-            // get index in sub
-            let sub = JSON.parse(await KV.get("sub"));
-            let index = sub.findIndex(e => e.id === item.id);
-            sub[index].telegraphUrl = telegraph.result.url;
-            await KV.put("sub", JSON.stringify(sub));
-          } catch (err) {
-            console.log(err);
-            return `<a href="${telegraph.result.url}">Tg</a> | Error ${err.message} \n${err.stack}`;
-          }
-          return `<a href="${telegraph.result.url}">Tg</a>`;
-        } else {
-          return url;
-        }
+        let url = await sendTelegraph(n, title, writer);
+        return url;
       }
-      return `<a href="${telegraph.result.url}">Tg</a>`;
+      return url
     }
   }
 }
@@ -212,8 +174,8 @@ export async function sendTelegraph(node, title, writer) {
   });
   const telegraph = await getTelegraph.json();
   if (telegraph.ok === false) {
-    return { success: false, url: telegraph.error };
+    return telegraph.error;
   } else {
-    return { success: true, url: telegraph.result.url };
+    return telegraph.result.url;
   }
 }

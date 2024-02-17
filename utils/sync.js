@@ -186,10 +186,18 @@ async function sendPassage(replies, id, page, reply, telegraphUrl, sub, index) {
   item.content = content;
   console.log("item: ");
   console.log(item);
-  let telegram_html = await editTelegraph(item);
-  console.log("telegram_html: ");
-  console.log(telegram_html);
-  sub[index].SyncTelegraphUrl = telegram_html.split(`"`)[1].split(`"`)[0];
+  let telegram_url = await editTelegraph(item);
+  console.log(`telegram_url: ${telegram_url}`);
+  // 如果return的不含https, 则说明出错了,直接插入到content中
+  let telegram_html = `<a href="${telegram_url}">tg</a>`;
+  // 如果不止一个链接，telegram_url是一个数组
+  if (Array.isArray(telegram_url)) {
+    telegram_html = telegram_url.map((e, index) => `<a href="${e}">tg${index + 1}</a>`).join(" | ");
+  }
+  if (telegram_url.indexOf("https") === -1) {
+    telegram_html = `<b>同步失败</b> | ${telegram_url}`;
+  }
+  sub[index].SyncTelegraphUrl = telegram_url;
   sub[index].SyncedReplyCount = (page - 1) * 19 + replies.length;
   console.log(`sub[index]: ${JSON.stringify(sub[index])}`);
 } catch (err) {
