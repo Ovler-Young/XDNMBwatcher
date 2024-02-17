@@ -125,10 +125,8 @@ export async function editTelegraph(item) {
             ]
         }
       ]
-      const TextToAddNodeJson = TextToAddNode.json();
-      console.log(`TextToAddNodeJson: ${TextToAddNodeJson}`);
-      // add the TextToAddNodeJson to the beginning of the newNode
-      let node = TextToAddNodeJson.concat(newNode);
+      console.log(`TextToAddNode: ${TextToAddNode}`);
+      let node = TextToAddNode.concat(newNode);
       let success, url = await sendTelegraph(node, title, writer);
       if (success) {
         try {
