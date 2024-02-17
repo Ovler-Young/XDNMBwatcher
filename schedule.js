@@ -140,6 +140,8 @@ export async function handleScheduled(event) {
             let lastUpdateTimeInFeed = feed[i].now;
             for (let j = 0; j < replies.length; j++) {
               let data = replies[j];
+              added += 1;
+              console.log(data)
               if (
                 data.user_hash === sub[index].po ||
                 (sub[index].IsSingle === false &&
@@ -147,11 +149,11 @@ export async function handleScheduled(event) {
               ) {
                 content_all_length += byteLength(data.content);
                 if (content_all_length > 30 * 1024) {
+                  added -= 1;
                   break;
                 }
                 content_all = addContent(id, data, content_all);
                 unread += 1;
-                added += 1;
                 lastUpdateTimeInFeed = data.now;
               } else if ( byteLength(data.content) > 300) {
                 // filter thee "催更" "F5" "gkdgkd"
@@ -191,7 +193,7 @@ export async function handleScheduled(event) {
               console.log(`send_message_id: ${sub[index].send_message_id}`);
             }
             sub[index].errorTimes = 0;
-            sub[index].ReplyCount = feed[i].ReplyCount;
+            sub[index].ReplyCount = parseInt(sub[index].ReplyCount) + added;
             console.log("added: " + added);
             sub[index].recent_replies = feed[i].recent_replies;
             console.log("sub[index].ReplyCount: " + sub[index].ReplyCount);
