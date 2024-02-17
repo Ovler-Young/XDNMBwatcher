@@ -118,7 +118,7 @@ export async function handleScheduled(event) {
             let id = feed[i].id;
             let NewReplyCount = feed[i].reply_count - sub[index].ReplyCount;
             let from = Math.floor((sub[index].ReplyCount - 1) / 19) + 1;
-            let to = Math.floor((feed[i].reply_count - 1) / 19) + 1;
+            let to = Math.min(5 + from, Math.floor((feed[i].reply_count - 1) / 19) + 1);
             let replies = [];
             for (let j = from; j <= to; j++) {
               let res = await cFetch(
@@ -130,6 +130,7 @@ export async function handleScheduled(event) {
               replies = replies.concat(data.Replies);
             }
             // sort replies by id and only keep the biggest NewReplyCount replies
+            replies = replies.filter(reply => reply.id !== 9999999);
             replies = replies.sort((a, b) => a.id - b.id).slice(-NewReplyCount);
             console.log(replies);
             let content_all = [];
@@ -137,7 +138,7 @@ export async function handleScheduled(event) {
             let content_all_length = 0;
             let added = 0;
             let lastUpdateTimeInFeed = feed[i].now;
-            for (let j = 0; j < NewReplyCount; j++) {
+            for (let j = 0; j < replies.length; j++) {
               let data = replies[j];
               if (
                 data.user_hash === sub[index].po ||
