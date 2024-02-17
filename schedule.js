@@ -187,7 +187,7 @@ export async function handleScheduled(event) {
                 AutoRemove: 1,
                 telegraphUrl: sub[index].telegraphUrl
               };
-              sub[index].send_message_id = await reply(sub[index], item);
+              sub[index] = await reply(sub[index], item);
               sub[index].lastUpdateTime = lastUpdateTimeInFeed; // feed[i].now is the time of the creation of the first reply
               u += sub[index].telegraph ? 3 : 1;
               console.log(`send_message_id: ${sub[index].send_message_id}`);

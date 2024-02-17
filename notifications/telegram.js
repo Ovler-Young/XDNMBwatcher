@@ -17,6 +17,7 @@ export async function reply(feed, item) {
   if (feed.telegraph) {
     if (item.content) {
       let telegram_url = await editTelegraph(item);
+      feed.telegraphUrl = telegram_url;
       console.log(`telegram_url: ${telegram_url}`);
       // 如果return的不含https, 则说明出错了,直接插入到content中
       let telegram_html = `<a href="${telegram_url}">tg</a>`;
@@ -42,7 +43,8 @@ export async function reply(feed, item) {
   let send = await telegram.sendMessage(item.SendTo, message, {
     parse_mode: "HTML"
   });
-  return send.message_id;
+  feed.send_message_id = send.message_id;
+  return feed;
 }
 export async function replyWhenError(feed, err) {
   const telegram = new Telegram(config.TG_TOKEN);
