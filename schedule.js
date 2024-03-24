@@ -5,7 +5,7 @@ const {
   sendNotice
 } = require(`./notifications/${mode}`);
 import { cFetch, addContent } from "./utils/util";
-import { Subscribe, Unsubscribe, MarkAsRead } from "./utils/functions";
+import { Subscribe, Unsubscribe, MarkAsRead,timeDifference } from "./utils/functions";
 import { byteLength } from "./utils/sync";
 
 export async function handleScheduled(event) {
@@ -155,19 +155,32 @@ export async function handleScheduled(event) {
                 content_all = addContent(id, data, content_all);
                 unread += 1;
                 lastUpdateTimeInFeed = data.now;
-              } else if ( byteLength(data.content) > 300) {
-                // filter thee "催更" "F5" "gkdgkd"
-                if ( (data.content.includes("催更") || data.content.includes("F5") || data.content.includes("gkdgkd") || data.content.includes("把po给我挖出来") || data.content.includes("魂兮归来") )) {
-                  // do nothing
-                } else {
-                  let message = `怀疑是po的回复 #id${id} #reply${data.id} ${data.ext ? `<a href="https://image.nmb.best/image/${data.img}${data.ext}1">img</a>` : ""
-                    } #po${data.user_hash} \n${data.content.replace(/<[^>]+>/g, "")
-                      .replace(
-                        /&gt;&gt;No\.(\d+)/g,
-                        `<a href="https://www.nmbxd1.com/Home/Forum/ref?id=$1">>>No.$1</a>`
-                      )} \n\n如的确是，请回复 <code>/po ${id} ${data.user_hash} </code> 以添加订阅`;
-                  sendNotice(message);
-                  }
+              } else if (
+                byteLength(data.content) > 300 &&
+                timeDifference(data.now, sub[index].lastUpdateTime) <
+                  14 * 24 * 60 * 60 &&
+                !(
+                  data.content.includes("催更") ||
+                    data.content.includes("F5") ||
+                    data.content.includes("gkdgkd") ||
+                    data.content.includes("把po给我挖出来") ||
+                    data.content.includes("魂兮归来") ||
+                    data.content.includes("求你了再写")
+                )
+              ) {
+                let message = `怀疑是po的回复 #id${id} #reply${data.id} ${
+                  data.ext
+                    ? `<a href="https://image.nmb.best/image/${data.img}${data.ext}1">img</a>`
+                    : ""
+                } #po${data.user_hash} \n${data.content
+                  .replace(/<[^>]+>/g, "")
+                  .replace(
+                    /&gt;&gt;No\.(\d+)/g,
+                    `<a href="https://www.nmbxd1.com/Home/Forum/ref?id=$1">>>No.$1</a>`
+                  )} \n\n如的确是，请回复 <code>/po ${id} ${
+                  data.user_hash
+                } </code> 以添加订阅`;
+                sendNotice(message);
               }
             }
             let content_join = content_all.join("<br/>");

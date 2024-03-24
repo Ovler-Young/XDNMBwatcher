@@ -202,3 +202,50 @@ export async function MarkAsRead(id) {
   }
   return { success, msg };
 }
+
+function parseGivenTime(givenTime) {
+  // Remove the part in parentheses
+  givenTime = givenTime.replace(/\(.*?\)/g, ' ');
+
+  // Split the string into an array
+  let dateTime = givenTime.split(/[- :]/);
+  let hour = parseInt(dateTime[3]) - 8;
+  if (hour < 0) {
+    hour += 24;
+  }
+  
+  // Create a new Date object
+  let date = new Date(
+    Date.UTC(
+      parseInt(dateTime[0]), // year
+      parseInt(dateTime[1]) - 1, // month, subtract 1 because months are 0-indexed in JavaScript
+      parseInt(dateTime[2]), // day
+      hour, // hour
+      parseInt(dateTime[4]), // minute
+      parseInt(dateTime[5]) // second
+    )
+  );
+
+  // If the hour subtraction resulted in a negative number, adjust the date
+  if (date.getUTCDate() < parseInt(dateTime[2])) {
+    date.setUTCDate(date.getUTCDate() + 1);
+  }
+
+  return date;
+}
+
+export function timeDifference(givenTime1, givenTime2) {
+  let dataDate = parseGivenTime(givenTime1);
+  let timeDiff = 0;
+  if (!givenTime2) {
+    let now = new Date(); 
+    timeDiff = now.getTime() - dataDate.getTime();
+  } else {
+    let dataDate2 = parseGivenTime(givenTime2);
+    timeDiff = dataDate2.getTime() - dataDate.getTime();
+  }
+  if (timeDiff < 0) {
+    timeDiff = -timeDiff;
+  }
+  return timeDiff;
+}
