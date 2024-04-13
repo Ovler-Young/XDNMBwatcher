@@ -41,7 +41,8 @@ export async function editTelegraph(item) {
   if (
     telegraphUrl === null ||
     telegraphUrl === undefined ||
-    telegraphUrl === ""
+    telegraphUrl === "" ||
+    telegraphUrl.indexOf("https") === -1
   ) {
     console.log("telegraphUrl is null");
     return await telegraph(item);
