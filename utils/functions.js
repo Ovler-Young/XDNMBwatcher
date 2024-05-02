@@ -68,6 +68,10 @@ export async function Subscribe(id) {
   let sub = JSON.parse(SubRaw);
   let success = true;
   let msg = "";
+  if (id === undefined) {
+    success = false;
+    msg = "未传入id";
+  }
   try {
     const resp = await cFetch(`https://api.nmb.best/Api/po?id=${id}`);
     if (resp.status === 200) {

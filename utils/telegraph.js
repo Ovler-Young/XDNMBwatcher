@@ -61,7 +61,7 @@ export async function editTelegraph(item) {
       }
     );
     const nodesJson = await getNode.json();
-    const oldNode = nodesJson.result.content;
+    const oldNode = nodesJson.result.content || [];
     let nodeSize = byteLength(JSON.stringify(oldNode));
     console.log(`oldNode size: ${nodeSize} = ${nodeSize / 1024}KB`);
     const getNode2 = await fetch(`${config.PARSE_URL}/api/html2node`, {
