@@ -29,9 +29,6 @@ const errorHandler = error =>
   new Response(error.message || "Server Error", {
     status: error.status || 200
   });
-router.get("/", async () => {
-  return new Response("Only the wise can see this page", { status: 200 });
-});
 router.get(`/${secret_path}`, async (req, e) => {
   const data = await KV.get("sub");
   if (!data) {
@@ -573,17 +570,97 @@ router.get("*", async (req, e) => {
   try {
     return await getAssetFromKV(e);
   } catch (err) {
-    return new Response(
-      err.message,
-      { status: 200 },
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, HEAD",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
+    try{
+      const url = new URL(request.url);
+
+      // Directly fetch and return for specific paths without modifying cookies
+      if (url.pathname.startsWith('/Public/') || url.pathname === '/favicon.ico' || url.pathname.startsWith('/Admin')) {
+        // Update hostname to the target domain
+        url.hostname = 'www.nmbxd1.com';
+        const directRequest = new Request(url.toString(), request);
+        return fetch(directRequest);
       }
-    );
+    
+      // Handle /Api/ requests with specific requirements
+      if (url.pathname.startsWith('/Api/')) {
+        // Update hostname to api.nmb.best
+        url.hostname = 'api.nmb.best';
+    
+        // Retrieve or fetch PHPSESSID
+        let PHPSESSID = await KV.get("PHPSESSID");
+        if (!PHPSESSID) {
+          PHPSESSID = await fetchPHPSESSID();
+          await KV.put("PHPSESSID", PHPSESSID, { expirationTtl: 3600 }); // Store with 1 hour expiration
+        }
+    
+        // Clone the request to modify headers
+        const newRequestHeaders = new Headers(request.headers);
+        newRequestHeaders.set('cookie', `userhash=${USERHASH}; PHPSESSID=${PHPSESSID};`);
+    
+        // Create a new request with modified headers
+        const modifiedRequest = new Request(url.toString(), {
+          method: request.method,
+          headers: newRequestHeaders,
+          body: request.body,
+          redirect: request.redirect
+        });
+    
+        // Fetch the response
+        const response = await fetch(modifiedRequest);
+    
+        // Check if the response is JSON and beautify it
+        if (response.headers.get('content-type')?.includes('application/json')) {
+          const json = await response.json();
+          const beautifiedJson = JSON.stringify(json, null, 2); // Beautify with 2 spaces indentation
+              // Decode HTML entities in the JSON string
+          const decodedJson = beautifiedJson.replace(/&bull;/g, '•').replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&');
+          return new Response(decodedJson, {
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+    
+        // Return the original response if not JSON
+        return response;
+      }
+    
+      // For all other paths, handle userhash and PHPSESSID
+      url.hostname = 'www.nmbxd1.com';
+      
+      // Retrieve or fetch PHPSESSID
+      let PHPSESSID = await KV.get("PHPSESSID");
+      if (!PHPSESSID) {
+        PHPSESSID = await fetchPHPSESSID();
+        await KV.put("PHPSESSID", PHPSESSID, { expirationTtl: 3600 }); // Store with 1 hour expiration
+      }
+    
+      // Clone the request to modify headers
+      const newRequestHeaders = new Headers(request.headers);
+      newRequestHeaders.set('cookie', `userhash=${USERHASH}; PHPSESSID=${PHPSESSID};`);
+      
+      // Create a new request with modified headers
+      const modifiedRequest = new Request(url.toString(), {
+        method: request.method,
+        headers: newRequestHeaders,
+        body: request.body,
+        redirect: request.redirect
+      });
+    
+      // Fetch and return the response
+      return fetch(modifiedRequest);
+    }
+    catch (err) {
+      return new Response(
+        err.message,
+        { status: 200 },
+        {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, HEAD",
+            "Access-Control-Allow-Headers": "Content-Type"
+          }
+        }
+      );
+    }
   }
 });
 addEventListener("fetch", e => {
@@ -592,3 +669,10 @@ addEventListener("fetch", e => {
 addEventListener("scheduled", async event => {
   event.waitUntil(handleScheduled(event));
 });
+
+
+async function fetchPHPSESSID() {
+  const response = await fetch("https://www.nmbxd1.com/Forum", { method: "GET" });
+  const cookie = response.headers.get("set-cookie");
+  return cookie.split(";")[0].split("=")[1];
+}
