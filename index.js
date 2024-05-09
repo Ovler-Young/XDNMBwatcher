@@ -571,6 +571,7 @@ router.get("*", async (req, e) => {
     return await getAssetFromKV(e);
   } catch (err) {
     try{
+      const request = e.request;
       const url = new URL(request.url);
 
       // Directly fetch and return for specific paths without modifying cookies
