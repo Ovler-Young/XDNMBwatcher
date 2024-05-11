@@ -415,7 +415,7 @@ export default function Test() {
                   </Td>
                   <Td>
                     <Link href={feed.url} fontSize="s" fontWeight="light">
-                      {feed.po.substring(0, 3)}
+                      {feed.po ? feed.po.substring(0, 3) : "Unknown"}
                     </Link>
                   </Td>
                   <Td>
