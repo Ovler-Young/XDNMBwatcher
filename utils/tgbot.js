@@ -428,10 +428,10 @@ export async function botLatest(ctx) {
   let time = end - start;
   let net = middle - start;
   let proc = end - middle;
-  let msg = `获取最新串耗时：${time}ms，网络请求耗时：${net}ms，处理耗时：${proc}ms`;
+  let msg = `耗时：${time}ms`;
   msg += `\n最新串id：${max_id}`;
   console.log("Call to doSomething took " + time + " milliseconds.");
-  ctx.reply(msg, {
+  await ctx.reply(msg, {
     parse_mode: "HTML",
     reply_to_message_id: ctx.update.message.message_id
   });
@@ -648,7 +648,7 @@ export async function botRoll(ctx) {
         .toISOString()
         .substring(11, 19)} 时，最新串ID为 ${max_id}\n`;
       continues = false;
-      ctx.reply(msg, {
+      await ctx.reply(msg, {
         parse_mode: "HTML",
         reply_to_message_id: ctx.update.message.message_id
       });
@@ -660,12 +660,12 @@ export async function botRoll(ctx) {
       if (Reply_status) {
         let my_id = await Check(id, "r");
         console.log(`my_id2342456756: ${my_id}`);
-        ctx.reply(`回复成功！耗时 ${time}ms\n帖子ID：${id}\n串ID：${my_id}\n`, {
+        await ctx.reply(`回复成功！耗时 ${time}ms\n帖子ID：${id}\n串ID：${my_id}\n`, {
           parse_mode: "HTML",
           reply_to_message_id: ctx.update.message.message_id
         });
       } else {
-        ctx.reply(
+        await ctx.reply(
           `发送失败！\n帖子ID：${id}\n直达链接：https://www.nmbxd1.com/t/${id}`,
           {
             parse_mode: "HTML",
@@ -678,7 +678,7 @@ export async function botRoll(ctx) {
     if (web_request_count > try_num) {
       msg += `抽取失败！\n`;
       msg += `已尝试 ${try_num} 次，最新串ID：${max_id}\n`;
-      ctx.reply(msg, {
+      await ctx.reply(msg, {
         parse_mode: "HTML",
         reply_to_message_id: ctx.update.message.message_id
       });
