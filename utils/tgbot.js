@@ -510,7 +510,7 @@ export async function botPO(ctx) {
         try {
           sub[find].IsSingle = false;
           if (sub[find].writer === undefined) {
-            sub[find].writer = [po];
+            sub[find].writer = [po, sub[find].po];
             sub[find].po = po;
             await KV.put("sub", JSON.stringify(sub));
             await ctx.reply(`成功添加 ${po} 至 ${id}\n`, {
