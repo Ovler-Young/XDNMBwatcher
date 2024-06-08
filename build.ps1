@@ -28,6 +28,7 @@ if (Test-Path $BUILD_FILE) {
 } else {
     Write-Output "First time building..."
     Set-Location $DIR ; pnpm install ; pnpm build
+    Set-Location $PSScriptRoot
     $dir_mod_time = (Get-Item $DIR).LastWriteTimeUtc.Ticks
     [IO.File]::WriteAllText($BUILD_FILE, $dir_mod_time)
 }
