@@ -145,7 +145,8 @@ export async function handleScheduled(event) {
               if (
                 data.user_hash === sub[index].po ||
                 (sub[index].IsSingle === false &&
-                  sub[index].writer.includes(data.user_hash))
+                  sub[index].writer.includes(data.user_hash)) ||
+                data.user_hash in sub[index].writer
               ) {
                 content_all_length += byteLength(data.content);
                 if (content_all_length > 30 * 1024) {
