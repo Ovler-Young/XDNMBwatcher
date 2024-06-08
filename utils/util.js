@@ -101,11 +101,11 @@ const addContent = (id, data, content_all) => {
   }
   if (data.title !== "" && data.title !== "无标题") {
     content_all.push(
-      `<br/><a href="https://www.nmbxd1.com/t/${id}?r=${data.id}">${data.title}</a> | PO: ${data.user_hash} | ${data.now}`
+      `<br/><a href="https://nmbproxy.gcy.workers.dev/t/${id}?r=${data.id}">${data.title}</a> | PO: ${data.user_hash} | ${data.now}`
     );
   } else {
     content_all.push(
-      `<br/><a href="https://www.nmbxd1.com/t/${id}?r=${data.id}">#${data.id}</a> | PO: ${data.user_hash} | ${data.now}`
+      `<br/><a href="https://nmbproxy.gcy.workers.dev/t/${id}?r=${data.id}">#${data.id}</a> | PO: ${data.user_hash} | ${data.now}`
     );
   }
   // if so, we need to get the content
@@ -114,7 +114,7 @@ const addContent = (id, data, content_all) => {
       .replace(/<[^>]+>/g, "")
       .replace(
         /&gt;&gt;No\.(\d+)/g,
-        `<a href="https://www.nmbxd1.com/Home/Forum/ref?id=$1">>>No.$1</a>`
+        `<a href="https://nmbproxy.gcy.workers.dev/Home/Forum/ref?id=$1">>>No.$1</a>`
       )
   ); //https://www.nmbxd1.com/Home/Forum/ref?id=57858642
   // if there is an image, we need to add it to the content

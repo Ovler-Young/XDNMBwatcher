@@ -167,23 +167,20 @@ router.get(`/${secret_path}/jumpread`, async req => {
     sub[index].LastRead = sub[index].ReplyCount;
   }
   let lastreadto = sub[index].LastRead;
-  console.log(lastreadto);
-  sub[index].LastRead = sub[index].ReplyCount;
-  await KV.put("sub", JSON.stringify(sub));
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
     let page = Math.floor((lastreadto - 1) / 9) + 1;
     console.log(page);
     console.log("mobile");
     return Response.redirect(
-      `https://www.nmbxd1.com/m/t/${id}?page=${page}`,
+      `https://nmbproxy.gcy.workers.dev/m/t/${id}?page=${page}`,
       307
     );
   }
   let page = Math.floor((lastreadto - 1) / 19) + 1;
   console.log(page);
   console.log("pc");
-  return Response.redirect(`https://www.nmbxd1.com/t/${id}?page=${page}`, 307);
+  return Response.redirect(`https://nmbproxy.gcy.workers.dev/t/${id}?page=${page}`, 307);
 });
 router.get(`/${secret_path}/jumplast`, async req => {
   const id = req.url.split("?id=")[1];
@@ -196,9 +193,6 @@ router.get(`/${secret_path}/jumplast`, async req => {
   if (index === -1) {
     return errorResponse("Please verify your input!");
   }
-  sub[index].unread = 0;
-  sub[index].LastRead = sub[index].ReplyCount;
-  await KV.put("sub", JSON.stringify(sub));
   let lastreadto = sub[index].LastRead;
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
@@ -206,14 +200,14 @@ router.get(`/${secret_path}/jumplast`, async req => {
     console.log(page);
     console.log("mobile");
     return Response.redirect(
-      `https://www.nmbxd1.com/m/t/${id}?page=${page}`,
+      `https://nmbproxy.gcy.workers.dev/m/t/${id}?page=${page}`,
       307
     );
   }
   let page = Math.floor((lastreadto - 1) / 19) + 1;
   console.log(page);
   console.log("pc");
-  return Response.redirect(`https://www.nmbxd1.com/t/${id}?page=${page}`, 307);
+  return Response.redirect(`https://nmbproxy.gcy.workers.dev/t/${id}?page=${page}`, 307);
 });
 router.get(`/${secret_path}/subscribe`, async req => {
   const uuid = req.url.split("?uuid=")[1];
@@ -535,7 +529,7 @@ router.get("/removelongunupdate", async (req, e) => {
           sub[i].title +
           "\n该串长时间未更新，已自动取消订阅，最新id为" +
           last_reply +
-          "\nhttps://www.nmbxd1.com/t/" +
+          "\nhttps://nmbproxy.gcy.workers.dev/t/" +
           sub[i].id
       );
       reqcount++;

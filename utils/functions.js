@@ -122,7 +122,7 @@ export async function Subscribe(id) {
         sub.push(feed);
         await KV.put("sub", JSON.stringify(sub));
         console.log(`ID: ${id} subscribed`);
-        msg = `#添加订阅 #id${feed.id} <b> ${feed.title} </b>\n<a href="https://www.nmbxd1.com/t/${feed.id}">点击查看</a>`;
+        msg = `#添加订阅 #id${feed.id} <b> ${feed.title} </b>\n<a href="https://nmbproxy.gcy.workers.dev/t/${feed.id}">点击查看</a>`;
         // https://api.nmb.best/Api/addFeed?uuid=xxx&tid=xxx
         const uuid = await KV.get("uuid");
         const addFeedres = await fetch(
@@ -137,7 +137,7 @@ export async function Subscribe(id) {
         }
         // "\u8ba2\u9605\u5927\u6210\u529f\u2192_\u2192" (订阅大成功→_→) -> 订阅大成功→_→
         else if (addFeedresText === "订阅大成功→_→") {
-          msg = `#新订阅 #id${feed.id} <b> ${feed.title} </b>\n<a href="https://www.nmbxd1.com/t/${feed.id}">点击查看</a>`;
+          msg = `#新订阅 #id${feed.id} <b> ${feed.title} </b>\n<a href="https://nmbproxy.gcy.workers.dev/t/${feed.id}">点击查看</a>`;
         } else {
           // error
           // return the error message
