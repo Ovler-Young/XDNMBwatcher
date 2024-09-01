@@ -4,13 +4,12 @@ const {
   replyWhenError,
   sendNotice
 } = require(`./notifications/${mode}`);
-import { cFetch, addContent } from "./utils/util";
+import { cFetch, addContent, getKVsub } from "./utils/util";
 import { Subscribe, Unsubscribe, MarkAsRead,timeDifference } from "./utils/functions";
 import { byteLength } from "./utils/sync";
 
 export async function handleScheduled(event) {
-  const SubRaw = await KV.get("sub");
-  let sub = JSON.parse(SubRaw);
+  let sub = await getKVsub();
   const uuid = await KV.get("uuid");
   let idToCheck = [];
   // idToCheck = sub.map(item => item.id); only those active

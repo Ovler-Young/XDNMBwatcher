@@ -1,7 +1,7 @@
 import { GetIDctx, Subscribe, Unsubscribe, ChangeSendto } from "./functions";
 import { html } from "./html";
 import { config } from "../config.js";
-import { cFetch } from "./util.js";
+import { cFetch, getKVsub } from "./util.js";
 import { syncToTelegraph } from "./sync.js";
 
 export async function botBind(ctx) {
@@ -12,8 +12,7 @@ export async function botBind(ctx) {
     });
     return;
   }
-  const SubRaw = await KV.get("sub");
-  let sub = JSON.parse(SubRaw);
+  let sub = await getKVsub();
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅");
   } else {
@@ -222,8 +221,7 @@ export async function botRetitle(ctx) {
     });
     return;
   }
-  const SubRaw = await KV.get("sub");
-  let sub = JSON.parse(SubRaw);
+  let sub = await getKVsub();
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
       reply_to_message_id: ctx.update.message.message_id
@@ -260,8 +258,7 @@ export async function botTelegraph(ctx) {
     });
     return;
   }
-  const SubRaw = await KV.get("sub");
-  let sub = JSON.parse(SubRaw);
+  let sub = await getKVsub();
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
       reply_to_message_id: ctx.update.message.message_id
@@ -481,8 +478,7 @@ export async function botPO(ctx) {
     });
     return;
   }
-  const SubRaw = await KV.get("sub");
-  let sub = JSON.parse(SubRaw);
+  let sub = await getKVsub();
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
       reply_to_message_id: ctx.update.message.message_id
@@ -553,8 +549,7 @@ export async function botMute(ctx) {
     });
     return;
   }
-  const SubRaw = await KV.get("sub");
-  let sub = JSON.parse(SubRaw);
+  let sub = await getKVsub();
   if (sub.length == 0) {
     await ctx.reply("还没有进行过订阅", {
       reply_to_message_id: ctx.update.message.message_id

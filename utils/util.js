@@ -126,4 +126,13 @@ const addContent = (id, data, content_all) => {
   return content_all;
 };
 
-export { cFetch, errorResponse, successResponse, addContent };
+const getKVsub = async () => {
+  const sub = await KV.get("sub");
+  if (sub === null) {
+    await KV.put("sub", JSON.stringify([]));
+    return {};
+  }
+  return JSON.parse(sub);
+}
+
+export { cFetch, errorResponse, successResponse, addContent, getKVsub };
