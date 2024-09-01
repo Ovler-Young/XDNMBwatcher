@@ -152,7 +152,8 @@ export async function handleScheduled(event) {
                   added -= 1;
                   break;
                 }
-                content_all = addContent(id, data, content_all);
+                page = Math.floor((j + sub[index].ReplyCount) / 19) + 1;
+                content_all = addContent(id, data, content_all, page);
                 unread += 1;
                 lastUpdateTimeInFeed = data.now;
               } else if (

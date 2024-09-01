@@ -95,19 +95,18 @@ const successResponse = message => {
   );
 };
 
-const addContent = (id, data, content_all) => {
+const addContent = (id, data, content_all, page = 0) => {
   if (data.id === 9999999) {
     return content_all;
   }
-  if (data.title !== "" && data.title !== "无标题") {
-    content_all.push(
-      `<br/><a href="https://nmbproxy.gcy.workers.dev/t/${id}?r=${data.id}">${data.title}</a> | PO: ${data.user_hash} | ${data.now}`
-    );
-  } else {
-    content_all.push(
-      `<br/><a href="https://nmbproxy.gcy.workers.dev/t/${id}?r=${data.id}">#${data.id}</a> | PO: ${data.user_hash} | ${data.now}`
-    );
+  const titleLink = data.title !== "" && data.title !== "无标题" ? data.title : `#${data.id}`;
+  let jumptopage = "";
+  if (page !== 0) {
+    jumptopage = `|<a href="https://nmbproxy.gcy.workers.dev/t/${id}?page=${page}">PC</a> | <a href="https://nmbproxy.gcy.workers.dev/t/${id}?page=${Math.floor((page-1)*19/9+1)}">MB</a>`;
   }
+  content_all.push(
+    `<br/><a href="https://nmbproxy.gcy.workers.dev/t/${id}?r=${data.id}">${titleLink}</a> | PO: ${data.user_hash} | ${data.now} ${jumptopage}`
+  );
   // if so, we need to get the content
   content_all.push(
     data.content

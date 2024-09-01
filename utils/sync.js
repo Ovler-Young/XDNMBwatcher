@@ -174,7 +174,7 @@ async function sendPassage(replies, id, page, reply, telegraphUrl, sub, index) {
   for (let i = 0; i < replies.length; i++) {
     let data = replies[i];
     let rep_id = data.id;
-    content_all = addContent(rep_id, data, content_all);
+    content_all = addContent(rep_id, data, content_all, page);
   }
   content = content_all.join("<br/>");
   let item = {};
