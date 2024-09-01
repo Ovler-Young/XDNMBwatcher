@@ -8,5 +8,6 @@ export const config = {
   SECRET_PATH,
   COOKIES,
   BASE_URL,
+  FRONTEND_URL : FRONTEND_URL || "https://www.nmbxd1.com",
   ...require(`./config/${mode}`).default
 };
