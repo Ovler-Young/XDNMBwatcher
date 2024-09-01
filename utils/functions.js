@@ -84,6 +84,7 @@ export async function Subscribe(id) {
       feed.id = id.toString();
       feed.url = `https://www.nmbxd1.com/t/${id}`;
       feed.po = data.user_hash;
+      feed.writer = [data.user_hash];
       // feed.title is data.title if it is not "无标题", otherwise feed.title is first line of data.content
       if (data.title === "无标题" || data.title === "") {
         let title = "";
