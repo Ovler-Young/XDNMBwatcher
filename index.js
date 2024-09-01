@@ -169,14 +169,14 @@ router.get(`/${secret_path}/jumpread`, async req => {
     console.log(page);
     console.log("mobile");
     return Response.redirect(
-      `https://nmbproxy.gcy.workers.dev/m/t/${id}?page=${page}`,
+      `${config.FRONTEND_URL}/m/t/${id}?page=${page}`,
       307
     );
   }
   let page = Math.floor((lastreadto - 1) / 19) + 1;
   console.log(page);
   console.log("pc");
-  return Response.redirect(`https://nmbproxy.gcy.workers.dev/t/${id}?page=${page}`, 307);
+  return Response.redirect(`${config.FRONTEND_URL}/t/${id}?page=${page}`, 307);
 });
 router.get(`/${secret_path}/jumplast`, async req => {
   const id = req.url.split("?id=")[1];
@@ -195,14 +195,14 @@ router.get(`/${secret_path}/jumplast`, async req => {
     console.log(page);
     console.log("mobile");
     return Response.redirect(
-      `https://nmbproxy.gcy.workers.dev/m/t/${id}?page=${page}`,
+      `${config.FRONTEND_URL}/m/t/${id}?page=${page}`,
       307
     );
   }
   let page = Math.floor((lastreadto - 1) / 19) + 1;
   console.log(page);
   console.log("pc");
-  return Response.redirect(`https://nmbproxy.gcy.workers.dev/t/${id}?page=${page}`, 307);
+  return Response.redirect(`${config.FRONTEND_URL}/t/${id}?page=${page}`, 307);
 });
 router.get(`/${secret_path}/subscribe`, async req => {
   const uuid = req.url.split("?uuid=")[1];
@@ -519,7 +519,8 @@ router.get("/removelongunupdate", async (req, e) => {
           sub[i].title +
           "\n该串长时间未更新，已自动取消订阅，最新id为" +
           last_reply +
-          "\nhttps://nmbproxy.gcy.workers.dev/t/" +
+          "\n" +
+          config.FRONTEND_URL +
           sub[i].id
       );
       reqcount++;

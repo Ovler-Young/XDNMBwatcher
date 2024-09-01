@@ -102,10 +102,10 @@ const addContent = (id, data, content_all, page = 0) => {
   const titleLink = data.title !== "" && data.title !== "无标题" ? data.title : `#${data.id}`;
   let jumptopage = "";
   if (page !== 0) {
-    jumptopage = `|<a href="https://nmbproxy.gcy.workers.dev/t/${id}?page=${page}">PC</a> | <a href="https://nmbproxy.gcy.workers.dev/t/${id}?page=${Math.floor((page-1)*19/9+1)}">MB</a>`;
+    jumptopage = `|<a href="${config.FRONTEND_URL}/t/${id}?page=${page}">PC</a> | <a href="${config.FRONTEND_URL}/t/${id}?page=${Math.floor((page-1)*19/9+1)}">MB</a>`;
   }
   content_all.push(
-    `<br/><a href="https://nmbproxy.gcy.workers.dev/t/${id}?r=${data.id}">${titleLink}</a> | PO: ${data.user_hash} | ${data.now} ${jumptopage}`
+    `<br/><a href="${config.FRONTEND_URL}/t/${id}?r=${data.id}">${titleLink}</a> | PO: ${data.user_hash} | ${data.now} ${jumptopage}`
   );
   // if so, we need to get the content
   content_all.push(
@@ -113,7 +113,7 @@ const addContent = (id, data, content_all, page = 0) => {
       .replace(/<[^>]+>/g, "")
       .replace(
         /&gt;&gt;No\.(\d+)/g,
-        `<a href="https://nmbproxy.gcy.workers.dev/Home/Forum/ref?id=$1">>>No.$1</a>`
+        `<a href="${config.FRONTEND_URL}/Home/Forum/ref?id=$1">>>No.$1</a>`
       )
   ); //https://www.nmbxd1.com/Home/Forum/ref?id=57858642
   // if there is an image, we need to add it to the content

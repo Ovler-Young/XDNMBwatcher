@@ -311,8 +311,8 @@ export default function Test() {
                           variant="ghost"
                           isChecked={feed.unread}
                           jump={feed.unread
-                            ? `https://nmbproxy.gcy.workers.dev/m/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 9 + 1)}`
-                            : `https://nmbproxy.gcy.workers.dev/m/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 9 + 1)}`
+                            ? `${config.FRONTEND_URL}/m/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 9 + 1)}`
+                            : `${config.FRONTEND_URL}/m/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 9 + 1)}`
                           }
                           onClick={handleUnread}
                         > {feed.unread}
@@ -322,8 +322,8 @@ export default function Test() {
                     <Button
                       id={feed.id}
                       url={feed.unread
-                        ? `https://nmbproxy.gcy.workers.dev/m/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 9 + 1)}`
-                        : `https://nmbproxy.gcy.workers.dev/m/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 9 + 1)}`
+                        ? `${config.FRONTEND_URL}/m/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 9 + 1)}`
+                        : `${config.FRONTEND_URL}/m/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 9 + 1)}`
                       }
                       variant="ghost"
                       isChecked={feed.unread}
@@ -422,8 +422,8 @@ export default function Test() {
                     <Button
                       id={feed.id}
                       url={feed.unread
-                        ? `https://nmbproxy.gcy.workers.dev/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 19 + 1)}`
-                        : `https://nmbproxy.gcy.workers.dev/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 19 + 1)}`
+                        ? `${config.FRONTEND_URL}/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 19 + 1)}`
+                        : `${config.FRONTEND_URL}/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 19 + 1)}`
                       }
                       variant="ghost"
                       fontWeight="light"
@@ -441,17 +441,17 @@ export default function Test() {
                   <Td>
                     <Link
                       href={String(feed.fid) === "19"
-                        ? "https://nmbproxy.gcy.workers.dev/f/小说"
+                        ? `${config.FRONTEND_URL}/f/小说`
                         : String(feed.fid) === "81"
-                        ? "https://nmbproxy.gcy.workers.dev/f/怪谈"
+                        ? `${config.FRONTEND_URL}/f/怪谈`
                         : String(feed.fid) === "111"
-                        ? "https://nmbproxy.gcy.workers.dev/f/跑团"
+                        ? `${config.FRONTEND_URL}/f/跑团`
                         : String(feed.fid) === "4"
-                        ? "https://nmbproxy.gcy.workers.dev/f/综合版1"
+                        ? `${config.FRONTEND_URL}/f/综合版1`
                         : String(feed.fid) === "20"
-                        ? "https://nmbproxy.gcy.workers.dev/f/都市怪谈"
+                        ? `${config.FRONTEND_URL}/f/都市怪谈`
                         : String(feed.fid) === "112"
-                        ? "https://nmbproxy.gcy.workers.dev/f/ROLL点"
+                        ? `${config.FRONTEND_URL}/f/ROLL点`
                         : feed.fid
                       }
                       fontSize="s"

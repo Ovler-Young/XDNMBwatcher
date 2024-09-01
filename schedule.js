@@ -87,7 +87,7 @@ export async function handleScheduled(event) {
         console.log(
           "找到" + feed[i].id + "，标题为‘" + title
         );
-        let message = `#重新订阅 #id${feed[i].id} <b> ${feed[i].title} </b>\n${title}\n<a href="https://nmbproxy.gcy.workers.dev/t/${feed[i].id}">点击查看</a>`;
+        let message = `#重新订阅 #id${feed[i].id} <b> ${feed[i].title} </b>\n${title}\n<a href="${config.FRONTEND_URL}/t/${feed[i].id}">点击查看</a>`;
         sendNotice(message);
         console.log("sendNotice with message: " + message);
       } else {
@@ -177,7 +177,7 @@ export async function handleScheduled(event) {
                   .replace(/<[^>]+>/g, "")
                   .replace(
                     /&gt;&gt;No\.(\d+)/g,
-                    `<a href="https://nmbproxy.gcy.workers.dev/Home/Forum/ref?id=$1">>>No.$1</a>`
+                    `<a href="${config.FRONTEND_URL}/Home/Forum/ref?id=$1">>>No.$1</a>`
                   )} \n\n如的确是，请回复 <code>/po ${id} ${
                   data.user_hash
                 } </code> 以添加订阅`;

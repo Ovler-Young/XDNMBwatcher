@@ -661,7 +661,7 @@ export async function botRoll(ctx) {
         });
       } else {
         await ctx.reply(
-          `发送失败！\n帖子ID：${id}\n直达链接：https://nmbproxy.gcy.workers.dev/t/${id}`,
+          `发送失败！\n帖子ID：${id}\n直达链接：${config.FRONTEND_URL}/t/${id}`,
           {
             parse_mode: "HTML",
             reply_to_message_id: ctx.update.message.message_id
