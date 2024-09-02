@@ -130,13 +130,18 @@ export async function handleScheduled(event) {
                 (PHPSESSID = PHPSESSID)
               );
               u += 1;
-              let data = await res.json();
+              data = await res.json();
               replies = replies.concat(data.Replies);
             }
             // sort replies by id and only keep the biggest NewReplyCount replies
             replies = replies.filter(reply => reply.id !== 9999999);
             replies = replies.sort((a, b) => a.id - b.id).slice(-NewReplyCount);
             let content_all = [];
+            if (sub[index].ReplyCount === 0) {
+              let page = 1;
+              content_all = addContent(id, data, content_all, page);
+            }
+
             let unread = 0;
             let content_all_length = 0;
             let added = 0;
