@@ -36,7 +36,7 @@ export async function reply(feed, item) {
   }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumpread?id=${feed.id}`}">Unread: ${
     feed.unread
   }</a>${
-    feed.lastUpdateTime ? `|${feed.lastUpdateTime.substring(14, 21)}` : ""
+    feed.lastUpdateTime ? `|${feed.lastUpdateTime}` : ""
   }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${feed.id}`}">Latest</a>`;
   let send = await telegram.sendMessage(item.SendTo, message, {
     parse_mode: "HTML"

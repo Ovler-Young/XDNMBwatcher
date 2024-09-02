@@ -122,7 +122,7 @@ export async function handleScheduled(event) {
             if (from === 0) {
               from = 1;
             }
-            let to = Math.min(5 + from, Math.floor((feed[i].reply_count - 1) / 19) + 1);
+            let to = Math.min(20 + from, Math.floor((feed[i].reply_count - 1) / 19) + 1);
             let replies = [];
             for (let j = from; j <= to; j++) {
               let res = await cFetch(
@@ -187,7 +187,6 @@ export async function handleScheduled(event) {
               }
             }
             let content_join = content_all.join("<br/>");
-            console.log("content_join: " + content_join);
             if (content_join !== "") {
               sub = addUnreadCount(sub, index, unread);
               let item = {
@@ -265,7 +264,6 @@ export async function handleScheduled(event) {
       );
       u += 1;
       let data = await res.json();
-      console.log(`id=${idToCheck[i]} data=${JSON.stringify(data)}`);
       if (data === "该串不存在") {
         // deleted
         console.log("id: " + idToCheck[i] + "已被站方删除");
