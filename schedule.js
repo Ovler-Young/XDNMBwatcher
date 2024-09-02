@@ -124,6 +124,7 @@ export async function handleScheduled(event) {
             }
             let to = Math.min(20 + from, Math.floor((feed[i].reply_count - 1) / 19) + 1);
             let replies = [];
+            let data = "";
             for (let j = from; j <= to; j++) {
               let res = await cFetch(
                 `https://api.nmb.best/Api/thread?id=${id}&page=${j}`,
