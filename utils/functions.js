@@ -121,6 +121,7 @@ export async function Subscribe(id) {
         const now = new Date();
         feed.lastUpdateTime = now;
         sub.push(feed);
+        console.log(feed);
         await KV.put("sub", JSON.stringify(sub));
         console.log(`ID: ${id} subscribed`);
         msg = `#添加订阅 #id${feed.id} <b> ${feed.title} </b>\n<a href="${config.FRONTEND_URL}/t/${feed.id}">点击查看</a>`;
