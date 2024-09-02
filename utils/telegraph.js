@@ -27,6 +27,9 @@ export async function editTelegraph(item) {
     let telegraphUrl = item.telegraphUrl;
 
     let oldContent = [];
+    let previousPageUrl = null;
+    let totalPages = 0;
+
     if (telegraphUrl && telegraphUrl.indexOf("https") !== -1) {
       const path = telegraphUrl.split("://")[1].split("/")[1].split(`"`)[0];
       const getPage = await fetchWithRetry(
@@ -42,6 +45,15 @@ export async function editTelegraph(item) {
       try {
         const pageJson = JSON.parse(pageText);
         oldContent = pageJson.result.content || [];
+        const lastNode = oldContent[oldContent.length - 1];
+        if (lastNode && lastNode.tag === "p" && lastNode.children) {
+          previousPageUrl = lastNode.children[0].attrs.href;
+          oldContent.pop(); // Remove the last navigation link
+        }
+        const titleMatch = pageJson.result.title.match(/\((\d+)\/(\d+)\)/);
+        if (titleMatch) {
+          totalPages = parseInt(titleMatch[2], 10);
+        }
       } catch (error) {
         console.error("Failed to parse Telegraph API response:", pageText);
         throw new Error("Invalid JSON response from Telegraph API");
@@ -66,7 +78,7 @@ export async function editTelegraph(item) {
 
     let fullContent = oldContent.concat(newContent);
 
-    const result = await handleContentPagination(fullContent, title, writer, url);
+    const result = await handleContentPagination(fullContent, title, writer, url, totalPages, previousPageUrl);
 
     await setTelegraphUrl(item, result.firstPageUrl);
 
@@ -99,19 +111,23 @@ export async function sendTelegraph(node, title, writer) {
     })
   });
   const telegraph = await getTelegraph.json();
-  if (telegraph.ok === false) {
-    // if flood wait, wait the required seconds
-    if (telegraph.error.code === 429) {
-      await new Promise(r => setTimeout(r, telegraph.error.parameters.retry_after * 1000));
-      return await sendTelegraph(node, title, writer);
+  if (edit.ok === false ) {
+    if (typeof edit.error === 'object' && "FLOOD_WAIT" in edit.error) {
+      await new Promise(r => setTimeout(r, parseInt(edit.error.FLOOD_WAIT) * 1000));
+      return await updateTelegraphPage(path, content, title, author_name, author_url, prevUrl, nextUrl);
+    } else if (typeof edit.error === 'number') {
+      await new Promise(r => setTimeout(r, edit.error * 1000));
+      return await updateTelegraphPage(path, content, title, author_name, author_url, prevUrl, nextUrl);
+    } else {
+      // 处理其他类型的 edit.error 或抛出错误
+      console.error("Unexpected error:", edit.error);
     }
-    return telegraph.error;
   } else {
     return telegraph.result.url;
   }
 }
 
-async function handleContentPagination(content, title, writer, url) {
+async function handleContentPagination(content, title, writer, url, totalPages = 0, previousPageUrl = null) {
   const maxSize = 30 * 1024; // 30KB
   let pages = [];
   let currentPage = [];
@@ -133,13 +149,13 @@ async function handleContentPagination(content, title, writer, url) {
     pages.push(currentPage);
   }
 
-  let previousUrl = null;
   let firstPageUrl = null;
   let pageUrls = [];
 
   // 首先创建所有页面，并存储它们的 URL
   for (let i = 0; i < pages.length; i++) {
-    const pageUrl = await sendTelegraph(pages[i], `${title} (${i + 1}/${pages.length})`, writer);
+    const pageTitle = `${title} (${totalPages + i + 1}/${totalPages + pages.length})`;
+    const pageUrl = await sendTelegraph(pages[i], pageTitle, writer);
     pageUrls.push(pageUrl);
     if (!firstPageUrl) {
       firstPageUrl = pageUrl;
@@ -148,14 +164,14 @@ async function handleContentPagination(content, title, writer, url) {
 
   // 然后更新所有页面，添加正确的导航链接
   for (let i = 0; i < pageUrls.length; i++) {
-    const prevUrl = i > 0 ? pageUrls[i - 1] : null;
+    const prevUrl = i > 0 ? pageUrls[i - 1] : previousPageUrl;
     const nextUrl = i < pageUrls.length - 1 ? pageUrls[i + 1] : null;
     const path = pageUrls[i].split("://")[1].split("/")[1];
 
     await updateTelegraphPage(
       path,
       pages[i],
-      `${title} (${i + 1}/${pages.length})`,
+      `${title} (${totalPages + i + 1}/${totalPages + pages.length})`,
       writer,
       url,
       prevUrl,
@@ -215,10 +231,18 @@ async function updateTelegraphPage(path, content, title, author_name, author_url
   });
 
   // if flood wait, wait the required seconds
-  if (edit.status === 429) {
-    await new Promise(r => setTimeout(r, edit.error.parameters.retry_after * 1000));
-    return await updateTelegraphPage(path, content, title, author_name, author_url, nextPage
-    );
+  // {"ok":false,"error":"FLOOD_WAIT_3"}
+  if (edit.ok === false ) {
+    if (typeof edit.error === 'object' && "FLOOD_WAIT" in edit.error) {
+      await new Promise(r => setTimeout(r, parseInt(edit.error.FLOOD_WAIT) * 1000));
+      return await updateTelegraphPage(path, content, title, author_name, author_url, prevUrl, nextUrl);
+    } else if (typeof edit.error === 'number') {
+      await new Promise(r => setTimeout(r, edit.error * 1000));
+      return await updateTelegraphPage(path, content, title, author_name, author_url, prevUrl, nextUrl);
+    } else {
+      // 处理其他类型的 edit.error 或抛出错误
+      console.error("Unexpected error:", edit.error);
+    }
   }
   return await edit.json();
 }
