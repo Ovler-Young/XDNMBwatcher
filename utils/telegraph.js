@@ -175,6 +175,11 @@ export async function sendTelegraph(node, title, writer) {
   });
   const telegraph = await getTelegraph.json();
   if (telegraph.ok === false) {
+    // if flood wait, wait the required seconds
+    if (telegraph.error.code === 429) {
+      await new Promise(r => setTimeout(r, telegraph.error.parameters.retry_after * 1000));
+      return await sendTelegraph(node, title, writer);
+    }
     return telegraph.error;
   } else {
     return telegraph.result.url;
