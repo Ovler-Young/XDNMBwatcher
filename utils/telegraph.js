@@ -2,47 +2,80 @@ import { config } from "../config";
 import { sendNotice } from "../notifications/telegram";
 import { byteLength } from "./sync.js";
 
-export async function editTelegraph(item) {
-  const writer = item.writer || "ink-rss";
-  const title = item.title;
-  const url = item.url;
-  let telegraphUrl = item.telegraphUrl;
-
-  let oldContent = [];
-  if (telegraphUrl && telegraphUrl.indexOf("https") !== -1) {
-    const path = telegraphUrl.split("://")[1].split("/")[1].split(`"`)[0];
-    const getPage = await fetch(
-      `https://api.telegra.ph/getPage/${path}?return_content=true`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json"
-        }
-      }
-    );
-    const pageJson = await getPage.json();
-    oldContent = pageJson.result.content || [];
+async function fetchWithRetry(url, options, maxRetries = 3, timeout = 10000) {
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(id);
+      return response;
+    } catch (error) {
+      lastError = error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // 指数退避
+    }
   }
+  throw lastError;
+}
 
-  const getNode = await fetch(`${config.PARSE_URL}/api/html2node`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json; charset=utf-8"
-    },
-    body: JSON.stringify({ content: item.content })
-  });
-  let newContent = await getNode.json();
+export async function editTelegraph(item) {
+  try {
+    const writer = item.writer || "ink-rss";
+    const title = item.title;
+    const url = item.url;
+    let telegraphUrl = item.telegraphUrl;
 
-  // 直接合并旧内容和新内容，不添加额外链接
-  let fullContent = oldContent.concat(newContent);
+    let oldContent = [];
+    if (telegraphUrl && telegraphUrl.indexOf("https") !== -1) {
+      const path = telegraphUrl.split("://")[1].split("/")[1].split(`"`)[0];
+      const getPage = await fetchWithRetry(
+        `https://api.telegra.ph/getPage/${path}?return_content=true`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      const pageText = await getPage.text();
+      try {
+        const pageJson = JSON.parse(pageText);
+        oldContent = pageJson.result.content || [];
+      } catch (error) {
+        console.error("Failed to parse Telegraph API response:", pageText);
+        throw new Error("Invalid JSON response from Telegraph API");
+      }
+    }
 
-  // 处理内容分割和页面创建/更新
-  const result = await handleContentPagination(fullContent, title, writer, url);
+    const getNode = await fetchWithRetry(`${config.PARSE_URL}/api/html2node`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8"
+      },
+      body: JSON.stringify({ content: item.content })
+    });
+    const nodeText = await getNode.text();
+    let newContent;
+    try {
+      newContent = JSON.parse(nodeText);
+    } catch (error) {
+      console.error("Failed to parse html2node API response:", nodeText);
+      throw new Error("Invalid JSON response from html2node API");
+    }
 
-  // 更新item的telegraphUrl
-  await setTelegraphUrl(item, result.firstPageUrl);
+    let fullContent = oldContent.concat(newContent);
 
-  return result.lastPageUrl;
+    const result = await handleContentPagination(fullContent, title, writer, url);
+
+    await setTelegraphUrl(item, result.firstPageUrl);
+
+    return result.lastPageUrl;
+  } catch (error) {
+    console.error("Error in editTelegraph:", error);
+    await sendNotice(`Error in editTelegraph: ${error.message}`);
+    throw error;
+  }
 }
 
 export async function setTelegraphUrl(item, url) {
