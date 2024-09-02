@@ -143,7 +143,6 @@ export async function handleScheduled(event) {
             }
 
             let unread = 0;
-            let content_all_length = 0;
             let added = 0;
             let lastUpdateTimeInFeed = feed[i].now;
             for (let j = 0; j < replies.length; j++) {
@@ -154,11 +153,6 @@ export async function handleScheduled(event) {
                 (sub[index].IsSingle === false &&
                   sub[index].writer.includes(data.user_hash))
               ) {
-                content_all_length += byteLength(data.content);
-                if (content_all_length > 30 * 1024) {
-                  added -= 1;
-                  break;
-                }
                 page = Math.floor((j + sub[index].ReplyCount) / 19) + 1;
                 content_all = addContent(id, data, content_all, page);
                 unread += 1;
