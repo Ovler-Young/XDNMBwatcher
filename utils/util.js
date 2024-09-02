@@ -127,9 +127,10 @@ const addContent = (id, data, content_all, page = 0) => {
 
 const getKVsub = async () => {
   const sub = await KV.get("sub");
-  if (sub === null) {
+  console.log(sub);
+  if (sub === null || sub === undefined || sub === "") {
     await KV.put("sub", JSON.stringify([]));
-    return {};
+    return JSON.stringify([]);
   }
   return JSON.parse(sub);
 }

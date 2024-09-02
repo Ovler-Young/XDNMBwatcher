@@ -13,7 +13,9 @@ export async function handleScheduled(event) {
   const uuid = await KV.get("uuid");
   let idToCheck = [];
   // idToCheck = sub.map(item => item.id); only those active
-  idToCheck = sub.filter(item => item.active).map(item => item.id);
+  if (sub !== null && sub !== undefined && sub !== "" && sub.length > 0) {
+    idToCheck = sub.filter(item => item.active).map(item => item.id);
+  }
   console.log("idToCheck: " + idToCheck.length + " " + idToCheck);
   let PHPSESSID = await KV.get("PHPSESSID");
   let retry = 0;
@@ -144,8 +146,7 @@ export async function handleScheduled(event) {
               if (
                 data.user_hash === sub[index].po ||
                 (sub[index].IsSingle === false &&
-                  sub[index].writer.includes(data.user_hash)) ||
-                data.user_hash in sub[index].writer
+                  sub[index].writer.includes(data.user_hash))
               ) {
                 content_all_length += byteLength(data.content);
                 if (content_all_length > 30 * 1024) {
