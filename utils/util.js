@@ -102,7 +102,7 @@ const addContent = (id, data, content_all, page = 0) => {
   const titleLink = data.title !== "" && data.title !== "无标题" ? data.title : `#${data.id}`;
   let jumptopage = "";
   if (page !== 0) {
-    jumptopage = `|<a href="${config.FRONTEND_URL}/t/${id}?page=${page}">PC</a> | <a href="${config.FRONTEND_URL}/t/${id}?page=${Math.floor((page-1)*19/9+1)}">MB</a>`;
+    jumptopage = `| <a href="${config.FRONTEND_URL}/t/${id}?page=${page}">PC</a> | <a href="${config.FRONTEND_URL}/m/t/${id}?page=${Math.floor((page-1)*19/9+1)}">MB</a>`;
   }
   content_all.push(
     `<br/><a href="${config.FRONTEND_URL}/t/${id}?r=${data.id}">${titleLink}</a> | PO: ${data.user_hash} | ${data.now} ${jumptopage}`
