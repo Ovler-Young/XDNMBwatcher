@@ -119,6 +119,9 @@ export async function handleScheduled(event) {
             let id = feed[i].id;
             let NewReplyCount = feed[i].reply_count - sub[index].ReplyCount;
             let from = Math.floor((sub[index].ReplyCount - 1) / 19) + 1;
+            if (from === 0) {
+              from = 1;
+            }
             let to = Math.min(5 + from, Math.floor((feed[i].reply_count - 1) / 19) + 1);
             let replies = [];
             for (let j = from; j <= to; j++) {
@@ -133,7 +136,6 @@ export async function handleScheduled(event) {
             // sort replies by id and only keep the biggest NewReplyCount replies
             replies = replies.filter(reply => reply.id !== 9999999);
             replies = replies.sort((a, b) => a.id - b.id).slice(-NewReplyCount);
-            console.log(replies);
             let content_all = [];
             let unread = 0;
             let content_all_length = 0;
@@ -142,7 +144,6 @@ export async function handleScheduled(event) {
             for (let j = 0; j < replies.length; j++) {
               let data = replies[j];
               added += 1;
-              console.log(data)
               if (
                 data.user_hash === sub[index].po ||
                 (sub[index].IsSingle === false &&
@@ -200,7 +201,8 @@ export async function handleScheduled(event) {
                 SendTo: sub[index].SendTo || config.TG_SENDID,
                 lastSendId: sub[index].send_message_id || 0,
                 AutoRemove: 1,
-                telegraphUrl: sub[index].telegraphUrl
+                telegraphUrl: sub[index].telegraphUrl,
+                sub: sub[index]
               };
               sub[index] = await reply(sub[index], item);
               sub[index].lastUpdateTime = lastUpdateTimeInFeed; // feed[i].now is the time of the creation of the first reply
