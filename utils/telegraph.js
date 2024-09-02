@@ -1,57 +1,17 @@
 import { config } from "../config";
 import { sendNotice } from "../notifications/telegram";
 import { byteLength } from "./sync.js";
-export async function telegraph(item) {
+
+export async function editTelegraph(item) {
   const writer = item.writer || "ink-rss";
   const title = item.title;
   const url = item.url;
-  const getNode = await fetch(`${config.PARSE_URL}/api/html2node`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json; charset=utf-8"
-    },
-    body: JSON.stringify({ content: item.content })
-  });
-  const node = await getNode.text();
-  const getTelegraph = await fetch("https://api.telegra.ph/createPage", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      author_name: writer,
-      author_url: url,
-      content: node,
-      title: title,
-      access_token: config.TELEGRAPH_TOKEN
-    })
-  });
-  const telegraph = await getTelegraph.json();
-  if (telegraph.ok === false) {
-    return telegraph.error;
-  } else {
-    console.log(telegraph);
-    return telegraph.result.url;
-  }
-}
-
-export async function editTelegraph(item) {
-  // get telegraph url if exists
   let telegraphUrl = item.telegraphUrl;
-  if (
-    telegraphUrl === null ||
-    telegraphUrl === undefined ||
-    telegraphUrl === "" ||
-    telegraphUrl.indexOf("https") === -1
-  ) {
-    console.log("telegraphUrl is null");
-    return await telegraph(item);
-  } else {
-    let path = telegraphUrl
-      .split("://")[1]
-      .split("/")[1]
-      .split(`"`)[0];
-    const getNode = await fetch(
+
+  let oldContent = [];
+  if (telegraphUrl && telegraphUrl.indexOf("https") !== -1) {
+    const path = telegraphUrl.split("://")[1].split("/")[1].split(`"`)[0];
+    const getPage = await fetch(
       `https://api.telegra.ph/getPage/${path}?return_content=true`,
       {
         method: "GET",
@@ -60,97 +20,29 @@ export async function editTelegraph(item) {
         }
       }
     );
-    const nodesJson = await getNode.json();
-    const oldNode = nodesJson.result.content || [];
-    let nodeSize = byteLength(JSON.stringify(oldNode));
-    console.log(`oldNode size: ${nodeSize} = ${nodeSize / 1024}KB`);
-    const getNode2 = await fetch(`${config.PARSE_URL}/api/html2node`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8"
-      },
-      body: JSON.stringify({ content: item.content })
-    });
-    let newNode = await getNode2.json();
-    let newNodeSize = byteLength(JSON.stringify(newNode));
-    console.log(`newNode size: ${newNodeSize} = ${newNodeSize / 1024}KB`);
-    console.log(`total size: ${nodeSize + newNodeSize} = ${(nodeSize + newNodeSize) / 1024}KB`);
-    // edit
-    const writer = item.writer || "ink-rss";
-    const title = item.title;
-    const url = item.url;
-    if (nodeSize + newNodeSize < 31 * 1024) {
-      // node 和 newNode 结构是一样的，但要合并起来
-      let node = oldNode.concat(newNode);
-      const edit = await fetch(`https://api.telegra.ph/editPage/${path}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          access_token: config.TELEGRAPH_TOKEN,
-          path: path,
-          title: title,
-          content: node,
-          author_name: writer,
-          author_url: url
-        })
-      });
-      const editStatus = await edit.json();
-      if (editStatus.ok === false) {
-        return editStatus.error;
-      } else {
-        return telegraphUrl
-      }
-    } else if (newNodeSize < 31 * 1024) {
-      // get the Node of text "上一次同步 <a href=telegraphUrl>telegraphUrl</a> "
-      const TextToAddNode = [
-        "上一次同步：",
-        {
-            "tag": "a",
-            "attrs": {
-                "href": `${telegraphUrl}`
-            },
-            "children": [
-                `${telegraphUrl}`
-            ]
-        }
-      ]
-      console.log(`TextToAddNode: ${TextToAddNode}`);
-      let node = TextToAddNode.concat(newNode);
-      let url = await sendTelegraph(node, title, writer);
-      return url;
-    } else {
-      // split the newNode into two parts or more
-      let nodes = [];
-      let node = [];
-      let nodeSize = 0;
-      let i = 0;
-      for (let n of newNode) {
-        node.push(n);
-        nodeSize += byteLength(JSON.stringify(n));
-        if (nodeSize > 30 * 1024) {
-          // remove the last element
-          node.pop();
-          nodeSize -= byteLength(JSON.stringify(n));
-          nodes.push(node);
-          console.log(`node ${i} size: ${nodeSize} = ${nodeSize / 1024}KB`);
-          node = [n];
-          nodeSize = byteLength(JSON.stringify(n));
-          i++;
-        }
-      }
-      nodes.push(node);
-      console.log(`node ${i} size: ${nodeSize} = ${nodeSize / 1024}KB`);
-      // send a new telegraph
-      let message2send = `上一次同步：<a href="${telegraphUrl}">${telegraphUrl}</a>`;
-      for (let n of nodes) {
-        let url = await sendTelegraph(n, title, writer);
-        return url;
-      }
-      return url
-    }
+    const pageJson = await getPage.json();
+    oldContent = pageJson.result.content || [];
   }
+
+  const getNode = await fetch(`${config.PARSE_URL}/api/html2node`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    body: JSON.stringify({ content: item.content })
+  });
+  let newContent = await getNode.json();
+
+  // 直接合并旧内容和新内容，不添加额外链接
+  let fullContent = oldContent.concat(newContent);
+
+  // 处理内容分割和页面创建/更新
+  const result = await handleContentPagination(fullContent, title, writer, url);
+
+  // 更新item的telegraphUrl
+  await setTelegraphUrl(item, result.firstPageUrl);
+
+  return result.lastPageUrl;
 }
 
 export async function setTelegraphUrl(item, url) {
@@ -184,4 +76,104 @@ export async function sendTelegraph(node, title, writer) {
   } else {
     return telegraph.result.url;
   }
+}
+
+async function handleContentPagination(content, title, writer, url) {
+  const maxSize = 30 * 1024; // 30KB
+  let pages = [];
+  let currentPage = [];
+  let currentSize = 0;
+
+  for (let node of content) {
+    const nodeSize = byteLength(JSON.stringify(node));
+    if (currentSize + nodeSize > maxSize) {
+      pages.push(currentPage);
+      currentPage = [node];
+      currentSize = nodeSize;
+    } else {
+      currentPage.push(node);
+      currentSize += nodeSize;
+    }
+  }
+
+  if (currentPage.length > 0) {
+    pages.push(currentPage);
+  }
+
+  let previousUrl = null;
+  let firstPageUrl = null;
+
+  for (let i = 0; i < pages.length; i++) {
+    let pageContent = pages[i];
+
+    // 添加页面导航链接
+    if (previousUrl) {
+      pageContent.unshift({
+        tag: "p",
+        children: [
+          "上一页：",
+          {
+            tag: "a",
+            attrs: { href: previousUrl },
+            children: [previousUrl]
+          }
+        ]
+      });
+    }
+
+    const pageUrl = await sendTelegraph(pageContent, `${title} (${i + 1}/${pages.length})`, writer);
+
+    if (!firstPageUrl) {
+      firstPageUrl = pageUrl;
+    }
+
+    // 更新上一页的"下一页"链接
+    if (previousUrl) {
+      const prevPath = previousUrl.split("://")[1].split("/")[1];
+      await updateTelegraphPage(prevPath, pages[i - 1], `${title} (${i}/${pages.length})`, writer, url, pageUrl);
+    }
+
+    previousUrl = pageUrl;
+  }
+
+  return { firstPageUrl, lastPageUrl: previousUrl };
+}
+
+async function updateTelegraphPage(path, content, title, author_name, author_url, nextPageUrl) {
+  if (nextPageUrl) {
+    content.push({
+      tag: "p",
+      children: [
+        "下一页：",
+        {
+          tag: "a",
+          attrs: { href: nextPageUrl },
+          children: [nextPageUrl]
+        }
+      ]
+    });
+  }
+
+  const edit = await fetch(`https://api.telegra.ph/editPage/${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      access_token: config.TELEGRAPH_TOKEN,
+      path: path,
+      title: title,
+      content: content,
+      author_name: author_name,
+      author_url: author_url
+    })
+  });
+
+  // if flood wait, wait the required seconds
+  if (edit.status === 429) {
+    await new Promise(r => setTimeout(r, edit.error.parameters.retry_after * 1000));
+    return await updateTelegraphPage(path, content, title, author_name, author_url, nextPage
+    );
+  }
+  return await edit.json();
 }
