@@ -8,6 +8,23 @@ import { cFetch, addContent, getKVsub } from "./utils/util";
 import { Subscribe, Unsubscribe, MarkAsRead,timeDifference } from "./utils/functions";
 import { byteLength } from "./utils/sync";
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+
+const retry = async (fn) => {
+  let retries = 0;
+  while (retries < MAX_RETRIES) {
+    try {
+      return await fn();
+    } catch (error) {
+      retries++;
+      if (retries >= MAX_RETRIES) throw error;
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+    }
+  }
+  throw new Error("Max retries reached");
+};
+
 export async function handleScheduled(event) {
   let sub = await getKVsub();
   const uuid = await KV.get("uuid");
@@ -18,14 +35,14 @@ export async function handleScheduled(event) {
   }
   console.log("idToCheck: " + idToCheck.length + " " + idToCheck);
   let PHPSESSID = await KV.get("PHPSESSID");
-  let retry = 0;
+  let retryphp = 0;
   let u = 2; // 请求次数
   if (PHPSESSID === null || PHPSESSID === undefined) {
-    for (retry = 0; retry < 4; retry++) {
+    for (retryphp = 0; retryphp < 4; retryphp++) {
       // fetch PHPSESSID
       const PHPSESSIDurl = "https://www.nmbxd1.com/Forum";
       const PHPSESSIDoption = { method: "GET" };
-      PHPSESSIDoption.signal = AbortSignal.timeout(1700 * (retry + 1));
+      PHPSESSIDoption.signal = AbortSignal.timeout(1700 * (retryphp + 1));
       let PHPSESSIDresponse = await fetch(PHPSESSIDurl, PHPSESSIDoption);
       PHPSESSID = PHPSESSIDresponse.headers
         .get("set-cookie")
@@ -126,13 +143,20 @@ export async function handleScheduled(event) {
             let replies = [];
             let data = "";
             for (let j = from; j <= to; j++) {
-              let res = await cFetch(
+              try {
+                const res = await retry(() =>
+                  cFetch(
                 `https://api.nmb.best/Api/thread?id=${id}&page=${j}`,
                 (PHPSESSID = PHPSESSID)
+                  )
               );
               u += 1;
               data = await res.json();
               replies = replies.concat(data.Replies);
+              } catch (error) {
+                console.error(`Failed to fetch page ${j} after ${MAX_RETRIES} retries:`, error);
+                break;
+              }
             }
             // sort replies by id and only keep the biggest NewReplyCount replies
             replies = replies.filter(reply => reply.id !== 9999999);
