@@ -111,16 +111,16 @@ export async function sendTelegraph(node, title, writer) {
     })
   });
   const telegraph = await getTelegraph.json();
-  if (edit.ok === false ) {
-    if (typeof edit.error === 'object' && "FLOOD_WAIT" in edit.error) {
-      await new Promise(r => setTimeout(r, parseInt(edit.error.FLOOD_WAIT) * 1000));
+  if (telegraph.ok === false ) {
+    if (typeof telegraph.error === 'object' && "FLOOD_WAIT" in telegraph.error) {
+      await new Promise(r => setTimeout(r, parseInt(telegraph.error.FLOOD_WAIT) * 1000));
       return await updateTelegraphPage(path, content, title, author_name, author_url, prevUrl, nextUrl);
-    } else if (typeof edit.error === 'number') {
-      await new Promise(r => setTimeout(r, edit.error * 1000));
+    } else if (typeof telegraph.error === 'number') {
+      await new Promise(r => setTimeout(r, telegraph.error * 1000));
       return await updateTelegraphPage(path, content, title, author_name, author_url, prevUrl, nextUrl);
     } else {
-      // 处理其他类型的 edit.error 或抛出错误
-      console.error("Unexpected error:", edit.error);
+      // 处理其他类型的 telegraph.error 或抛出错误
+      console.error("Unexpected error:", telegraph.error);
     }
   } else {
     return telegraph.result.url;
