@@ -78,9 +78,26 @@ export async function editTelegraph(item) {
 
     let fullContent = oldContent.concat(newContent);
 
+    // 更新：从totalPages开始编号新页面
     const result = await handleContentPagination(fullContent, title, writer, url, totalPages, previousPageUrl);
 
     await setTelegraphUrl(item, result.firstPageUrl);
+
+    // 更新旧页面的导航链接
+    if (telegraphUrl && telegraphUrl.indexOf("https") !== -1) {
+      const oldPath = telegraphUrl.split("://")[1].split("/")[1].split(`"`)[0];
+      await updateTelegraphPage(
+        oldPath,
+        oldContent,
+        `${title} (${totalPages}/${totalPages})`,
+        writer,
+        url,
+        previousPageUrl,
+        result.firstPageUrl,
+        false,
+        false
+      );
+    }
 
     return result.lastPageUrl;
   } catch (error) {
@@ -152,9 +169,10 @@ async function handleContentPagination(content, title, writer, url, totalPages =
   let firstPageUrl = null;
   let pageUrls = [];
 
-  // 首先创建所有页面，并存储它们的 URL
+  // 更新：从totalPages开始编号新页面
   for (let i = 0; i < pages.length; i++) {
-    const pageTitle = `${title} (${totalPages + i + 1}/${totalPages + pages.length})`;
+    const pageNumber = totalPages + i + 1;
+    const pageTitle = `${title} (${pageNumber}/${totalPages + pages.length})`;
     const pageUrl = await sendTelegraph(pages[i], pageTitle, writer);
     pageUrls.push(pageUrl);
     if (!firstPageUrl) {
@@ -162,9 +180,9 @@ async function handleContentPagination(content, title, writer, url, totalPages =
     }
   }
 
-  // 然后更新所有页面，添加正确的导航链接
+  // 更新所有页面，添加正确的导航链接
   for (let i = 0; i < pageUrls.length; i++) {
-    const prevUrl = i > 0 ? pageUrls[i - 1] : previousPageUrl;
+    const prevUrl = i > 0 ? pageUrls[i - 1] : (totalPages > 0 ? previousPageUrl : null);
     const nextUrl = i < pageUrls.length - 1 ? pageUrls[i + 1] : null;
     const path = pageUrls[i].split("://")[1].split("/")[1];
 
@@ -175,23 +193,25 @@ async function handleContentPagination(content, title, writer, url, totalPages =
       writer,
       url,
       prevUrl,
-      nextUrl
+      nextUrl,
+      i === 0,
+      i === pageUrls.length - 1
     );
   }
 
   return { firstPageUrl, lastPageUrl: pageUrls[pageUrls.length - 1] };
 }
 
-function createNavigationLinks(prevUrl, nextUrl) {
+function createNavigationLinks(prevUrl, nextUrl, isFirstPage, isLastPage) {
   let links = [];
-  if (prevUrl) {
+  if (prevUrl && !isFirstPage) {
     links.push({
       tag: "a",
       attrs: { href: prevUrl },
       children: ["上一页 "]
     });
   }
-  if (nextUrl) {
+  if (nextUrl && !isLastPage) {
     links.push({
       tag: "a",
       attrs: { href: nextUrl },
@@ -201,8 +221,8 @@ function createNavigationLinks(prevUrl, nextUrl) {
   return links.length > 0 ? { tag: "p", children: links } : null;
 }
 
-async function updateTelegraphPage(path, content, title, author_name, author_url, prevUrl, nextUrl) {
-  const navigationLinks = createNavigationLinks(prevUrl, nextUrl);
+async function updateTelegraphPage(path, content, title, author_name, author_url, prevUrl, nextUrl, isFirstPage, isLastPage) {
+  const navigationLinks = createNavigationLinks(prevUrl, nextUrl, isFirstPage, isLastPage);
   let updatedContent = [];
 
   if (navigationLinks) {
