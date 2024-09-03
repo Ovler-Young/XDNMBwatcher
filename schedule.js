@@ -54,7 +54,7 @@ export async function handleScheduled(event) {
   }
 
   // 访问 feed 接口，check 是否有新帖子
-  let page = 1;
+  let feedpage = 1;
   while (true) {
     const res = await cFetch(
       `https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`,
@@ -129,6 +129,7 @@ export async function handleScheduled(event) {
           console.log("id: " + feed[i].id + "title" + feed[i].title + "未更新" + sub[index].ReplyCount + " " + feed[i].reply_count);
         } else if (sub[index].ReplyCount < feed[i].reply_count) {
           try {
+            let page = 0;
             // 有更新
             console.log(
               "id: " + feed[i].id + "title" + feed[i].title + "有更新，之前回复数为" + sub[index].ReplyCount + "现在回复数为" + feed[i].reply_count + "增加了" + (feed[i].reply_count - sub[index].ReplyCount) + "条回复"
@@ -139,7 +140,7 @@ export async function handleScheduled(event) {
             if (from === 0) {
               from = 1;
             }
-            let to = Math.min(20 + from, Math.floor((feed[i].reply_count - 1) / 19) + 1);
+            let to = Math.min(10 + from, Math.floor((feed[i].reply_count - 1) / 19) + 1);
             let replies = [];
             let data = "";
             for (let j = from; j <= to; j++) {
@@ -163,7 +164,7 @@ export async function handleScheduled(event) {
             replies = replies.sort((a, b) => a.id - b.id).slice(-NewReplyCount);
             let content_all = [];
             if (sub[index].ReplyCount === 0) {
-              let page = 1;
+              page = 1;
               content_all = addContent(id, data, content_all, page);
             }
 
@@ -274,7 +275,7 @@ export async function handleScheduled(event) {
         }
       }
     }
-    page++;
+    feedpage++;
   }
   // 确定
   // for things still in idToCheck, that means they are not in feed, so we need to check if they are deleted
