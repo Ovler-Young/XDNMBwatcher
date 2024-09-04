@@ -57,7 +57,7 @@ export async function handleScheduled(event) {
   let feedpage = 1;
   while (true) {
     const res = await cFetch(
-      `https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`,
+      `https://api.nmb.best/Api/feed?uuid=${uuid}&page=${feedpage}`,
       (PHPSESSID = PHPSESSID)
     );
     u++;
