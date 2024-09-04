@@ -28,7 +28,7 @@ export async function editTelegraph(item) {
 
     let oldContent = [];
     let nMinus2PageUrl = null;
-    let currentMaxPage = 0;
+    let currentMaxPage = 1;
 
     if (nMinus1PageUrl && nMinus1PageUrl.indexOf("https") !== -1) {
       const path = nMinus1PageUrl.split("://")[1].split("/")[1].split(`"`)[0];
