@@ -146,7 +146,7 @@ export async function sendTelegraph(node, title, writer) {
       const waitTime = parseInt(telegraph.error.split("_")[2]);
       console.log(`Flood wait for ${waitTime} seconds`);
       await new Promise(r => setTimeout(r, waitTime * 1000));
-      return await sendTelegraph(path, content, title, author_name, author_url);
+      return await sendTelegraph(node, title, writer);
     } else {
       sendNotice(`Error in sendTelegraph: ${telegraph.error}, with response: ${JSON.stringify(telegraph)}`);
     }
@@ -187,10 +187,10 @@ async function handleContentPagination(content, title, writer, url, currentMaxPa
       pageUrls.push(nMinus1PageUrl);
       continue;
     } else {
-    const pageNumber = currentMaxPage + i;
-    const pageTitle = `${title} (${pageNumber}/${newcurrentMaxPage})`;
-    const pageUrl = await sendTelegraph(pages[i], pageTitle, writer);
-    pageUrls.push(pageUrl);
+      const pageNumber = currentMaxPage + i;
+      const pageTitle = `${title} (${pageNumber}/${newcurrentMaxPage})`;
+      const pageUrl = await sendTelegraph(pages[i], pageTitle, writer);
+      pageUrls.push(pageUrl);
     }
   }
 
