@@ -24,14 +24,14 @@ export async function editTelegraph(item) {
     const writer = item.writer || "ink-rss";
     const title = item.title;
     const url = item.url;
-    let telegraphUrl = item.telegraphUrl;
+    let nMinus1PageUrl = item.telegraphUrl;
 
     let oldContent = [];
-    let previousPageUrl = null;
-    let totalPages = 0;
+    let nMinus2PageUrl = null;
+    let currentMaxPage = 0;
 
-    if (telegraphUrl && telegraphUrl.indexOf("https") !== -1) {
-      const path = telegraphUrl.split("://")[1].split("/")[1].split(`"`)[0];
+    if (nMinus1PageUrl && nMinus1PageUrl.indexOf("https") !== -1) {
+      const path = nMinus1PageUrl.split("://")[1].split("/")[1].split(`"`)[0];
       const getPage = await fetchWithRetry(
         `https://api.telegra.ph/getPage/${path}?return_content=true`,
         {
@@ -45,14 +45,28 @@ export async function editTelegraph(item) {
       try {
         const pageJson = JSON.parse(pageText);
         oldContent = pageJson.result.content || [];
-        const lastNode = oldContent[oldContent.length - 1];
-        if (lastNode && lastNode.tag === "p" && lastNode.children) {
-          previousPageUrl = lastNode.children[0].attrs.href;
-          oldContent.pop(); // Remove the last navigation link
+        // 获取上一页链接
+        const firstNode = oldContent[0];
+        if (firstNode && firstNode.tag === "p" && firstNode.children) {
+          nMinus2PageUrl = firstNode.children[0].attrs.href;
+          if ("上一页 " === firstNode.children[0].children[0]) {
+            oldContent.shift();
+            console.log("Removed top navigation link:", nMinus2PageUrl);
+          }
+
+          // search for the last navigation link
+          const lastNode = oldContent[oldContent.length - 1];
+          if (lastNode && lastNode.tag === "p" && lastNode.children) {
+            const lastLink = lastNode.children[lastNode.children.length - 1];
+            if (lastLink.tag === "a" && lastLink.children && "下一页 " === lastLink.children[0]) {
+              oldContent.pop();
+              console.log("Removed bottom navigation link:", lastLink.attrs.href);
+            }
+          }
         }
         const titleMatch = pageJson.result.title.match(/\((\d+)\/(\d+)\)/);
         if (titleMatch) {
-          totalPages = parseInt(titleMatch[2], 10);
+          currentMaxPage = parseInt(titleMatch[2], 10);
         }
       } catch (error) {
         console.error("Failed to parse Telegraph API response:", pageText);
@@ -78,26 +92,45 @@ export async function editTelegraph(item) {
 
     let fullContent = oldContent.concat(newContent);
 
-    // 更新：从totalPages开始编号新页面
-    const result = await handleContentPagination(fullContent, title, writer, url, totalPages, previousPageUrl);
+    /////以上没问题
 
-    await setTelegraphUrl(item, result.firstPageUrl);
+    const result = await handleContentPagination(fullContent, title, writer, url, currentMaxPage, nMinus1PageUrl, nMinus2PageUrl);
 
-    // 更新旧页面的导航链接
-    if (telegraphUrl && telegraphUrl.indexOf("https") !== -1) {
-      const oldPath = telegraphUrl.split("://")[1].split("/")[1].split(`"`)[0];
+    // 更新原有最后一页的内容和导航链接
+    if (nMinus1PageUrl && nMinus1PageUrl.indexOf("https") !== -1) {
+      const oldPath = nMinus1PageUrl.split("://")[1].split("/")[1].split(`"`)[0];
       await updateTelegraphPage(
         oldPath,
         oldContent,
-        `${title} (${totalPages}/${totalPages})`,
+        `${title} (${currentMaxPage}/${result.newcurrentMaxPage})`,
         writer,
         url,
-        previousPageUrl,
+        nMinus2PageUrl,
         result.firstPageUrl,
-        false,
+        currentMaxPage === 1,
         false
       );
     }
+
+    // 更新所有原有页面的标题
+    for (let i = 1; i < currentMaxPage; i++) {
+      const prevPageUrl = i > 1 ? `https://telegra.ph/${title.replace(/\s+/g, '-')}-${i-1}-${Date.now()}` : null;
+      const nextPageUrl = i < currentMaxPage - 1 ? `https://telegra.ph/${title.replace(/\s+/g, '-')}-${i+1}-${Date.now()}` : (i === currentMaxPage - 1 ? result.firstPageUrl : null);
+      
+      await updateTelegraphPage(
+        `${title.replace(/\s+/g, '-')}-${i}-${Date.now()}`,
+        [], // 保持内容不变
+        `${title} (${i}/${result.newcurrentMaxPage})`,
+        writer,
+        url,
+        prevPageUrl,
+        nextPageUrl,
+        i === 1,
+        false
+      );
+    }
+
+    await setnMinus1PageUrl(item, result.lastPageUrl);
 
     return result.lastPageUrl;
   } catch (error) {
@@ -107,15 +140,15 @@ export async function editTelegraph(item) {
   }
 }
 
-export async function setTelegraphUrl(item, url) {
+export async function setnMinus1PageUrl(item, url) {
   let sub = JSON.parse(await KV.get("sub"));
   let index = sub.findIndex(e => e.id === item.id);
-  sub[index].telegraphUrl = url;
+  sub[index].nMinus1PageUrl = url;
   await KV.put("sub", JSON.stringify(sub));
 }
 
 export async function sendTelegraph(node, title, writer) {
-  const getTelegraph = await fetch("https://api.telegra.ph/createPage", {
+  const getTelegraph = await fetch("https://api.telegra.ph/createPage?return_content=true", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -144,7 +177,7 @@ export async function sendTelegraph(node, title, writer) {
   }
 }
 
-async function handleContentPagination(content, title, writer, url, totalPages = 0, previousPageUrl = null) {
+async function handleContentPagination(content, title, writer, url, currentMaxPage = 1, nMinus1PageUrl = null, nMinus2PageUrl = null) {
   const maxSize = 30 * 1024; // 30KB
   let pages = [];
   let currentPage = [];
@@ -166,13 +199,19 @@ async function handleContentPagination(content, title, writer, url, totalPages =
     pages.push(currentPage);
   }
 
-  let firstPageUrl = null;
+  const newcurrentMaxPage = currentMaxPage + pages.length - 1;
+
+  let firstPageUrl = nMinus1PageUrl;
   let pageUrls = [];
 
-  // 更新：从totalPages开始编号新页面
-  for (let i = 0; i < pages.length; i++) {
-    const pageNumber = totalPages + i + 1;
-    const pageTitle = `${title} (${pageNumber}/${totalPages + pages.length})`;
+  // 从currentMaxPage开始编号新页面
+  for (let i = 0; i < pages.length; i++) { // 从n-1，n，n+1...开始编号
+    if (i === 0 && nMinus1PageUrl) {
+      pageUrls.push(nMinus1PageUrl);
+      continue;
+    }
+    const pageNumber = currentMaxPage + i;
+    const pageTitle = `${title} (${pageNumber}/${newcurrentMaxPage})`;
     const pageUrl = await sendTelegraph(pages[i], pageTitle, writer);
     pageUrls.push(pageUrl);
     if (!firstPageUrl) {
@@ -180,26 +219,25 @@ async function handleContentPagination(content, title, writer, url, totalPages =
     }
   }
 
-  // 更新所有页面，添加正确的导航链接
   for (let i = 0; i < pageUrls.length; i++) {
-    const prevUrl = i > 0 ? pageUrls[i - 1] : (totalPages > 0 ? previousPageUrl : null);
+    const prevUrl = i > 0 ? pageUrls[i - 1] : nMinus2PageUrl;
     const nextUrl = i < pageUrls.length - 1 ? pageUrls[i + 1] : null;
     const path = pageUrls[i].split("://")[1].split("/")[1];
 
     await updateTelegraphPage(
       path,
       pages[i],
-      `${title} (${totalPages + i + 1}/${totalPages + pages.length})`,
+      `${title} (${currentMaxPage + i}/${newcurrentMaxPage})`,
       writer,
       url,
       prevUrl,
       nextUrl,
-      i === 0,
+      i === 0 && currentMaxPage === 0,
       i === pageUrls.length - 1
     );
   }
 
-  return { firstPageUrl, lastPageUrl: pageUrls[pageUrls.length - 1] };
+  return { firstPageUrl, lastPageUrl: pageUrls[pageUrls.length - 1], newcurrentMaxPage };
 }
 
 function createNavigationLinks(prevUrl, nextUrl, isFirstPage, isLastPage) {
@@ -235,7 +273,11 @@ async function updateTelegraphPage(path, content, title, author_name, author_url
     updatedContent.push(navigationLinks); // 底部导航链接
   }
 
-  const edit = await fetch(`https://api.telegra.ph/editPage/${path}`, {
+  return await editTelegraphPageRaw(path, updatedContent, title, author_name, author_url);
+}
+
+async function editTelegraphPageRaw(path, content, title, author_name, author_url) {
+  const edit = await fetch(`https://api.telegra.ph/editPage/${path}?return_content=true`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -244,21 +286,19 @@ async function updateTelegraphPage(path, content, title, author_name, author_url
       access_token: config.TELEGRAPH_TOKEN,
       path: path,
       title: title,
-      content: updatedContent,
+      content: content,
       author_name: author_name,
       author_url: author_url
     })
   });
 
-  // if flood wait, wait the required seconds
-  // {"ok":false,"error":"FLOOD_WAIT_3"}
   if (edit.ok === false ) {
     if (typeof edit.error === 'object' && "FLOOD_WAIT" in edit.error) {
       await new Promise(r => setTimeout(r, parseInt(edit.error.FLOOD_WAIT) * 1000));
-      return await updateTelegraphPage(path, content, title, author_name, author_url, prevUrl, nextUrl);
+      return await editTelegraphPageRaw(path, content, title, author_name, author_url);
     } else if (typeof edit.error === 'number') {
       await new Promise(r => setTimeout(r, edit.error * 1000));
-      return await updateTelegraphPage(path, content, title, author_name, author_url, prevUrl, nextUrl);
+      return await editTelegraphPageRaw(path, content, title, author_name, author_url);
     } else {
       // 处理其他类型的 edit.error 或抛出错误
       console.error("Unexpected error:", edit.error);
