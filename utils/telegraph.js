@@ -189,7 +189,7 @@ async function handleContentPagination(content, title, writer, url, currentMaxPa
 
   // 从currentMaxPage开始编号新页面
   for (let i = 0; i < pages.length; i++) { // 从n-1，n，n+1...开始编号
-    if (i === 0 && nMinus1PageUrl) {
+    if (i === 0 && nMinus1PageUrl && nMinus1PageUrl.indexOf("https") !== -1) {
       pageUrls.push(nMinus1PageUrl);
       continue;
     }
