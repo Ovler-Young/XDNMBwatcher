@@ -98,34 +98,17 @@ export async function editTelegraph(item) {
 
     // 更新原有最后一页的内容和导航链接
     if (nMinus1PageUrl && nMinus1PageUrl.indexOf("https") !== -1) {
+      console.log("Updating last page:", nMinus1PageUrl);
       const oldPath = nMinus1PageUrl.split("://")[1].split("/")[1].split(`"`)[0];
       await updateTelegraphPage(
         oldPath,
-        oldContent,
+        result.pages[0],
         `${title} (${currentMaxPage}/${result.newcurrentMaxPage})`,
         writer,
         url,
         nMinus2PageUrl,
         result.firstPageUrl,
         currentMaxPage === 1,
-        false
-      );
-    }
-
-    // 更新所有原有页面的标题
-    for (let i = 1; i < currentMaxPage; i++) {
-      const prevPageUrl = i > 1 ? `https://telegra.ph/${title.replace(/\s+/g, '-')}-${i-1}-${Date.now()}` : null;
-      const nextPageUrl = i < currentMaxPage - 1 ? `https://telegra.ph/${title.replace(/\s+/g, '-')}-${i+1}-${Date.now()}` : (i === currentMaxPage - 1 ? result.firstPageUrl : null);
-      
-      await updateTelegraphPage(
-        `${title.replace(/\s+/g, '-')}-${i}-${Date.now()}`,
-        [], // 保持内容不变
-        `${title} (${i}/${result.newcurrentMaxPage})`,
-        writer,
-        url,
-        prevPageUrl,
-        nextPageUrl,
-        i === 1,
         false
       );
     }
@@ -237,7 +220,7 @@ async function handleContentPagination(content, title, writer, url, currentMaxPa
     );
   }
 
-  return { firstPageUrl, lastPageUrl: pageUrls[pageUrls.length - 1], newcurrentMaxPage };
+  return { firstPageUrl, lastPageUrl: pageUrls[pageUrls.length - 1], newcurrentMaxPage, pages };
 }
 
 function createNavigationLinks(prevUrl, nextUrl, isFirstPage, isLastPage) {
