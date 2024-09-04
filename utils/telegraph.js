@@ -69,8 +69,7 @@ export async function editTelegraph(item) {
           currentMaxPage = parseInt(titleMatch[2], 10);
         }
       } catch (error) {
-        console.error("Failed to parse Telegraph API response:", pageText);
-        throw new Error("Invalid JSON response from Telegraph API");
+        sendNotice(`Error in editTelegraph: ${error.message}, with response: ${pageText}`);
       }
     }
 
@@ -86,8 +85,7 @@ export async function editTelegraph(item) {
     try {
       newContent = JSON.parse(nodeText);
     } catch (error) {
-      console.error("Failed to parse html2node API response:", nodeText);
-      throw new Error("Invalid JSON response from html2node API");
+      sendNotice(`Error in editTelegraph: ${error.message}, with response: ${nodeText}`);
     }
 
     let fullContent = oldContent.concat(newContent);
@@ -107,7 +105,7 @@ export async function editTelegraph(item) {
         writer,
         url,
         nMinus2PageUrl,
-        result.firstPageUrl,
+        result.pageUrls[1],
         currentMaxPage === 1,
         false
       );
@@ -117,7 +115,6 @@ export async function editTelegraph(item) {
 
     return result.lastPageUrl;
   } catch (error) {
-    console.error("Error in editTelegraph:", error);
     await sendNotice(`Error in editTelegraph: ${error.message}`);
     throw error;
   }
@@ -145,15 +142,13 @@ export async function sendTelegraph(node, title, writer) {
   });
   const telegraph = await getTelegraph.json();
   if (telegraph.ok === false ) {
-    if (typeof telegraph.error === 'object' && "FLOOD_WAIT" in telegraph.error) {
-      await new Promise(r => setTimeout(r, parseInt(telegraph.error.FLOOD_WAIT) * 1000));
-      return await updateTelegraphPage(path, content, title, author_name, author_url, prevUrl, nextUrl);
-    } else if (typeof telegraph.error === 'number') {
-      await new Promise(r => setTimeout(r, telegraph.error * 1000));
-      return await updateTelegraphPage(path, content, title, author_name, author_url, prevUrl, nextUrl);
+    if (typeof telegraph.error === 'string' && telegraph.error.startsWith("FLOOD_WAIT_")) {
+      const waitTime = parseInt(telegraph.error.split("_")[2]);
+      console.log(`Flood wait for ${waitTime} seconds`);
+      await new Promise(r => setTimeout(r, waitTime * 1000));
+      return await sendTelegraph(path, content, title, author_name, author_url);
     } else {
-      // 处理其他类型的 telegraph.error 或抛出错误
-      console.error("Unexpected error:", telegraph.error);
+      sendNotice(`Error in sendTelegraph: ${telegraph.error}, with response: ${JSON.stringify(telegraph)}`);
     }
   } else {
     return telegraph.result.url;
@@ -184,7 +179,6 @@ async function handleContentPagination(content, title, writer, url, currentMaxPa
 
   const newcurrentMaxPage = currentMaxPage + pages.length - 1;
 
-  let firstPageUrl = nMinus1PageUrl;
   let pageUrls = [];
 
   // 从currentMaxPage开始编号新页面
@@ -192,13 +186,11 @@ async function handleContentPagination(content, title, writer, url, currentMaxPa
     if (i === 0 && nMinus1PageUrl && nMinus1PageUrl.indexOf("https") !== -1) {
       pageUrls.push(nMinus1PageUrl);
       continue;
-    }
+    } else {
     const pageNumber = currentMaxPage + i;
     const pageTitle = `${title} (${pageNumber}/${newcurrentMaxPage})`;
     const pageUrl = await sendTelegraph(pages[i], pageTitle, writer);
     pageUrls.push(pageUrl);
-    if (!firstPageUrl) {
-      firstPageUrl = pageUrl;
     }
   }
 
@@ -220,7 +212,7 @@ async function handleContentPagination(content, title, writer, url, currentMaxPa
     );
   }
 
-  return { firstPageUrl, lastPageUrl: pageUrls[pageUrls.length - 1], newcurrentMaxPage, pages };
+  return { lastPageUrl: pageUrls[pageUrls.length - 1], newcurrentMaxPage, pages, pageUrls };
 }
 
 function createNavigationLinks(prevUrl, nextUrl, isFirstPage, isLastPage) {
@@ -276,15 +268,13 @@ async function editTelegraphPageRaw(path, content, title, author_name, author_ur
   });
 
   if (edit.ok === false ) {
-    if (typeof edit.error === 'object' && "FLOOD_WAIT" in edit.error) {
-      await new Promise(r => setTimeout(r, parseInt(edit.error.FLOOD_WAIT) * 1000));
-      return await editTelegraphPageRaw(path, content, title, author_name, author_url);
-    } else if (typeof edit.error === 'number') {
-      await new Promise(r => setTimeout(r, edit.error * 1000));
+    if (typeof edit.error === 'string' && edit.error.startsWith("FLOOD_WAIT_")) {
+      const waitTime = parseInt(edit.error.split("_")[2]);
+      console.log(`Flood wait for ${waitTime} seconds`);
+      await new Promise(r => setTimeout(r, waitTime * 1000));
       return await editTelegraphPageRaw(path, content, title, author_name, author_url);
     } else {
-      // 处理其他类型的 edit.error 或抛出错误
-      console.error("Unexpected error:", edit.error);
+      sendNotice(`Error in editTelegraphPage: ${edit.error}, with response: ${JSON.stringify(edit)}`);
     }
   }
   return await edit.json();
