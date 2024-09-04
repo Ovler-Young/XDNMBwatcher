@@ -151,6 +151,7 @@ export async function sendTelegraph(node, title, writer) {
       sendNotice(`Error in sendTelegraph: ${telegraph.error}, with response: ${JSON.stringify(telegraph)}`);
     }
   } else {
+    await new Promise(r => setTimeout(r, 2000));
     return telegraph.result.url;
   }
 }
@@ -277,5 +278,6 @@ async function editTelegraphPageRaw(path, content, title, author_name, author_ur
       sendNotice(`Error in editTelegraphPage: ${edit.error}, with response: ${JSON.stringify(edit)}`);
     }
   }
+  await new Promise(r => setTimeout(r, 2000));
   return await edit.json();
 }
