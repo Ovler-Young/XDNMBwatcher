@@ -115,6 +115,11 @@ const addContent = (id, data, content_all, page = 0) => {
         />>No\.(\d+)/g,
         `<a href="${config.FRONTEND_URL}/Home/Forum/ref?id=$1">>>No.$1</a>`
       )
+      // >>1234 should also be replaced
+      .replace(
+        />>\d{8}/g,
+        `<a href="${config.FRONTEND_URL}/Home/Forum/ref?id=$1">>>$1</a>`
+      )
   ); //https://www.nmbxd1.com/Home/Forum/ref?id=57858642
   // if there is an image, we need to add it to the content
   if (data.ext !== "") {
