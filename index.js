@@ -188,7 +188,7 @@ router.get(`/${secret_path}/jumplast`, async req => {
   if (index === -1) {
     return errorResponse("Please verify your input!");
   }
-  let lastreadto = sub[index].LastRead;
+  let lastreadto = sub[index].ReplyCount;
   // if ua is mobile, jump to app
   if (req.headers.get("user-agent").includes("Mobile")) {
     let page = Math.floor((lastreadto - 1) / 9) + 1;
@@ -274,6 +274,14 @@ router.get("/test", async (req, e) => {
   // 测试
   e.waitUntil(handleScheduled(e));
 });
+router.get("/test10times", async (req, e) => {
+  // test one time, wait 1 hour, test again
+  for (let i = 0; i < 10; i++) {
+    e.waitUntil(handleScheduled(e));
+    await new Promise(r => setTimeout(r, 3600000));
+  }
+});
+
 router.get("/forcetest", async (req, e) => {
   // 强制测试
   let sub = await getKVsub();
@@ -590,7 +598,7 @@ router.get("*", async (req, e) => {
     let PHPSESSID = await KV.get("PHPSESSID");
     if (!PHPSESSID) {
       PHPSESSID = await fetchPHPSESSID();
-      await KV.put("PHPSESSID", PHPSESSID, { expirationTtl: 3600 }); // Store with 1 hour expiration
+      await KV.put("PHPSESSID", PHPSESSID, { expirationTtl: 36000000 }); // Store with 1 hour expiration
     }
 
     // Clone the request to modify headers

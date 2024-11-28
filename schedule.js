@@ -181,7 +181,7 @@ export async function handleScheduled(event) {
                   sub[index].writer.includes(data.user_hash))
               ) {
                 content_all_length += byteLength(data.content);
-                if (content_all_length > 128 * 1024) {
+                if (content_all_length > 87 * 1024) {
                   added -= 1;
                   break;
                 }
