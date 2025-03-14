@@ -1,6 +1,6 @@
 import { config } from "./../config";
 
-const cFetch = async (url, option, PHPSESSID) => {
+const cFetch = async (url, PHPSESSID, option) => {
   let retry = 0;
   if (PHPSESSID === undefined) {
     PHPSESSID = await KV.get("PHPSESSID");
@@ -55,10 +55,10 @@ const cFetch = async (url, option, PHPSESSID) => {
       }
     } catch (e) {
       console.log(e.name);
-      return cFetch(url, option)
+      return cFetch(url, null, option)
     }
   }
-  return cFetch(url, option);
+  return cFetch(url, null, option);
 };
 
 const errorResponse = message => {
