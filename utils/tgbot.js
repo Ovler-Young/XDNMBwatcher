@@ -591,10 +591,42 @@ export async function botRoll(ctx) {
       return;
     }
   }
-  // msg += `帖子ID：${id}\n`;
-  const num2r = parseInt(ctx.update.message.text.split(" ").pop());
+  // Extract number from command
+  const lastParam = ctx.update.message.text.split(" ").pop();
+  const num2r = parseInt(lastParam);
   const send = [];
   const try_num = 15;
+  
+  // Check if number is invalid (NaN)
+  if (isNaN(num2r)) {
+    // If no valid number specified, reply with [1,10] directly
+    await ctx.reply("未指定尾数，使用默认范围[1,10]");
+    
+    let start = new Date().getTime();
+    let Reply_status = await Reply(id, "[1,10]");
+    let end = new Date().getTime();
+    let time = end - start;
+    console.log(`Time: ${time}ms`);
+    
+    if (Reply_status) {
+      let my_id = await Check(id, "[1,10]");
+      console.log(`my_id: ${my_id}`);
+      await ctx.reply(`回复成功！耗时 ${time}ms\n帖子ID：${id}\n串ID：${my_id}\n`, {
+        parse_mode: "HTML",
+        reply_to_message_id: ctx.update.message.message_id
+      });
+    } else {
+      await ctx.reply(
+        `发送失败！\n帖子ID：${id}\n直达链接：${config.FRONTEND_URL}/t/${id}`,
+        {
+          parse_mode: "HTML",
+          reply_to_message_id: ctx.update.message.message_id
+        }
+      );
+    }
+    return;
+  }
+  
   if ((num2r > 10 && num2r < 100) || num2r === 10) {
     // start_num 是 num2r 的十位数
     const start_num = Math.floor(num2r / 10);
