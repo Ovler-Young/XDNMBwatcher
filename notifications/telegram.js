@@ -3,17 +3,8 @@ const { Telegram } = require("telegraf");
 import { editTelegraph } from "../utils/telegraph";
 import { html } from "../utils/html";
 export async function reply(feed, item) {
-    try {
+  try {
     const telegram = new Telegram(config.TG_TOKEN);
-
-    if (item.lastSendId && item.lastSendId != 0 && item.AutoRemove == 1) {
-      try {
-        await telegram.deleteMessage(item.SendTo, item.lastSendId);
-      } catch (err) {
-        console.log(err);
-        feed.send_message_id = 0;
-      }
-    }
 
     let telegraph_link = "";
     if (feed.telegraph && item.content) {
@@ -24,16 +15,18 @@ export async function reply(feed, item) {
       let telegram_html = `<a href="${telegram_url}">tg</a>`;
       // 如果不止一个链接，telegram_url是一个数组
       if (Array.isArray(telegram_url)) {
-        telegram_html = telegram_url.map((e, index) => `<a href="${e}">tg${index + 1}</a>`).join(" | ");
+        telegram_html = telegram_url
+          .map((e, index) => `<a href="${e}">tg${index + 1}</a>`)
+          .join(" | ");
       }
       if (telegram_url.indexOf("https") === -1) {
         telegram_html = `<b>同步失败</b> | ${telegram_url}`;
       }
       telegraph_link = `|${telegram_html}`;
     }
-    let message = `<b>${html(feed.title)}</b>\n#${html(item.writer)} | #id${html(
-      feed.id
-    )}${
+    let message = `<b>${html(feed.title)}</b>\n#${html(
+      item.writer
+    )} | #id${html(feed.id)}${
       feed.telegraph ? (item.content ? telegraph_link : "") : ""
     }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumpread?id=${feed.id}`}">Unread: ${
       feed.unread
@@ -41,13 +34,18 @@ export async function reply(feed, item) {
       feed.lastUpdateTime ? `|${feed.lastUpdateTime}` : ""
     }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${feed.id}`}">Latest</a>`;
     let send = await telegram.sendMessage(item.SendTo, message, {
-      parse_mode: "HTML"
+      parse_mode: "HTML",
     });
     feed.send_message_id = send.message_id;
+
+    if (item.lastSendId && item.lastSendId != 0 && item.AutoRemove == 1) {
+      await telegram.deleteMessage(item.SendTo, item.lastSendId);
+    }
   } catch (err) {
     console.log(`Error in reply: ${err}`);
     replyWhenError(feed, err);
     feed.send_message_id = 0;
+    return feed;
   }
   return feed;
 }
