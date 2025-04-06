@@ -3,45 +3,52 @@ const { Telegram } = require("telegraf");
 import { editTelegraph } from "../utils/telegraph";
 import { html } from "../utils/html";
 export async function reply(feed, item) {
-  const telegram = new Telegram(config.TG_TOKEN);
-
-  if (item.lastSendId && item.lastSendId != 0 && item.AutoRemove == 1) {
     try {
-      await telegram.deleteMessage(item.SendTo, item.lastSendId);
-    } catch (err) {
-      console.log(err);
-    }
-  }
+    const telegram = new Telegram(config.TG_TOKEN);
 
-  let telegraph_link = "";
-  if (feed.telegraph && item.content) {
-    let telegram_url = await editTelegraph(item);
-    feed.telegraphUrl = telegram_url;
-    console.log(`telegram_url: ${telegram_url}`);
-    // 如果return的不含https, 则说明出错了,直接插入到content中
-    let telegram_html = `<a href="${telegram_url}">tg</a>`;
-    // 如果不止一个链接，telegram_url是一个数组
-    if (Array.isArray(telegram_url)) {
-      telegram_html = telegram_url.map((e, index) => `<a href="${e}">tg${index + 1}</a>`).join(" | ");
+    if (item.lastSendId && item.lastSendId != 0 && item.AutoRemove == 1) {
+      try {
+        await telegram.deleteMessage(item.SendTo, item.lastSendId);
+      } catch (err) {
+        console.log(err);
+        feed.send_message_id = 0;
+      }
     }
-    if (telegram_url.indexOf("https") === -1) {
-      telegram_html = `<b>同步失败</b> | ${telegram_url}`;
+
+    let telegraph_link = "";
+    if (feed.telegraph && item.content) {
+      let telegram_url = await editTelegraph(item);
+      feed.telegraphUrl = telegram_url;
+      console.log(`telegram_url: ${telegram_url}`);
+      // 如果return的不含https, 则说明出错了,直接插入到content中
+      let telegram_html = `<a href="${telegram_url}">tg</a>`;
+      // 如果不止一个链接，telegram_url是一个数组
+      if (Array.isArray(telegram_url)) {
+        telegram_html = telegram_url.map((e, index) => `<a href="${e}">tg${index + 1}</a>`).join(" | ");
+      }
+      if (telegram_url.indexOf("https") === -1) {
+        telegram_html = `<b>同步失败</b> | ${telegram_url}`;
+      }
+      telegraph_link = `|${telegram_html}`;
     }
-    telegraph_link = `|${telegram_html}`;
+    let message = `<b>${html(feed.title)}</b>\n#${html(item.writer)} | #id${html(
+      feed.id
+    )}${
+      feed.telegraph ? (item.content ? telegraph_link : "") : ""
+    }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumpread?id=${feed.id}`}">Unread: ${
+      feed.unread
+    }</a>${
+      feed.lastUpdateTime ? `|${feed.lastUpdateTime}` : ""
+    }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${feed.id}`}">Latest</a>`;
+    let send = await telegram.sendMessage(item.SendTo, message, {
+      parse_mode: "HTML"
+    });
+    feed.send_message_id = send.message_id;
+  } catch (err) {
+    console.log(`Error in reply: ${err}`);
+    replyWhenError(feed, err);
+    feed.send_message_id = 0;
   }
-  let message = `<b>${html(feed.title)}</b>\n#${html(item.writer)} | #id${html(
-    feed.id
-  )}${
-    feed.telegraph ? (item.content ? telegraph_link : "") : ""
-  }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumpread?id=${feed.id}`}">Unread: ${
-    feed.unread
-  }</a>${
-    feed.lastUpdateTime ? `|${feed.lastUpdateTime}` : ""
-  }|<a href="${`https://rssandmore.gcy.workers.dev/1/jumplast?id=${feed.id}`}">Latest</a>`;
-  let send = await telegram.sendMessage(item.SendTo, message, {
-    parse_mode: "HTML"
-  });
-  feed.send_message_id = send.message_id;
   return feed;
 }
 export async function replyWhenError(feed, err) {
