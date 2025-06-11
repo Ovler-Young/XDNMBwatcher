@@ -270,6 +270,13 @@ router.get(`/${secret_path}/stg`, async req => {
   const telegraph = await syncToTelegraph(id);
   return successResponse(telegraph);
 });
+router.get("/robots.txt", async (req, e) => {
+  return new Response("User-agent: *\nDisallow: /", {
+    headers: {
+      "Content-Type": "text/plain"
+    }
+  });
+});
 router.get("/test", async (req, e) => {
   // 测试
   e.waitUntil(handleScheduled(e));
