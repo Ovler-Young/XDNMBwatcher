@@ -585,7 +585,8 @@ router.get("/_next/*" || "/index.html" || "/favicon.ico", async (req, e) => {
     );
   }
 });
-router.get("*", async (req, e) => {
+// Helper function to handle generic requests with proper headers
+const handleGenericRequest = async (req, e) => {
   const request = req;
   const url = new URL(request.url);
   // Directly fetch and return for specific paths without modifying cookies
@@ -610,7 +611,7 @@ router.get("*", async (req, e) => {
 
     // Clone the request to modify headers
     const newRequestHeaders = new Headers(request.headers);
-    newRequestHeaders.set('cookie', `userhash=${COOKIES}; PHPSESSID=${PHPSESSID};`);
+    newRequestHeaders.set('cookie', `userhash=${config.COOKIES}; PHPSESSID=${PHPSESSID};`);
 
     // Create a new request with modified headers
     const modifiedRequest = new Request(url.toString(), {
@@ -650,7 +651,7 @@ router.get("*", async (req, e) => {
 
   // Clone the request to modify headers
   const newRequestHeaders = new Headers(request.headers);
-  newRequestHeaders.set('cookie', `userhash=${COOKIES}; PHPSESSID=${PHPSESSID};`);
+  newRequestHeaders.set('cookie', `userhash=${config.COOKIES}; PHPSESSID=${PHPSESSID};`);
   
   // Create a new request with modified headers
   const modifiedRequest = new Request(url.toString(), {
@@ -662,7 +663,10 @@ router.get("*", async (req, e) => {
 
   // Fetch and return the response
   return fetch(modifiedRequest);
-});
+};
+
+router.get("*", handleGenericRequest);
+router.post("*", handleGenericRequest);
 addEventListener("fetch", e => {
   e.respondWith(router.handle(e.request, e).catch(errorHandler));
 });
