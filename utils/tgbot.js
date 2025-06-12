@@ -609,12 +609,22 @@ export async function botRoll(ctx) {
     console.log(`Time: ${time}ms`);
     
     if (Reply_status) {
-      let my_id = await Check(id, "[1,10]");
-      console.log(`my_id: ${my_id}`);
-      await ctx.reply(`回复成功！耗时 ${time}ms\n帖子ID：${id}\n串ID：${my_id}\n`, {
-        parse_mode: "HTML",
-        reply_to_message_id: ctx.update.message.message_id
-      });
+      let my_reply = await Check(id, "[1,10]");
+      console.log(`my_reply: ${JSON.stringify(my_reply)}`);
+      if (typeof my_reply === 'object' && my_reply.id) {
+        await ctx.reply(
+          `回复成功！${time}ms  <code>${my_reply.time} ${my_reply.id}</code>\n${my_reply.content}`,
+          {
+            parse_mode: "HTML",
+            reply_to_message_id: ctx.update.message.message_id
+          }
+        );
+      } else {
+        await ctx.reply(`回复成功但查找失败！耗时 ${time}ms\n帖子ID：${id}\n错误：${my_reply}`, {
+          parse_mode: "HTML",
+          reply_to_message_id: ctx.update.message.message_id
+        });
+      }
     } else {
       await ctx.reply(
         `发送失败！\n帖子ID：${id}\n直达链接：${config.FRONTEND_URL}/t/${id}`,
@@ -685,12 +695,22 @@ export async function botRoll(ctx) {
       let time = end - start;
       console.log(`Time: ${time}ms`);
       if (Reply_status) {
-        let my_id = await Check(id, "r");
-        console.log(`my_id2342456756: ${my_id}`);
-        await ctx.reply(`回复成功！耗时 ${time}ms\n帖子ID：${id}\n串ID：${my_id}\n`, {
-          parse_mode: "HTML",
-          reply_to_message_id: ctx.update.message.message_id
-        });
+        let my_reply = await Check(id, "r");
+        console.log(`my_reply: ${JSON.stringify(my_reply)}`);
+        if (typeof my_reply === 'object' && my_reply.id) {
+          await ctx.reply(
+            `回复成功！${time}ms  <code>${my_reply.time} ${my_reply.id}</code>\n<pre>${my_reply.content}</pre>`,
+            {
+              parse_mode: "HTML",
+              reply_to_message_id: ctx.update.message.message_id
+            }
+          );
+        } else {
+          await ctx.reply(`回复成功但查找失败！耗时 ${time}ms\n帖子ID：${id}\n错误：${my_reply}`, {
+            parse_mode: "HTML",
+            reply_to_message_id: ctx.update.message.message_id
+          });
+        }
       } else {
         await ctx.reply(
           `发送失败！\n帖子ID：${id}\n直达链接：${config.FRONTEND_URL}/t/${id}`,
@@ -775,23 +795,31 @@ export async function Check(id, msg) {
   const data = await lastpage.json();
   console.log(data);
   console.log("data.Replies.length: " + data.Replies.length);
-  let my_id = 0;
+  let my_reply = null;
   try {
-    for (let j = 0; j < data.Replies.length; j++) {
-      if (data.Replies[j].user_hash === "RRbLdfa") {
+    // 从后往前查找
+    for (let j = data.Replies.length - 1; j >= 0; j--) {
+      if (data.Replies[j].user_hash === config.USER_HASH) {
         if (data.Replies[j].content === msg) {
           console.log(`my_id: ${data.Replies[j].content}`);
           console.log(`user_hash: ${data.Replies[j].user_hash}`);
           console.log(`id: ${data.Replies[j].id}`);
-          my_id = data.Replies[j].id;
+          console.log(`time: ${data.Replies[j].now}`);
+          my_reply = {
+            id: data.Replies[j].id,
+            content: data.Replies[j].content,
+            time: data.Replies[j].now,
+            user_hash: data.Replies[j].user_hash
+          };
+          break;
         }
       }
     }
-    if (my_id === 0) {
+    if (my_reply === null) {
       console.log("my_id not found");
-      return "my_id not found";
+      return "my_id not found@bot.js";
     } else {
-      return my_id;
+      return my_reply;
     }
   } catch (e) {
     console.log(e);

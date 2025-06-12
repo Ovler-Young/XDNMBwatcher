@@ -672,7 +672,7 @@ addEventListener("fetch", e => {
 });
 addEventListener("scheduled", async event => {
   event.waitUntil(handleScheduled(event));
-});
+}); 
 
 
 async function fetchPHPSESSID() {
