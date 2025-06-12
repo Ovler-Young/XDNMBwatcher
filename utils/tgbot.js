@@ -800,14 +800,13 @@ export async function Check(id, msg) {
     // 从后往前查找
     for (let j = data.Replies.length - 1; j >= 0; j--) {
       if (data.Replies[j].user_hash === config.USER_HASH) {
-        if (data.Replies[j].content === msg) {
-          console.log(`my_id: ${data.Replies[j].content}`);
-          console.log(`user_hash: ${data.Replies[j].user_hash}`);
-          console.log(`id: ${data.Replies[j].id}`);
-          console.log(`time: ${data.Replies[j].now}`);
+        if (data.Replies[j].content && data.Replies[j].content.includes(msg)) {
+          let rawContent = data.Replies[j].content;
+          Content = rawContent.replace(/<b>(.*?)<\/b>/g, '<strong>$1</strong>');
+          Content = rawContent.replace(/<small>(.*?)<\/small>/g, '<code>$1</code>');
           my_reply = {
             id: data.Replies[j].id,
-            content: data.Replies[j].content,
+            content: Content,
             time: data.Replies[j].now,
             user_hash: data.Replies[j].user_hash
           };
