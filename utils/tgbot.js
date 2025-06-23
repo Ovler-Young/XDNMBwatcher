@@ -796,6 +796,7 @@ export async function Check(id, msg) {
   console.log(data);
   console.log("data.Replies.length: " + data.Replies.length);
   let my_reply = null;
+  let Content = "";
   try {
     // 从后往前查找
     for (let j = data.Replies.length - 1; j >= 0; j--) {
