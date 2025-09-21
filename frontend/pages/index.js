@@ -51,7 +51,7 @@ export default function Test() {
   const [hasMounted, setHasMounted] = React.useState(false);
   const [suburl, setsuburl] = useAtom(subAtom);
   const [subtitle, setsubtitle] = useAtom(subAtom);
-  const { data } = useSWR(`${config.BASE_URL}1/feeds`);
+  const { data } = useSWR(`https://XDNMBwatcher.180811.xyz/1/feeds`);
   React.useEffect(() => {
     setdomain(location.host);
     setsecret(location.pathname.substring(1));
@@ -62,7 +62,7 @@ export default function Test() {
     console.log(e);
     let id = e.currentTarget.getAttribute("id");
     const url = `https://www.nmbxd1.com/t/${id}`;
-    const res = await fetch(`${config.BASE_URL}1/deleteitem`, {
+    const res = await fetch(`https://XDNMBwatcher.180811.xyz/1/deleteitem`, {
       method: "post",
       body: JSON.stringify({ url: url }),
     })
@@ -88,11 +88,11 @@ export default function Test() {
           });
         }
       });
-    mutate(`${config.BASE_URL}1/feeds`);
+    mutate(`https://XDNMBwatcher.180811.xyz/1/feeds`);
   };
   const handlesub = async (e) => {
     console.log(suburl);
-    const res = await fetch(`${config.BASE_URL}1/subitem`, {
+    const res = await fetch(`https://XDNMBwatcher.180811.xyz/1/subitem`, {
       method: "post",
       body: JSON.stringify({ url: suburl }),
     })
@@ -118,12 +118,12 @@ export default function Test() {
           });
         }
       });
-    mutate(`${config.BASE_URL}1/feeds`);
+    mutate(`https://XDNMBwatcher.180811.xyz/1/feeds`);
   };
   const handleActive = async (e) => {
     e.preventDefault();
     console.log(e.currentTarget.getAttribute("state"));
-    const res = await fetch(`${config.BASE_URL}1/active`, {
+    const res = await fetch(`https://XDNMBwatcher.180811.xyz/1/active`, {
       method: "POST",
       body: JSON.stringify({
         url: e.currentTarget.getAttribute("url"),
@@ -152,11 +152,11 @@ export default function Test() {
           });
         }
       });
-    mutate(`${config.BASE_URL}1/feeds`);
+    mutate(`https://XDNMBwatcher.180811.xyz/1/feeds`);
   };
   const handleTitle = async (e) => {
     let url = e.currentTarget.getAttribute("url");
-    const res = await fetch(`${config.BASE_URL}1/title`, {
+    const res = await fetch(`https://XDNMBwatcher.180811.xyz/1/title`, {
       method: "post",
       body: JSON.stringify({
         url: url,
@@ -185,14 +185,14 @@ export default function Test() {
           });
         }
       });
-    mutate(`${config.BASE_URL}1/feeds`);
+    mutate(`https://XDNMBwatcher.180811.xyz/1/feeds`);
   };
   const handleUnread = async (e) => {
     e.preventDefault();
     console.log(e.currentTarget.getAttribute("state"));
     console.log(e.currentTarget.getAttribute("jump"));
     window.open(e.currentTarget.getAttribute("jump"));
-    const res = await fetch(`${config.BASE_URL}1/unread`, {
+    const res = await fetch(`https://XDNMBwatcher.180811.xyz/1/unread`, {
       method: "POST",
       body: JSON.stringify({
         url: e.currentTarget.getAttribute("url"),
@@ -220,7 +220,7 @@ export default function Test() {
           });
         }
       });
-    mutate(`${config.BASE_URL}1/feeds`);
+    mutate(`https://XDNMBwatcher.180811.xyz/1/feeds`);
   };
   const handleJump = async (e) => {
     e.preventDefault();
