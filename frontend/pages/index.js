@@ -311,8 +311,8 @@ export default function Test() {
                           variant="ghost"
                           isChecked={feed.unread}
                           jump={feed.unread
-                            ? `${config.FRONTEND_URL}/m/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 9 + 1)}`
-                            : `${config.FRONTEND_URL}/m/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 9 + 1)}`
+                            ? `https://www.nmbxd1.com/m/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 9 + 1)}`
+                            : `https://www.nmbxd1.com/m/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 9 + 1)}`
                           }
                           onClick={handleUnread}
                         > {feed.unread}
@@ -322,8 +322,8 @@ export default function Test() {
                     <Button
                       id={feed.id}
                       url={feed.unread
-                        ? `${config.FRONTEND_URL}/m/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 9 + 1)}`
-                        : `${config.FRONTEND_URL}/m/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 9 + 1)}`
+                        ? `https://www.nmbxd1.com/m/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 9 + 1)}`
+                        : `https://www.nmbxd1.com/m/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 9 + 1)}`
                       }
                       variant="ghost"
                       isChecked={feed.unread}
@@ -422,8 +422,8 @@ export default function Test() {
                     <Button
                       id={feed.id}
                       url={feed.unread
-                        ? `${config.FRONTEND_URL}/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 19 + 1)}`
-                        : `${config.FRONTEND_URL}/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 19 + 1)}`
+                        ? `https://www.nmbxd1.com/t/${feed.id}?page=${Math.floor((feed.LastRead - 1) / 19 + 1)}`
+                        : `https://www.nmbxd1.com/t/${feed.id}?page=${Math.floor((feed.ReplyCount - 1) / 19 + 1)}`
                       }
                       variant="ghost"
                       fontWeight="light"
@@ -441,17 +441,17 @@ export default function Test() {
                   <Td>
                     <Link
                       href={String(feed.fid) === "19"
-                        ? `${config.FRONTEND_URL}/f/小说`
+                        ? `https://www.nmbxd1.com/f/小说`
                         : String(feed.fid) === "81"
-                        ? `${config.FRONTEND_URL}/f/怪谈`
+                        ? `https://www.nmbxd1.com/f/怪谈`
                         : String(feed.fid) === "111"
-                        ? `${config.FRONTEND_URL}/f/跑团`
+                        ? `https://www.nmbxd1.com/f/跑团`
                         : String(feed.fid) === "4"
-                        ? `${config.FRONTEND_URL}/f/综合版1`
+                        ? `https://www.nmbxd1.com/f/综合版1`
                         : String(feed.fid) === "20"
-                        ? `${config.FRONTEND_URL}/f/都市怪谈`
+                        ? `https://www.nmbxd1.com/f/都市怪谈`
                         : String(feed.fid) === "112"
-                        ? `${config.FRONTEND_URL}/f/ROLL点`
+                        ? `https://www.nmbxd1.com/f/ROLL点`
                         : feed.fid
                       }
                       fontSize="s"
