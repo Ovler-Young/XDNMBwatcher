@@ -36,7 +36,7 @@ export async function syncToTelegraph(id, force = false) {
   r += 1;
 
   let res = await cFetch(
-    `https://api.nmb.best/Api/po?id=${id}`, // 只看po即可，第一次确认总回复数
+    `${config.API_BASE_URL}/Api/po?id=${id}`, // 只看po即可，第一次确认总回复数
     (PHPSESSID = PHPSESSID)
   );
   r++;
@@ -76,7 +76,7 @@ export async function syncToTelegraph(id, force = false) {
   for (let i = FromPage; i <= ToPage; i++) {
     // console.log(`i: ${i}`);
     let res = await cFetch(
-      `https://api.nmb.best/Api/po?id=${id}&page=${i}`,
+      `${config.API_BASE_URL}/Api/po?id=${id}&page=${i}`,
       (PHPSESSID = PHPSESSID)
     );
     // console.log(`res_size: ${res.length}`)

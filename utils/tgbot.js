@@ -405,7 +405,7 @@ export async function botHelp(ctx) {
 export async function botLatest(ctx) {
   // 记时
   let start = new Date().getTime();
-  const resp = await cFetch(`https://api.nmb.best/Api/timeline`);
+  const resp = await cFetch(`${config.API_BASE_URL}/Api/timeline`);
   const data = await resp.json();
   let middle = new Date().getTime();
   // the id we need is in data[*].Replies[0].id
@@ -665,7 +665,7 @@ export async function botRoll(ctx) {
   let try_count = 0;
   while (continues) {
     try_count++;
-    const resp = await cFetch(`https://api.nmb.best/Api/timeline`);
+    const resp = await cFetch(`${config.API_BASE_URL}/Api/timeline`);
     web_request_count += 1;
     const data = await resp.json();
     // the id we need is in data[*].Replies[0].id
@@ -776,7 +776,7 @@ export async function Reply(id, msg) {
 
 export async function Check(id, msg) {
   let frontend_page = 0;
-  const resp = await cFetch(`https://api.nmb.best/Api/thread?id=${id}`);
+  const resp = await cFetch(`${config.API_BASE_URL}/Api/thread?id=${id}`);
   // find what we just posted
   if (resp.ok) {
     // if everything is fine, return the json
@@ -790,7 +790,7 @@ export async function Check(id, msg) {
   }
   console.log(`https://www.nmbxd1.com/t/${id}?page=${frontend_page}`);
   const lastpage = await cFetch(
-    `https://api.nmb.best/Api/thread?id=${id}&page=${frontend_page}`
+    `${config.API_BASE_URL}/Api/thread?id=${id}&page=${frontend_page}`
   );
   const data = await lastpage.json();
   console.log(data);

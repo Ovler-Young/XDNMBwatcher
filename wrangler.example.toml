@@ -44,6 +44,7 @@ COOKIES = ""
 
 BASE_URL = ""
 FRONTEND_URL = ""
+API_BASE_URL = ""
 
 # # Environments / Multiple Workers
 # # Ref: https://developers.cloudflare.com/workers/platform/environments

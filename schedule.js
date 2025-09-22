@@ -57,7 +57,7 @@ export async function handleScheduled(event) {
   let feedpage = 1;
   while (true) {
     const res = await cFetch(
-      `https://api.nmb.best/Api/feed?uuid=${uuid}&page=${feedpage}`,
+      `${config.API_BASE_URL}/Api/feed?uuid=${uuid}&page=${feedpage}`,
       (PHPSESSID = PHPSESSID)
     );
     u++;
@@ -147,7 +147,7 @@ export async function handleScheduled(event) {
               try {
                 const res = await retry(() =>
                   cFetch(
-                `https://api.nmb.best/Api/thread?id=${id}&page=${j}`,
+                `${config.API_BASE_URL}/Api/thread?id=${id}&page=${j}`,
                 (PHPSESSID = PHPSESSID)
                   )
               );
@@ -290,7 +290,7 @@ export async function handleScheduled(event) {
     if (index !== -1) {
       // check if it is deleted
       let res = await cFetch(
-        `https://api.nmb.best/Api/thread?id=${idToCheck[i]}`,
+        `${config.API_BASE_URL}/Api/thread?id=${idToCheck[i]}`,
         (PHPSESSID = PHPSESSID)
       );
       u += 1;

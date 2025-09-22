@@ -20,7 +20,7 @@ import { title } from "process";
 require('url').URL = URL;
 
 const refreshUnread = async index => {
-  const res = await cFetch(`https://api.nmb.best/Api/thread?id=${id}`);
+  const res = await cFetch(`${config.API_BASE_URL}/Api/thread?id=${id}`);
   sub[index].LastRead = (await res.json()).ReplyCount;
   await KV.put("sub", JSON.stringify(sub));
 };
@@ -218,7 +218,7 @@ router.get(`/${secret_path}/subscribe`, async req => {
   while (true) {
     // Start of loop for multiple pages
     const res = await fetch(
-      `https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`
+      `${config.API_BASE_URL}/Api/feed?uuid=${uuid}&page=${page}`
     );
     let feed = await res.json();
     // Break the loop if the feed is empty
@@ -388,7 +388,7 @@ router.get("/sync", async (req, e) => {
   let sub = await getKVsub();
   while (true) {
     const res = await cFetch(
-      `https://api.nmb.best/Api/feed?uuid=${uuid}&page=${page}`
+      `${config.API_BASE_URL}/Api/feed?uuid=${uuid}&page=${page}`
     );
     r++;
     let feed = await res.json();
@@ -439,7 +439,7 @@ router.get("/sync", async (req, e) => {
     if (feedid.indexOf(sub[i].id) === -1) {
       // add to feed
       const res = await fetch(
-        `https://api.nmb.best/Api/addFeed?uuid=${uuid}&tid=${sub[i].id}`
+        `${config.API_BASE_URL}/Api/addFeed?uuid=${uuid}&tid=${sub[i].id}`
       );
       const addFeedresText = await res.json();
       if (addFeedresText === "该串不存在") {
@@ -511,7 +511,7 @@ router.get("/removelongunupdate", async (req, e) => {
       // too old, remove
       console.log("remove " + sub[i].id);
       const delFeedres = await fetch(
-        `https://api.nmb.best/Api/delFeed?uuid=${uuid}&tid=${sub[i].id}`
+        `${config.API_BASE_URL}/Api/delFeed?uuid=${uuid}&tid=${sub[i].id}`
       );
       // decode the response
       const delFeedresText = await delFeedres.json();
@@ -599,8 +599,7 @@ const handleGenericRequest = async (req, e) => {
 
   // Handle /Api/ requests with specific requirements
   if (url.pathname.startsWith('/Api/')) {
-    // Update hostname to api.nmb.best
-    url.hostname = 'api.nmb.best';
+    url.hostname = config.API_BASE_URL.replace("https://", "").replace("http://", "");
 
     // Retrieve or fetch PHPSESSID
     let PHPSESSID = await KV.get("PHPSESSID");

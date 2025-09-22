@@ -9,5 +9,6 @@ export const config = {
   COOKIES,
   BASE_URL,
   FRONTEND_URL : FRONTEND_URL || "https://www.nmbxd1.com",
+  API_BASE_URL: API_BASE_URL || "https://api.nmb.best",
   ...require(`./config/${mode}`).default
 };

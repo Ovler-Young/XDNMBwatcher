@@ -73,7 +73,7 @@ export async function Subscribe(id) {
     msg = "未传入id";
   }
   try {
-    const resp = await cFetch(`https://api.nmb.best/Api/po?id=${id}`);
+    const resp = await cFetch(`${config.API_BASE_URL}/Api/po?id=${id}`);
     if (resp.status === 200) {
       let feed = {};
       const data = await resp.json();
@@ -125,10 +125,10 @@ export async function Subscribe(id) {
         await KV.put("sub", JSON.stringify(sub));
         console.log(`ID: ${id} subscribed`);
         msg = `#添加订阅 #id${feed.id} <b> ${feed.title} </b>\n<a href="${config.FRONTEND_URL}/t/${feed.id}">点击查看</a>`;
-        // https://api.nmb.best/Api/addFeed?uuid=xxx&tid=xxx
+        // ${config.API_BASE_URL}/Api/addFeed?uuid=xxx&tid=xxx
         const uuid = await KV.get("uuid");
         const addFeedres = await fetch(
-          `https://api.nmb.best/Api/addFeed?uuid=${uuid}&tid=${id}`
+          `${config.API_BASE_URL}/Api/addFeed?uuid=${uuid}&tid=${id}`
         );
         // decode the response
         // "\u8be5\u4e32\u4e0d\u5b58\u5728" (该串不存在) -> 该串不存在
@@ -170,10 +170,10 @@ export async function Unsubscribe(id) {
     success = false;
     msg = "未订阅该串";
   } else {
-    // https://api.nmb.best/Api/delFeed?uuid=xxx&tid=xxx
+    // ${config.API_BASE_URL}/Api/delFeed?uuid=xxx&tid=xxx
     const uuid = await KV.get("uuid");
     const delFeedres = await fetch(
-      `https://api.nmb.best/Api/delFeed?uuid=${uuid}&tid=${id}`
+      `${config.API_BASE_URL}/Api/delFeed?uuid=${uuid}&tid=${id}`
     );
     // decode the response
     const delFeedresText = await delFeedres.json();
